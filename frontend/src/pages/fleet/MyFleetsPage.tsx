@@ -24,7 +24,7 @@ import {
 
 export const MyFleetsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, activeFleetId, setActiveFleet } = useAuthStore();
+  const { user, activeFleetId, setActiveFleet, closeFleetWorkspace, openFleetWorkspace } = useAuthStore();
   const [fleets, setFleets] = useState<Fleet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,11 +78,13 @@ export const MyFleetsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    closeFleetWorkspace();
     fetchFleets();
   }, [search, statusFilter]);
 
   const handleSelectFleet = (fleet: Fleet) => {
     setActiveFleet(fleet.id, fleet.name);
+    openFleetWorkspace();
     navigate('/dashboard');
   };
 
@@ -131,7 +133,7 @@ export const MyFleetsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-8 space-y-6 w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -199,8 +201,7 @@ export const MyFleetsPage: React.FC = () => {
 
       {/* Fleets Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">          {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-2xl border border-bordergray p-6 shadow-sm animate-pulse h-64" />
           ))}
         </div>
@@ -228,7 +229,16 @@ export const MyFleetsPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          className="grid gap-6"
+          style={{
+            gridTemplateColumns:
+              fleets.length === 1 ? 'minmax(0, 560px)' :
+              fleets.length === 2 ? 'repeat(2, 1fr)' :
+              fleets.length === 3 ? 'repeat(3, 1fr)' :
+              'repeat(auto-fill, minmax(340px, 1fr))',
+          }}
+        >
           {fleets.map((fleet) => {
             const isActive = activeFleetId === fleet.id;
             const health = fleet.health_summary || { healthy: 0, warning: 0, critical: 0 };

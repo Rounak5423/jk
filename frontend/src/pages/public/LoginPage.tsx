@@ -121,7 +121,7 @@ export const LoginPage: React.FC = () => {
 
           {/* Logo */}
           <motion.div {...drop(0.1)}>
-            <img src={jkLogo} alt="JK Tyre" className="h-10 w-auto object-contain" />
+            <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
           </motion.div>
 
           {/* Tagline block */}
@@ -207,9 +207,9 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          RIGHT PANEL  —  clean white login form
+          RIGHT PANEL  —  yellow gradient login form
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col justify-center items-center flex-1 h-full bg-white relative overflow-hidden px-8">
+      <div className="flex flex-col justify-center items-center flex-1 h-full relative overflow-hidden px-8" style={{ background: 'radial-gradient(ellipse at top left, #ffe066 0%, #ffd700 25%, #fff176 50%, #fef08a 70%, #ffd000 100%)' }}>
 
         {/* Subtle yellow glow in corner */}
         <div
@@ -225,7 +225,7 @@ export const LoginPage: React.FC = () => {
         >
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-800 transition group"
+            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back to Home
@@ -236,8 +236,8 @@ export const LoginPage: React.FC = () => {
 
           {/* Heading */}
           <motion.div className="mb-8" {...drop(0.25)}>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Login</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <h1 className="text-3xl font-black text-blue-900 tracking-tight">Login</h1>
+            <p className="text-sm text-blue-600 mt-1">
               Sign in to monitor vehicles and tyre health.
             </p>
           </motion.div>
@@ -259,15 +259,15 @@ export const LoginPage: React.FC = () => {
             {/* Login ID */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-blue-700 uppercase tracking-wider">
                   Login ID
                 </label>
-                <span className="text-[10px] text-slate-400 font-medium">
+                <span className="text-[10px] text-blue-400 font-medium">
                   Fleet ID / Driver ID / Admin Email
                 </span>
               </div>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={identifier}
@@ -275,28 +275,28 @@ export const LoginPage: React.FC = () => {
                   placeholder="e.g. JK-FLT-84219 or admin@jktyre.com"
                   required
                   autoComplete="username"
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm font-medium"
+                  className="w-full bg-white/80 border border-blue-200 rounded-xl pl-10 pr-4 py-3 text-sm text-blue-900 placeholder-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition shadow-sm font-medium"
                 />
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[11px] text-blue-400 mt-1">
                 Log in with your generated ID. No email required for fleet or driver accounts.
               </p>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-[11px] font-bold text-blue-700 mb-1.5 uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm"
+                  className="w-full bg-white/80 border border-blue-200 rounded-xl pl-10 pr-4 py-3 text-sm text-blue-900 placeholder-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition shadow-sm"
                 />
               </div>
             </div>
@@ -316,12 +316,12 @@ export const LoginPage: React.FC = () => {
 
           {/* Register link */}
           <motion.p
-            className="mt-5 text-center text-xs text-slate-500"
+            className="mt-5 text-center text-xs text-blue-700"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ delay: 0.65, duration: 0.45 }}
           >
             New fleet operator?{' '}
-            <Link to="/register" className="text-yellow-600 hover:text-yellow-500 font-bold transition">
+            <Link to="/register" className="text-blue-800 underline font-bold transition">
               Register here
             </Link>
           </motion.p>

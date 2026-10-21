@@ -79,7 +79,7 @@ export const Vehicle3DPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f3c 30%, #1a3a5c 55%, #7a5c00 80%, #ffd700 100%)' }}>
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

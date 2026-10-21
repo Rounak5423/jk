@@ -186,7 +186,8 @@ export const VehicleViewer3D: React.FC<Props> = ({
     <div
       className={`relative w-full ${
         fullscreen ? 'h-[calc(100vh-140px)] min-h-[620px]' : 'h-[660px]'
-      } bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col`}
+      } rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col`}
+      style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f3c 30%, #1a3a5c 55%, #7a5c00 80%, #ffd700 100%)' }}
     >
       {/* Top Controls Overlay */}
       <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2 max-w-[calc(100%-400px)]">
@@ -281,7 +282,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
       )}
 
       {/* Main Three.js Canvas */}
-      <div className="flex-1 w-full h-full relative cursor-grab active:cursor-grabbing">
+      <div className="flex-1 w-full h-full relative cursor-grab active:cursor-grabbing" style={{ background: 'linear-gradient(160deg, #071426 0%, #0d2040 40%, #1a3a5c 70%, #4a3800 90%, #ffd000 100%)' }}>
         <Canvas
           shadows
           camera={{

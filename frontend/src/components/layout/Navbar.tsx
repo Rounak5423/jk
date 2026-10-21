@@ -22,19 +22,11 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 shadow-sm px-6 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-14 bg-white border-b border-slate-200 shadow-sm px-6 flex items-center justify-between sticky top-0 z-40 overflow-visible">
       {/* Brand */}
-      <div className="flex items-center gap-3">
-        <img src={jkLogo} alt="JK Tyre" className="h-9 w-auto object-contain" />
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-slate-900 text-base tracking-tight">JK TYRE</span>
-            <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-              THI INTELLIGENCE
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 leading-none">Commercial Fleet Telematics Platform</p>
-        </div>
+      <div className="flex items-center gap-3" style={{ overflow: 'visible' }}>
+        <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
+        <p className="text-[11px] font-semibold text-slate-700 leading-none tracking-wide">THI Tyre Intelligence Platform</p>
       </div>
 
       {/* Right controls */}

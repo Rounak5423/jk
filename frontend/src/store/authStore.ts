@@ -8,9 +8,12 @@ interface AuthState {
   isAuthenticated: boolean;
   activeFleetId: string | null;
   activeFleetName: string | null;
+  fleetWorkspaceOpen: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
   setActiveFleet: (fleetId: string, fleetName?: string) => void;
+  openFleetWorkspace: () => void;
+  closeFleetWorkspace: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -19,6 +22,7 @@ export const useAuthStore = create<AuthState>((set) => {
   const parsedUser: User | null = savedUser ? JSON.parse(savedUser) : null;
   const savedFleetId = localStorage.getItem('jk_active_fleet_id') || (parsedUser ? parsedUser.fleet_id : null);
   const savedFleetName = localStorage.getItem('jk_active_fleet_name') || (parsedUser ? parsedUser.fleet_name : null);
+  const savedWorkspaceOpen = localStorage.getItem('jk_fleet_workspace_open') === 'true';
 
   return {
     token: savedToken,
@@ -26,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => {
     isAuthenticated: !!savedToken,
     activeFleetId: savedFleetId,
     activeFleetName: savedFleetName,
+    fleetWorkspaceOpen: savedWorkspaceOpen,
 
     login: (token: string, user: User) => {
       localStorage.setItem('jk_token', token);
@@ -36,12 +41,14 @@ export const useAuthStore = create<AuthState>((set) => {
       if (user.fleet_name) {
         localStorage.setItem('jk_active_fleet_name', user.fleet_name);
       }
+      localStorage.setItem('jk_fleet_workspace_open', 'false');
       set({
         token,
         user,
         isAuthenticated: true,
         activeFleetId: user.fleet_id,
         activeFleetName: user.fleet_name || null,
+        fleetWorkspaceOpen: false,
       });
     },
 
@@ -50,12 +57,13 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.removeItem('jk_user');
       localStorage.removeItem('jk_active_fleet_id');
       localStorage.removeItem('jk_active_fleet_name');
+      localStorage.removeItem('jk_fleet_workspace_open');
       try {
         queryClient.clear();
       } catch (e) {
         // ignore
       }
-      set({ token: null, user: null, isAuthenticated: false, activeFleetId: null, activeFleetName: null });
+      set({ token: null, user: null, isAuthenticated: false, activeFleetId: null, activeFleetName: null, fleetWorkspaceOpen: false });
     },
 
     setActiveFleet: (fleetId: string, fleetName?: string) => {
@@ -73,6 +81,16 @@ export const useAuthStore = create<AuthState>((set) => {
         activeFleetName: fleetName || state.activeFleetName,
         user: state.user ? { ...state.user, fleet_id: fleetId, fleet_name: fleetName || state.user.fleet_name } : null,
       }));
+    },
+
+    openFleetWorkspace: () => {
+      localStorage.setItem('jk_fleet_workspace_open', 'true');
+      set({ fleetWorkspaceOpen: true });
+    },
+
+    closeFleetWorkspace: () => {
+      localStorage.setItem('jk_fleet_workspace_open', 'false');
+      set({ fleetWorkspaceOpen: false });
     },
   };
 });
