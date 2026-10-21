@@ -70,15 +70,9 @@ export const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-50 px-8 py-4 flex items-center justify-between w-full">
-        <div className="flex items-center gap-3">
-          <img src={jkLogo} alt="JK Tyre" className="h-9 w-auto object-contain" />
-          <div>
-            <div className="font-extrabold text-white text-base tracking-tight">JK TYRE</div>
-            <div className="text-[10px] text-yellow-400 font-semibold uppercase tracking-wider">
-              THI Fleet Intelligence Platform
-            </div>
-          </div>
+      <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-50 px-8 flex items-center justify-between w-full" style={{ height: '56px', overflow: 'visible' }}>
+        <div className="flex items-center">
+          <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
         </div>
 
         <div className="flex items-center gap-3">

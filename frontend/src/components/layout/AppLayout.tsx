@@ -1,15 +1,39 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
+import { useAuthStore } from '../../store/authStore';
+
+const FLEET_WORKSPACE_PATHS = [
+  '/dashboard', '/vehicles', '/fitment', '/tyres',
+  '/trips', '/inspections', '/alerts', '/trends', '/comparison', '/reports',
+];
 
 export const AppLayout: React.FC = () => {
+  const { user, fleetWorkspaceOpen } = useAuthStore();
+  const location = useLocation();
+
+  /* Guard: Fleet Manager with no open workspace must go to /my-fleets */
+  if (
+    user?.role === 'FLEET_MANAGER' &&
+    !fleetWorkspaceOpen &&
+    FLEET_WORKSPACE_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
+  ) {
+    return <Navigate to="/my-fleets" replace />;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
+    <div
+      className="min-h-screen flex flex-col text-slate-900"
+      style={{
+        background: 'radial-gradient(ellipse at top left, #ffe066 0%, #ffd700 25%, #fff176 50%, #fef08a 70%, #ffd000 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <Navbar />
       <div className="flex-1 flex">
         <Sidebar />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
           <Outlet />
         </main>
       </div>

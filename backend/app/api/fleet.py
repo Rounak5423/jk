@@ -109,6 +109,7 @@ def get_fleet_by_id(fleet_id):
 
 @fleet_bp.route("", methods=["POST"])
 @fleet_bp.route("/", methods=["POST"])
+@fleet_bp.route("/add", methods=["POST"])
 @jwt_required
 def create_fleet():
     """
@@ -201,12 +202,12 @@ def create_fleet():
     db.session.commit()
 
     record_audit(
-        action="CREATE_FLEET",
+        action="FLEET_ADDED",
         resource_type="FLEET",
         resource_id=new_fleet.id,
         details={"name": new_fleet.name, "city": new_fleet.city, "registration_no": new_fleet.registration_no},
         fleet_id=new_fleet.id,
     )
 
-    return jsonify(new_fleet.to_dict()), 201
+    return jsonify({"message": f"Fleet '{new_fleet.name}' registered successfully.", "fleet": new_fleet.to_dict()}), 201
 
