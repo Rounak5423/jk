@@ -500,15 +500,48 @@ def generate_fleet_data(num_vehicles=30, seed=42, weeks_history=4):
     print(f"[SYNTHETIC GENERATOR] Successfully created {len(all_vehicles)} vehicles, starter fleets, users, telemetry and alerts.")
 
 
+def clear_vehicle_and_tyre_data():
+    """Removes all dummy vehicles, tyres, and associated operational records."""
+    print("[SYNTHETIC GENERATOR] Clearing all vehicle and tyre data...")
+    try:
+        from app.models.lifecycle_history import TyreLifecycleHistory
+        db.session.query(TyreLifecycleHistory).delete()
+    except Exception:
+        pass
+    try:
+        from app.models.oem_vault import OEMFleetVault
+        db.session.query(OEMFleetVault).delete()
+    except Exception:
+        pass
+
+    db.session.query(TyreFitment).delete()
+    db.session.query(TelemetryRecord).delete()
+    db.session.query(THIRecord).delete()
+    db.session.query(Inspection).delete()
+    db.session.query(Trip).delete()
+    db.session.query(Alert).delete()
+    db.session.query(Tyre).delete()
+    db.session.query(Vehicle).delete()
+    db.session.commit()
+    print("[SYNTHETIC GENERATOR] All vehicles and tyres cleared. 0 vehicles in all fleets.")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="JK Tyre Synthetic Data Generator")
-    parser.add_argument("--vehicles", type=int, default=30, help="Number of vehicles to generate")
+    parser.add_argument("--vehicles", type=int, default=30, help="Number of vehicles to generate (set 0 for 0 vehicles)")
     parser.add_argument("--seed", type=int, default=42, help="Reproducible random seed")
     parser.add_argument("--weeks", type=int, default=4, help="Weeks of historical telemetry")
+    parser.add_argument("--clear", action="store_true", help="Remove all vehicles and tyre data so that all fleets have 0 vehicles")
     args = parser.parse_args()
 
     from app import create_app
     app = create_app()
     with app.app_context():
         db.create_all()
-        generate_fleet_data(num_vehicles=args.vehicles, seed=args.seed, weeks_history=args.weeks)
+        if args.clear:
+            clear_vehicle_and_tyre_data()
+        elif args.vehicles == 0:
+            clear_vehicle_and_tyre_data()
+            generate_fleet_data(num_vehicles=0, seed=args.seed, weeks_history=args.weeks)
+        else:
+            generate_fleet_data(num_vehicles=args.vehicles, seed=args.seed, weeks_history=args.weeks)
