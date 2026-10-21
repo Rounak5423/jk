@@ -1,6 +1,6 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { LogOut, User, Shield, Truck, Navigation, RefreshCw } from 'lucide-react';
+import { LogOut, User, Shield, Truck, Navigation, RefreshCw, Building2 } from 'lucide-react';
 import jkLogo from '../../assets/jk-logo.png';
 import api from '../../services/api';
 
@@ -54,9 +54,15 @@ export const Navbar: React.FC = () => {
               {user?.full_name}
               {getRoleBadge(user?.role)}
             </div>
-            <div className="text-[11px] text-slate-500">
-              {activeFleetName || user?.fleet_name || 'JK Tyre Headquarters'}
-            </div>
+            <Link
+              to="/my-fleets"
+              className="text-[11px] text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center justify-end gap-1"
+              title="Click to Switch or Add Fleets"
+            >
+              <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+              <span>{activeFleetName || user?.fleet_name || 'JK Tyre Headquarters'}</span>
+              <span className="text-[9px] text-slate-400 font-normal">▾</span>
+            </Link>
           </div>
 
           <button

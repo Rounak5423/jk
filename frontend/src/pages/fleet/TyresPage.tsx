@@ -4,14 +4,16 @@ import api from '../../services/api';
 import { Tyre } from '../../types';
 import { ShieldCheck, AlertTriangle, AlertCircle, Activity } from 'lucide-react';
 import { TyreCard } from '../../components/tyre/TyreCard';
+import { useAuthStore } from '../../store/authStore';
 
 export const TyresPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState('');
   const [healthFilter, setHealthFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: tyres, isLoading } = useQuery<Tyre[]>({
-    queryKey: ['fleet-tyres', statusFilter, healthFilter],
+    queryKey: ['fleet-tyres', activeFleetId, statusFilter, healthFilter],
     queryFn: async () => {
       let url = '/tyres?';
       if (statusFilter) url += `status=${statusFilter}&`;

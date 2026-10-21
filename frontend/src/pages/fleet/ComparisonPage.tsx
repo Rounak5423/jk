@@ -25,15 +25,17 @@ import {
   Search,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 
 export const ComparisonPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
   // 1. Fetch available fleet vehicles for selection
   const { data: allVehicles, isLoading: vehiclesLoading } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles-comparison-picker'],
+    queryKey: ['fleet-vehicles-comparison-picker', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;
@@ -49,7 +51,7 @@ export const ComparisonPage: React.FC = () => {
 
   // 2. Fetch comparison metrics for selected vehicles
   const { data: comparisons, isLoading: comparisonLoading, error: comparisonError } = useQuery({
-    queryKey: ['vehicle-comparison', selectedIds],
+    queryKey: ['vehicle-comparison', activeFleetId, selectedIds],
     queryFn: async () => {
       if (selectedIds.length < 2) return [];
       const res = await api.get(`/analytics/comparison?vehicle_ids=${selectedIds.join(',')}`);

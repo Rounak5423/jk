@@ -170,7 +170,19 @@ export function resolveWheelPositionName(position?: string): string | undefined 
     REAR2LEFTOUTER: 'R2_LO',
     REAR2LEFTINNER: 'R2_LI',
     REAR2RIGHTINNER: 'R2_RI',
-    REAR2RIGHTOUTER: 'R2_RO',
+    // Commercial fleet inspection sheet format (1R, 1L, 2R, 2L, 3RO, 3RI, 3LO, 3LI, 4RO, 4RI, 4LO, 4LI)
+    '1R': 'F1_R',
+    '1L': 'F1_L',
+    '2R': 'F2_R',
+    '2L': 'F2_L',
+    '3RO': 'R1_RO',
+    '3RI': 'R1_RI',
+    '3LO': 'R1_LO',
+    '3LI': 'R1_LI',
+    '4RO': 'R2_RO',
+    '4RI': 'R2_RI',
+    '4LO': 'R2_LO',
+    '4LI': 'R2_LI',
   };
 
   if (aliases[normalized]) return aliases[normalized];

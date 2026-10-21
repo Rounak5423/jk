@@ -13,6 +13,7 @@ import {
   Truck,
   AlertTriangle,
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 interface PositionData {
   fitment_id: string;
@@ -71,6 +72,7 @@ function getTHIBadge(status: string) {
 }
 
 export const FitmentPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const queryClient = useQueryClient();
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
 
@@ -91,7 +93,7 @@ export const FitmentPage: React.FC = () => {
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles'],
+    queryKey: ['fleet-vehicles', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;
@@ -99,7 +101,7 @@ export const FitmentPage: React.FC = () => {
   });
 
   const { data: vehicleData, isLoading: vehicleLoading } = useQuery({
-    queryKey: ['vehicle-fitment-summary', selectedVehicleId],
+    queryKey: ['vehicle-fitment-summary', selectedVehicleId, activeFleetId],
     queryFn: async () => {
       const res = await api.get(`/inspections/vehicle/${selectedVehicleId}`);
       return res.data;
@@ -108,7 +110,7 @@ export const FitmentPage: React.FC = () => {
   });
 
   const { data: availableTyres } = useQuery<Tyre[]>({
-    queryKey: ['available-tyres'],
+    queryKey: ['available-tyres', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/tyres/available');
       return res.data;

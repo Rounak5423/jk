@@ -4,7 +4,7 @@ from sqlalchemy import func
 from app.extensions import db
 from app.models import Tyre, Vehicle, THIRecord, TelemetryRecord, Trip
 from app.services.ml_service import TyreWearMLService
-from app.utils.security import jwt_required, enforce_fleet_access
+from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -12,8 +12,7 @@ analytics_bp = Blueprint("analytics", __name__)
 @analytics_bp.route("/summary", methods=["GET"])
 @jwt_required
 def get_analytics_summary():
-    user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     if not fleet_id or not enforce_fleet_access(fleet_id):
         return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
@@ -60,8 +59,7 @@ def get_health_trends():
     """
     Returns daily aggregated historical THI, pressure, and temperature trends.
     """
-    user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     if not fleet_id or not enforce_fleet_access(fleet_id):
         return jsonify({"error": "Forbidden: unauthorized access"}), 403
@@ -125,8 +123,7 @@ def get_vehicle_comparison():
     - Maximum 10 vehicles allowed (returns 400 Bad Request if > 10)
     - Validates server-side fleet authorization
     """
-    user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     if not fleet_id or not enforce_fleet_access(fleet_id):
         return jsonify({"error": "Forbidden: unauthorized access"}), 403

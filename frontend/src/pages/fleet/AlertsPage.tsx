@@ -3,8 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Alert } from '../../types';
 import { AlertTriangle, ShieldCheck, AlertCircle, CheckCircle, Check, X, ArrowRight } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const AlertsPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [severityFilter, setSeverityFilter] = useState('');
@@ -14,7 +16,7 @@ export const AlertsPage: React.FC = () => {
   const [resolutionNote, setResolutionNote] = useState('');
 
   const { data: alerts, isLoading } = useQuery<Alert[]>({
-    queryKey: ['fleet-alerts', statusFilter, severityFilter],
+    queryKey: ['fleet-alerts', activeFleetId, statusFilter, severityFilter],
     queryFn: async () => {
       let url = '/alerts?';
       if (statusFilter) url += `status=${statusFilter}&`;

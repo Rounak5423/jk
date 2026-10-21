@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User } from '../types';
+import { queryClient } from '../queryClient';
 
 interface AuthState {
   user: User | null;
@@ -49,6 +50,11 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.removeItem('jk_user');
       localStorage.removeItem('jk_active_fleet_id');
       localStorage.removeItem('jk_active_fleet_name');
+      try {
+        queryClient.clear();
+      } catch (e) {
+        // ignore
+      }
       set({ token: null, user: null, isAuthenticated: false, activeFleetId: null, activeFleetName: null });
     },
 
@@ -56,6 +62,11 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.setItem('jk_active_fleet_id', fleetId);
       if (fleetName) {
         localStorage.setItem('jk_active_fleet_name', fleetName);
+      }
+      try {
+        queryClient.clear();
+      } catch (e) {
+        // ignore
       }
       set((state) => ({
         activeFleetId: fleetId,

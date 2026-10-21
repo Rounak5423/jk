@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
 from app.models import Trip, Vehicle
-from app.utils.security import jwt_required, enforce_fleet_access
+from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 
 trips_bp = Blueprint("trips", __name__)
 
@@ -10,7 +10,6 @@ trips_bp = Blueprint("trips", __name__)
 @trips_bp.route("", methods=["GET"])
 @jwt_required
 def list_trips():
-    user = g.current_user
     vehicle_id = request.args.get("vehicle_id")
 
     # If vehicle_id is provided, verify user has authorization to access that vehicle's fleet
@@ -22,7 +21,7 @@ def list_trips():
             return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
         fleet_id = vehicle.fleet_id
     else:
-        fleet_id = request.args.get("fleet_id") or user.fleet_id
+        fleet_id = get_effective_fleet_id()
         if not fleet_id or not enforce_fleet_access(fleet_id):
             return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
 

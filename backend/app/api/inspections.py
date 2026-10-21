@@ -8,7 +8,7 @@ from app.models import Inspection, Vehicle, Tyre, InspectionCondition, Inspectio
 from app.models.tyre import TyreStatus, LifecycleType
 from app.services.alert_engine import AlertEngine
 from app.services.thi_engine import THIEngine
-from app.utils.security import jwt_required, enforce_fleet_access
+from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
 
 inspections_bp = Blueprint("inspections", __name__)
@@ -21,7 +21,6 @@ def allowed_file(filename):
 @inspections_bp.route("", methods=["GET"])
 @jwt_required
 def list_inspections():
-    user = g.current_user
     vehicle_id = request.args.get("vehicle_id")
 
     if vehicle_id:
@@ -32,7 +31,7 @@ def list_inspections():
             return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
         fleet_id = vehicle.fleet_id
     else:
-        fleet_id = request.args.get("fleet_id") or user.fleet_id
+        fleet_id = get_effective_fleet_id()
         if not fleet_id or not enforce_fleet_access(fleet_id):
             return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
 

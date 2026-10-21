@@ -71,16 +71,16 @@ Alternatively, use the Windows convenience PowerShell script from root:
 
 ---
 
-## 3. Demo Credentials (Local Development)
-Once synthetic data is initialized, the following preconfigured accounts are ready:
+## 3. Demo Credentials & ID-Based Authentication
+The platform uses **Generated Login IDs** for Fleet Owners and Drivers (no email required during registration). Super Admins log in using their administrator email:
 
-| Role | Email | Password | Scope |
+| Role | Login Identifier | Password | Scope |
 |---|---|---|---|
-| **JK Tyre Super Admin** | `admin@jktyre.com` | `Admin@12345` | Global oversight, audit logs, all fleets, platform usage map |
-| **Fleet Manager** | `fleet.manager@translogistics.com` | `Fleet@12345` | Apex Trans Logistics (Fleet 1 & Fleet 3 via multi-fleet) |
-| **Driver** | `driver1@translogistics.com` | `Driver@12345` | Driver workflow, vehicle assignments, trip logging |
+| **JK Tyre Super Admin** | `admin@jktyre.com` (or `jkadmin`) | `Admin@12345` | Global oversight, audit logs, all fleets, platform usage map |
+| **Fleet Manager** | Generated Fleet ID (e.g. `JK-FLT-XXXXX` or `apex_manager`) | `Fleet@12345` | Commercial transport fleet management, vehicle onboarding, telemetry |
+| **Commercial Driver** | Generated Driver ID (e.g. `JK-DRV-XXXXX` or `driver1`) | `Driver@12345` | Driver mobile portal, trip start/end, active tyre alerts |
 
-> **Development Mode Flag**: Quick-login buttons on the login page are hidden by default in production and only shown when `VITE_ENABLE_DEV_LOGIN="true"` in `frontend/.env`.
+> **ID-Based Registration**: When new Fleet Owners or Commercial Drivers register via `/register`, no email address is requested. A branded unique ID (`JK-FLT-XXXXX` or `JK-DRV-XXXXX`) is generated instantly and presented with a copy action to be used for all subsequent sign-ins.
 
 ---
 

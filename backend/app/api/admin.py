@@ -44,6 +44,13 @@ def list_all_fleets():
     return jsonify([f.to_dict() for f in fleets]), 200
 
 
+@admin_bp.route("/fleets", methods=["POST"])
+@roles_required(UserRole.SUPER_ADMIN)
+def admin_create_fleet():
+    from app.api.fleet import create_fleet
+    return create_fleet()
+
+
 @admin_bp.route("/users", methods=["GET"])
 @roles_required(UserRole.SUPER_ADMIN)
 def list_all_users():

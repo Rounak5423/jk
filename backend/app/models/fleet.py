@@ -10,7 +10,7 @@ class Fleet(db.Model):
     name = db.Column(db.String(120), nullable=False)
     registration_no = db.Column(db.String(64), nullable=True)
     contact_name = db.Column(db.String(120), nullable=False)
-    contact_email = db.Column(db.String(120), nullable=False, unique=True, index=True)
+    contact_email = db.Column(db.String(120), nullable=True, unique=True, index=True)
     contact_phone = db.Column(db.String(32), nullable=True)
     address = db.Column(db.Text, nullable=True)
     city = db.Column(db.String(64), nullable=True)

@@ -12,34 +12,61 @@ class VehicleType:
 
 
 class WheelConfig:
-    FOUR_WHEELER = "4-Wheeler"
-    SIX_WHEELER = "6-Wheeler"
     TEN_WHEELER = "10-Wheeler"
     TWELVE_WHEELER = "12-Wheeler"
+    FOURTEEN_WHEELER = "14-Wheeler"
+    SIXTEEN_WHEELER = "16-Wheeler"
+    # Legacy / not selectable in fleet truck registry:
+    FOUR_WHEELER = "4-Wheeler"
+    SIX_WHEELER = "6-Wheeler"
 
 
 def get_default_layout(wheel_config: str):
     """
     Returns standard physical configuration for commercial vehicle wheel layouts.
     Wheel positions:
-    - FL: Front Left (Steer)
-    - FR: Front Right (Steer)
-    - Axle 2+ Dual: LIO (Left Inner/Outer), RIO (Right Inner/Outer)
-      Convention:
-        LIO: Left Inner/Outer - specifically:
-        LO: Left Outer
-        LI: Left Inner
-        RI: Right Inner
-        RO: Right Outer
+    - FL, FR: Steer Axle 1
+    - FL2, FR2: Steer Axle 2 (for 12W / 14W / 16W)
+    - FL3, FR3: Pusher/Lift Axle (for 14W)
+    - Axle Duals: LIO (Left Inner/Outer), RIO (Right Inner/Outer):
+      LO: Left Outer, LI: Left Inner, RI: Right Inner, RO: Right Outer
     """
-    if wheel_config == WheelConfig.FOUR_WHEELER:
+    if wheel_config == WheelConfig.TWELVE_WHEELER:
         return {
-            "layout_type": WheelConfig.FOUR_WHEELER,
-            "axle_count": 2,
-            "total_wheels": 4,
+            "layout_type": WheelConfig.TWELVE_WHEELER,
+            "axle_count": 4,
+            "total_wheels": 12,
             "axles": [
-                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 1.6},
-                {"index": 2, "type": "DRIVE", "dual": False, "positions": ["RL", "RR"], "x_offset": -1.6},
+                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 3.0},
+                {"index": 2, "type": "STEER_AUX", "dual": False, "positions": ["FL2", "FR2"], "x_offset": 1.7},
+                {"index": 3, "type": "DRIVE_FORWARD", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -1.4},
+                {"index": 4, "type": "DRIVE_REAR", "dual": True, "positions": ["R2_LO", "R2_LI", "R2_RI", "R2_RO"], "x_offset": -2.7},
+            ],
+        }
+    elif wheel_config == WheelConfig.FOURTEEN_WHEELER:
+        return {
+            "layout_type": WheelConfig.FOURTEEN_WHEELER,
+            "axle_count": 5,
+            "total_wheels": 14,
+            "axles": [
+                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 3.4},
+                {"index": 2, "type": "STEER_AUX", "dual": False, "positions": ["FL2", "FR2"], "x_offset": 2.2},
+                {"index": 3, "type": "PUSHER_LIFT", "dual": False, "positions": ["FL3", "FR3"], "x_offset": 0.8},
+                {"index": 4, "type": "DRIVE_FORWARD", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -1.4},
+                {"index": 5, "type": "DRIVE_REAR", "dual": True, "positions": ["R2_LO", "R2_LI", "R2_RI", "R2_RO"], "x_offset": -2.7},
+            ],
+        }
+    elif wheel_config == WheelConfig.SIXTEEN_WHEELER:
+        return {
+            "layout_type": WheelConfig.SIXTEEN_WHEELER,
+            "axle_count": 5,
+            "total_wheels": 16,
+            "axles": [
+                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 3.4},
+                {"index": 2, "type": "STEER_AUX", "dual": False, "positions": ["FL2", "FR2"], "x_offset": 2.2},
+                {"index": 3, "type": "DRIVE_FORWARD", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -0.8},
+                {"index": 4, "type": "DRIVE_MID", "dual": True, "positions": ["R2_LO", "R2_LI", "R2_RI", "R2_RO"], "x_offset": -2.0},
+                {"index": 5, "type": "DRIVE_REAR", "dual": True, "positions": ["R3_LO", "R3_LI", "R3_RI", "R3_RO"], "x_offset": -3.2},
             ],
         }
     elif wheel_config == WheelConfig.SIX_WHEELER:
@@ -52,16 +79,14 @@ def get_default_layout(wheel_config: str):
                 {"index": 2, "type": "DRIVE", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -2.0},
             ],
         }
-    elif wheel_config == WheelConfig.TWELVE_WHEELER:
+    elif wheel_config == WheelConfig.FOUR_WHEELER:
         return {
-            "layout_type": WheelConfig.TWELVE_WHEELER,
-            "axle_count": 4,
-            "total_wheels": 12,
+            "layout_type": WheelConfig.FOUR_WHEELER,
+            "axle_count": 2,
+            "total_wheels": 4,
             "axles": [
-                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 3.0},
-                {"index": 2, "type": "STEER_AUX", "dual": False, "positions": ["FL2", "FR2"], "x_offset": 1.7},
-                {"index": 3, "type": "DRIVE_FORWARD", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -1.4},
-                {"index": 4, "type": "DRIVE_REAR", "dual": True, "positions": ["R2_LO", "R2_LI", "R2_RI", "R2_RO"], "x_offset": -2.7},
+                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 1.6},
+                {"index": 2, "type": "DRIVE", "dual": False, "positions": ["RL", "RR"], "x_offset": -1.6},
             ],
         }
     else:  # Default to TEN_WHEELER (standard 3-axle heavy hauler)

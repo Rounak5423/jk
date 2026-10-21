@@ -25,7 +25,7 @@ class User(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     fleet_id = db.Column(db.String(36), db.ForeignKey("fleets.id", ondelete="SET NULL"), nullable=True, index=True)
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=True, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(32), nullable=False, default=UserRole.FLEET_MANAGER)
@@ -69,6 +69,7 @@ class User(db.Model):
             "fleet_name": self.fleet.name if self.fleet else None,
             "managed_fleet_count": len(self.authorized_fleets),
             "username": self.username,
+            "login_id": self.username,
             "email": self.email,
             "full_name": self.full_name,
             "role": self.role,

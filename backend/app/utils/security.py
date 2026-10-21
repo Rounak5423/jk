@@ -87,3 +87,24 @@ def enforce_fleet_access(target_fleet_id: str) -> bool:
     if hasattr(user, "authorized_fleets") and target_fleet_id in [f.id for f in user.authorized_fleets]:
         return True
     return False
+
+
+def get_effective_fleet_id(data=None) -> str:
+    """
+    Extracts the targeted fleet ID in order of precedence:
+    1. Query param: ?fleet_id=...
+    2. Header: X-Fleet-ID (sent automatically by axios interceptor from activeFleetId)
+    3. Body payload (if data dict provided): data.get("fleet_id")
+    4. Default fallback: g.current_user.fleet_id
+    """
+    from flask import request
+    fleet_id = request.args.get("fleet_id")
+    if not fleet_id:
+        fleet_id = request.headers.get("X-Fleet-ID") or request.headers.get("x-fleet-id")
+    if not fleet_id and data and isinstance(data, dict):
+        fleet_id = data.get("fleet_id")
+    if not fleet_id:
+        user = getattr(g, "current_user", None)
+        if user:
+            fleet_id = user.fleet_id
+    return fleet_id

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
 import {
-  Lock, Mail, AlertCircle, ArrowRight, ArrowLeft,
-  Activity, ShieldCheck, TrendingUp, Navigation,
+  Lock, User, Mail, AlertCircle, ArrowRight, ArrowLeft,
+  Activity, ShieldCheck, TrendingUp, Navigation, KeyRound,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jkLogo  from '../../assets/jk-logo.png';
@@ -28,9 +28,10 @@ const drop = (delay = 0, x = 0) => ({
 /* ═══════════════════════════════════════════════════════════════════════ */
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuthStore();
 
-  const [email,    setEmail]    = useState('');
+  const [identifier, setIdentifier] = useState(searchParams.get('login_id') || '');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState<string | null>(null);
   const [loading,  setLoading]  = useState(false);
@@ -40,14 +41,14 @@ export const LoginPage: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', { identifier: identifier.trim(), password });
       login(res.data.token, res.data.user);
       if      (res.data.user.role === 'SUPER_ADMIN')   navigate('/admin');
       else if (res.data.user.role === 'DRIVER')         navigate('/driver');
       else if (res.data.user.role === 'FLEET_MANAGER')  navigate('/my-fleets');
       else                                              navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+      setError(err.response?.data?.error || 'Invalid Login ID or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -255,22 +256,31 @@ export const LoginPage: React.FC = () => {
           {/* Form */}
           <motion.form onSubmit={handleSubmit} className="space-y-4" {...drop(0.38)}>
 
-            {/* Email */}
+            {/* Login ID */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                Email or Driver ID
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  Login ID
+                </label>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Fleet ID / Driver ID / Admin Email
+                </span>
+              </div>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  type="text"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="e.g. JK-FLT-84219 or admin@jktyre.com"
                   required
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm"
+                  autoComplete="username"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm font-medium"
                 />
               </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Log in with your generated ID. No email required for fleet or driver accounts.
+              </p>
             </div>
 
             {/* Password */}

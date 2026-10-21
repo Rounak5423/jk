@@ -9,7 +9,7 @@ from app.models import (
     Fleet, User, Vehicle, Tyre, TyreFitment, Trip,
     TelemetryRecord, THIRecord, Alert, Inspection, AuditLog, UserRole
 )
-from app.utils.security import jwt_required, enforce_fleet_access
+from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 
 export_bp = Blueprint("export", __name__)
 
@@ -40,7 +40,7 @@ def export_excel_dataset():
     Excludes sensitive secrets such as password hashes.
     """
     user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     # Super admin can view all or filter; fleet managers strictly access authorized fleet
     is_super_admin = (user.role == UserRole.SUPER_ADMIN)
@@ -293,7 +293,7 @@ def export_csv_table():
     Supports ?table=vehicles|tyres|trips|alerts|inspections
     """
     user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
     table = (request.args.get("table") or "vehicles").lower()
 
     if user.role != UserRole.SUPER_ADMIN:

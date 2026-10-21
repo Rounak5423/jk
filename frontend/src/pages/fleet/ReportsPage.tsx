@@ -14,13 +14,15 @@ import {
   Info,
   Layers,
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const ReportsPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const [downloadingExcel, setDownloadingExcel] = useState(false);
   const [downloadingCsv, setDownloadingCsv] = useState<string | null>(null);
 
   const { data: tyres } = useQuery({
-    queryKey: ['fleet-tyres-report'],
+    queryKey: ['fleet-tyres-report', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/tyres');
       return res.data;

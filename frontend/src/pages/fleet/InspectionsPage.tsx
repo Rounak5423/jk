@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Inspection, Vehicle, Tyre } from '../../types';
 import { ClipboardCheck, Plus, Camera, CheckCircle, AlertCircle, X, AlertTriangle } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 type LifecycleDecision = '' | 'NEW' | 'REUSE' | 'RETREAD' | 'SCRAP';
 
@@ -38,6 +39,7 @@ function getResultBadge(result: string | null | undefined) {
 }
 
 export const InspectionsPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export const InspectionsPage: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: inspections, isLoading } = useQuery<Inspection[]>({
-    queryKey: ['inspections'],
+    queryKey: ['inspections', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/inspections');
       return res.data;
@@ -74,7 +76,7 @@ export const InspectionsPage: React.FC = () => {
   });
 
   const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles'],
+    queryKey: ['fleet-vehicles', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;
@@ -82,7 +84,7 @@ export const InspectionsPage: React.FC = () => {
   });
 
   const { data: tyres } = useQuery<Tyre[]>({
-    queryKey: ['fleet-tyres'],
+    queryKey: ['fleet-tyres', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/tyres');
       return res.data;

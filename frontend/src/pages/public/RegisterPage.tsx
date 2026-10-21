@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
 import {
-  Building2, User, Mail, Lock, Phone, MapPin,
+  Building2, User, Lock, Phone, MapPin,
   AlertCircle, ArrowRight, ArrowLeft,
-  Truck, Shield, BarChart3, Disc,
+  Truck, Shield, BarChart3, Disc, CheckCircle2,
+  Copy, Check, ShieldCheck, KeyRound,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jkLogo      from '../../assets/jk-logo.png';
@@ -294,24 +295,120 @@ export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
-  const [formData, setFormData] = useState({
-    company_name: '', registration_no: '', contact_name: '',
-    email: '', password: '', phone: '', address: '',
-  });
-  const [error,   setError]   = useState<string | null>(null);
+  const [role, setRole] = useState<'FLEET_MANAGER' | 'DRIVER'>('FLEET_MANAGER');
+  const [fleetsList, setFleetsList] = useState<Array<{ id: string; name: string; city?: string }>>([]);
+
+  // Fleet fields
+  const [companyName, setCompanyName] = useState('');
+  const [registrationNo, setRegistrationNo] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [city, setCity] = useState('New Delhi');
+  const [address, setAddress] = useState('');
+
+  // Driver fields
+  const [driverName, setDriverName] = useState('');
+  const [driverLicenseNo, setDriverLicenseNo] = useState('');
+  const [driverPhone, setDriverPhone] = useState('');
+  const [driverPassword, setDriverPassword] = useState('');
+  const [assignedFleetId, setAssignedFleetId] = useState('');
+
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Success modal
+  const [registeredData, setRegisteredData] = useState<{
+    login_id: string;
+    role: string;
+    token: string;
+    user: any;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    api.get('/auth/public-fleets')
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setFleetsList(res.data);
+          if (res.data.length > 0 && !assignedFleetId) {
+            setAssignedFleetId(res.data[0].id);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleCopyId = () => {
+    if (registeredData?.login_id) {
+      navigator.clipboard.writeText(registeredData.login_id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleProceed = () => {
+    if (registeredData) {
+      login(registeredData.token, registeredData.user);
+      if (registeredData.role === 'DRIVER') {
+        navigate('/driver');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
-      const res = await api.post('/auth/register', formData);
-      login(res.data.token, res.data.user);
-      navigate('/dashboard');
+      let payload: any;
+      if (role === 'DRIVER') {
+        if (!driverName.trim()) {
+          setError('Driver full name is required');
+          setLoading(false);
+          return;
+        }
+        payload = {
+          role: 'DRIVER',
+          full_name: driverName.trim(),
+          driver_license_no: driverLicenseNo.trim() || undefined,
+          phone: driverPhone.trim() || undefined,
+          password: driverPassword,
+          fleet_id: assignedFleetId || undefined,
+        };
+      } else {
+        if (!companyName.trim()) {
+          setError('Company name is required');
+          setLoading(false);
+          return;
+        }
+        if (!contactName.trim()) {
+          setError('Contact person name is required');
+          setLoading(false);
+          return;
+        }
+        payload = {
+          role: 'FLEET_MANAGER',
+          company_name: companyName.trim(),
+          registration_no: registrationNo.trim() || undefined,
+          contact_name: contactName.trim(),
+          phone: phone.trim() || undefined,
+          password: password,
+          city: city.trim() || undefined,
+          address: address.trim() || undefined,
+        };
+      }
+
+      const res = await api.post('/auth/register', payload);
+      setRegisteredData({
+        login_id: res.data.login_id,
+        role: res.data.role,
+        token: res.data.token,
+        user: res.data.user,
+      });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed. Please check your inputs.');
     } finally {
@@ -326,7 +423,78 @@ export const RegisterPage: React.FC = () => {
 
   return (
     /* Full viewport, no scroll — two columns, GIF on right, smooth blend */
-    <div className="h-screen w-screen overflow-hidden flex bg-white">
+    <div className="h-screen w-screen overflow-hidden flex bg-white relative">
+
+      {/* ══ SUCCESS MODAL OVERLAY ═══════════════════════════════════════ */}
+      {registeredData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center relative overflow-hidden"
+          >
+            <div className="w-14 h-14 mx-auto mb-3 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+              Registration Successful!
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Your {registeredData.role === 'DRIVER' ? 'Commercial Driver' : 'Fleet Owner'} account is now registered.
+            </p>
+
+            {/* Generated Login ID Card */}
+            <div className="my-5 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-yellow-400 text-center shadow-sm">
+              <div className="text-[10px] font-extrabold text-amber-800 uppercase tracking-widest mb-1">
+                Your Official Login ID
+              </div>
+              <div className="text-2xl font-black font-mono text-slate-900 tracking-wider py-1 select-all">
+                {registeredData.login_id}
+              </div>
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleCopyId}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-slate-900 text-xs font-black transition shadow-sm"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-900" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? 'Copied to Clipboard!' : 'Copy Login ID'}
+                </button>
+              </div>
+            </div>
+
+            {/* Notice */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs text-slate-600 mb-5">
+              <p className="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                Sign In Using This Login ID:
+              </p>
+              <p className="text-[11px] leading-relaxed">
+                <strong>No email is required</strong>. Use <span className="font-mono font-bold text-slate-900 bg-slate-200 px-1 rounded">{registeredData.login_id}</span> along with your password whenever you sign in.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleProceed}
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md shadow-yellow-400/20"
+              >
+                <span>Proceed to {registeredData.role === 'DRIVER' ? 'Driver Portal' : 'Fleet Dashboard'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/login?login_id=${registeredData.login_id}`)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+              >
+                Go to Sign In Screen
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* ══ LEFT — solid white form column ══════════════════════════════ */}
       <div className="relative z-10 flex flex-col w-full lg:w-[52%] h-full overflow-y-auto bg-white px-8 py-7 scrollbar-hide"
@@ -339,7 +507,7 @@ export const RegisterPage: React.FC = () => {
         <div className="max-w-[430px] mx-auto w-full flex flex-col min-h-full">
 
           {/* Back */}
-          <motion.div {...up(0.05)} className="mb-4 mt-1">
+          <motion.div {...up(0.05)} className="mb-3 mt-1">
             <Link to="/"
               className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 transition group w-fit">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
@@ -348,15 +516,43 @@ export const RegisterPage: React.FC = () => {
           </motion.div>
 
           {/* Heading */}
-          <motion.div className="mb-5" {...up(0.12)}>
-            <div className="flex items-center gap-3 mb-3">
+          <motion.div className="mb-4" {...up(0.12)}>
+            <div className="flex items-center gap-3 mb-2">
               <img src={jkLogo} alt="JK Tyre" className="h-8 w-auto object-contain" />
               <div className="h-5 w-px bg-slate-200" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fleet Enrolment</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Platform Enrolment</span>
             </div>
-            <h1 className="text-[1.85rem] font-black text-slate-900 tracking-tight">Fleet Registration</h1>
-            <p className="text-xs text-slate-500 mt-1">Enroll your transport company in JK Tyre Fleet Intelligence.</p>
+            <h1 className="text-[1.75rem] font-black text-slate-900 tracking-tight">Create Account</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Register your fleet or driver profile. An official Login ID will be generated.</p>
           </motion.div>
+
+          {/* Account Type Toggle */}
+          <div className="flex bg-slate-100 p-1 rounded-xl mb-4 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => { setRole('FLEET_MANAGER'); setError(null); }}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                role === 'FLEET_MANAGER'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5 text-amber-500" />
+              Fleet Owner
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRole('DRIVER'); setError(null); }}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                role === 'DRIVER'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5 text-blue-600" />
+              Commercial Driver
+            </button>
+          </div>
 
           {/* Error */}
           {error && (
@@ -366,83 +562,228 @@ export const RegisterPage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Form — all fields restored */}
-          <motion.form onSubmit={handleSubmit} className="space-y-3.5 flex-1" {...up(0.2)}>
+          {/* Form */}
+          <motion.form onSubmit={handleSubmit} className="space-y-3 flex-1" {...up(0.2)}>
 
-            {/* Row 1 — Company Name + Registration No */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={lbl}>Company Name *</label>
-                <div className="relative">
-                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input type="text" name="company_name" value={formData.company_name}
-                    onChange={handleChange} placeholder="Apex Trans Logistics" required className={inp} />
+            {role === 'FLEET_MANAGER' ? (
+              /* ── Fleet Owner Fields ── */
+              <>
+                {/* Row 1 — Company Name + Registration No */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Company Name *</label>
+                    <div className="relative">
+                      <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="Apex Trans Logistics"
+                        required
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl}>Registration No.</label>
+                    <input
+                      type="text"
+                      value={registrationNo}
+                      onChange={(e) => setRegistrationNo(e.target.value)}
+                      placeholder="DL-TRANS-2024-889"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                {/* Row 2 — Contact Person + Phone */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Contact Person *</label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        placeholder="Operations Head"
+                        required
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl}>Contact Phone</label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+91 98100 00000"
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 3 — Password + City */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Password *</label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Min 6 characters"
+                        required
+                        minLength={6}
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl}>Operating City</label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="New Delhi"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Depot Address */}
+                <div>
+                  <label className={lbl}>Depot / Yard Address</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <textarea
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      rows={2}
+                      placeholder="Logistics Park / Depot address"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm resize-none"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* ── Driver Fields ── */
+              <>
+                {/* Row 1 — Full Name + License No */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Driver Full Name *</label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={driverName}
+                        onChange={(e) => setDriverName(e.target.value)}
+                        placeholder="Rajesh Kumar"
+                        required
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl}>Driving License No. *</label>
+                    <div className="relative">
+                      <ShieldCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={driverLicenseNo}
+                        onChange={(e) => setDriverLicenseNo(e.target.value)}
+                        placeholder="DL-0420110023456"
+                        required
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2 — Phone + Password */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Mobile Phone</label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        value={driverPhone}
+                        onChange={(e) => setDriverPhone(e.target.value)}
+                        placeholder="+91 98110 00000"
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl}>Password *</label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={driverPassword}
+                        onChange={(e) => setDriverPassword(e.target.value)}
+                        placeholder="Min 6 characters"
+                        required
+                        minLength={6}
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 3 — Assigned Fleet */}
+                <div>
+                  <label className={lbl}>Assigned Transport Fleet</label>
+                  <select
+                    value={assignedFleetId}
+                    onChange={(e) => setAssignedFleetId(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm"
+                  >
+                    <option value="">Select Transport Fleet (Optional)</option>
+                    {fleetsList.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name} {f.city ? `(${f.city})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Generated ID Info Banner */}
+            <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 flex items-start gap-2.5 text-amber-900 text-xs">
+              <KeyRound className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <label className={lbl}>Registration No.</label>
-                <input type="text" name="registration_no" value={formData.registration_no}
-                  onChange={handleChange} placeholder="DL-TRANS-2024-889"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm" />
+                <span className="font-bold">No Email Required: </span>
+                <span className="text-slate-600">
+                  A unique Login ID (e.g.{' '}
+                  <strong className="font-mono text-slate-900 font-bold">
+                    {role === 'FLEET_MANAGER' ? 'JK-FLT-XXXXX' : 'JK-DRV-XXXXX'}
+                  </strong>
+                  ) will be generated. You will use this ID to sign in.
+                </span>
               </div>
             </div>
 
-            {/* Row 2 — Contact Person + Phone */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={lbl}>Full Name *</label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input type="text" name="contact_name" value={formData.contact_name}
-                    onChange={handleChange} placeholder="Full Name" required className={inp} />
-                </div>
-              </div>
-              <div>
-                <label className={lbl}>Contact Number</label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input type="tel" name="phone" value={formData.phone}
-                    onChange={handleChange} placeholder="+91 98100 00000" className={inp} />
-                </div>
-              </div>
-            </div>
-
-            {/* Row 3 — Email + Password */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={lbl}>Official Email *</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input type="email" name="email" value={formData.email}
-                    onChange={handleChange} placeholder="fleet@company.com" required className={inp} />
-                </div>
-              </div>
-              <div>
-                <label className={lbl}>Password *</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input type="password" name="password" value={formData.password}
-                    onChange={handleChange} placeholder="Min 6 characters" required minLength={6} className={inp} />
-                </div>
-              </div>
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className={lbl}>Operating Depot / Address</label>
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <textarea name="address" value={formData.address} onChange={handleChange}
-                  rows={2} placeholder="Logistics Park / Depot address"
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition shadow-sm resize-none" />
-              </div>
-            </div>
-
-            <motion.button type="submit" disabled={loading}
-              whileHover={{ scale: 1.02, boxShadow: '0 8px 28px rgba(234,179,8,0.32)' }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-yellow-400/20">
-              {loading ? 'Registering Fleet…' : 'Register Transport Fleet'}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileHover={{ scale: 1.01, boxShadow: '0 8px 28px rgba(234,179,8,0.32)' }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-yellow-400/20"
+            >
+              {loading
+                ? 'Generating Account…'
+                : role === 'FLEET_MANAGER'
+                ? 'Register Fleet & Generate ID'
+                : 'Register Driver & Generate ID'}
               <ArrowRight className="w-4 h-4" />
             </motion.button>
           </motion.form>
@@ -458,10 +799,10 @@ export const RegisterPage: React.FC = () => {
             ))}
           </motion.div>
 
-          <motion.p className="text-center text-xs text-slate-500 mt-4 pb-2" {...up(0.45)}>
+          <motion.p className="text-center text-xs text-slate-500 mt-3 pb-2" {...up(0.45)}>
             Already registered?{' '}
             <Link to="/login" className="text-yellow-600 hover:text-yellow-500 font-bold transition">
-              Sign In
+              Sign In with Login ID
             </Link>
           </motion.p>
         </div>
@@ -471,7 +812,6 @@ export const RegisterPage: React.FC = () => {
       <div className="hidden lg:block flex-1 h-full relative overflow-hidden"
         style={{ marginLeft: '-80px' }}>
 
-        {/* GIF fills the right column, anchored to the right edge */}
         <motion.img
           src={tyreAnim}
           alt=""
@@ -483,7 +823,6 @@ export const RegisterPage: React.FC = () => {
           transition={{ duration: 0.9, ease: 'easeOut' }}
         />
 
-        {/* Reduced white fade — just enough to blend, not wash out the GIF */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{

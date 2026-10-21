@@ -1,7 +1,17 @@
+import uuid
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
-from app.models import Vehicle, Tyre, TyreFitment, get_default_layout, UserRole
-from app.utils.security import jwt_required, roles_required, enforce_fleet_access
+from app.models import (
+    Vehicle,
+    VehicleType,
+    WheelConfig,
+    Tyre,
+    TyreFitment,
+    get_default_layout,
+    UserRole,
+)
+from app.utils.security import jwt_required, roles_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
 
 vehicles_bp = Blueprint("vehicles", __name__)
@@ -10,14 +20,124 @@ vehicles_bp = Blueprint("vehicles", __name__)
 @vehicles_bp.route("", methods=["GET"])
 @jwt_required
 def list_vehicles():
-    user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     if not fleet_id or not enforce_fleet_access(fleet_id):
         return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
 
     vehicles = Vehicle.query.filter_by(fleet_id=fleet_id).order_by(Vehicle.vehicle_number.asc()).all()
     return jsonify([v.to_dict(include_fitments=True) for v in vehicles]), 200
+
+
+@vehicles_bp.route("", methods=["POST"])
+@jwt_required
+def create_vehicle():
+    """
+    Registers a new commercial multi-axle vehicle in the authorized fleet.
+    Automatically initializes the physical wheel layout based on configuration.
+    """
+    data = request.get_json() or {}
+
+    fleet_id = get_effective_fleet_id(data)
+    if not fleet_id or not enforce_fleet_access(fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
+
+    vehicle_number = (data.get("vehicle_number") or "").strip().upper()
+    if not vehicle_number:
+        return jsonify({"error": "Vehicle registration number is required"}), 400
+
+    existing = Vehicle.query.filter_by(fleet_id=fleet_id, vehicle_number=vehicle_number).first()
+    if existing:
+        return jsonify({"error": f"Vehicle '{vehicle_number}' is already registered in this fleet"}), 400
+
+    wheel_config = (data.get("wheel_config") or WheelConfig.TEN_WHEELER).strip()
+    if wheel_config in ["4-Wheeler", "6-Wheeler", WheelConfig.FOUR_WHEELER, WheelConfig.SIX_WHEELER]:
+        return jsonify({
+            "error": "Commercial fleet vehicles must be heavy multi-axle trucks starting from 10-Wheeler (10-Wheeler, 12-Wheeler, 14-Wheeler, 16-Wheeler)."
+        }), 400
+
+    valid_configs = [
+        WheelConfig.TEN_WHEELER,
+        WheelConfig.TWELVE_WHEELER,
+        WheelConfig.FOURTEEN_WHEELER,
+        WheelConfig.SIXTEEN_WHEELER,
+    ]
+    if wheel_config not in valid_configs:
+        wheel_config = WheelConfig.TEN_WHEELER
+
+    layout_dict = get_default_layout(wheel_config)
+
+    vehicle_type = data.get("vehicle_type") or VehicleType.HEAVY_TRUCK
+    make = (data.get("make") or "Tata Motors").strip()
+    
+    if wheel_config == WheelConfig.SIXTEEN_WHEELER:
+        default_model = "Signa 4825.TK"
+        default_p = 135.0
+    elif wheel_config == WheelConfig.FOURTEEN_WHEELER:
+        default_model = "Signa 4225.T"
+        default_p = 130.0
+    elif wheel_config == WheelConfig.TWELVE_WHEELER:
+        default_model = "Signa 3525.K"
+        default_p = 130.0
+    else:  # 10-Wheeler
+        default_model = "Signa 2823.K"
+        default_p = 110.0
+
+    model = (data.get("model") or default_model).strip()
+
+    try:
+        year = int(data.get("year") or datetime.now().year)
+    except (ValueError, TypeError):
+        year = datetime.now().year
+
+    try:
+        baseline_pressure = float(data.get("baseline_pressure") or default_p)
+    except (ValueError, TypeError):
+        baseline_pressure = default_p
+
+    try:
+        baseline_mileage = float(data.get("baseline_mileage") or 4.5)
+    except (ValueError, TypeError):
+        baseline_mileage = 4.5
+
+    try:
+        current_odometer = float(data.get("current_odometer") or 0.0)
+    except (ValueError, TypeError):
+        current_odometer = 0.0
+
+    location_name = (data.get("current_location_name") or "Depot Registry").strip()
+
+    veh = Vehicle(
+        id=str(uuid.uuid4()),
+        fleet_id=fleet_id,
+        vehicle_number=vehicle_number,
+        vehicle_type=vehicle_type,
+        wheel_config=wheel_config,
+        axle_count=layout_dict.get("axle_count", 3),
+        make=make,
+        model=model,
+        year=year,
+        baseline_pressure=baseline_pressure,
+        baseline_mileage=baseline_mileage,
+        current_odometer=current_odometer,
+        current_location_name=location_name,
+        location_source="MANUAL_REGISTRY",
+        status="ACTIVE",
+    )
+    veh.layout = layout_dict
+
+    db.session.add(veh)
+    db.session.commit()
+
+    record_audit(
+        action="ADD_VEHICLE",
+        resource_type="VEHICLE",
+        resource_id=veh.id,
+        fleet_id=fleet_id,
+        details={"vehicle_number": vehicle_number, "wheel_config": wheel_config, "model": model},
+    )
+
+    return jsonify(veh.to_dict(include_fitments=True)), 201
 
 
 @vehicles_bp.route("/<vehicle_id>", methods=["GET"])

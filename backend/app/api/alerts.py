@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
 from app.models import Alert, AlertStatus
-from app.utils.security import jwt_required, enforce_fleet_access
+from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
 
 alerts_bp = Blueprint("alerts", __name__)
@@ -11,8 +11,7 @@ alerts_bp = Blueprint("alerts", __name__)
 @alerts_bp.route("", methods=["GET"])
 @jwt_required
 def list_alerts():
-    user = g.current_user
-    fleet_id = request.args.get("fleet_id") or user.fleet_id
+    fleet_id = get_effective_fleet_id()
 
     if not fleet_id or not enforce_fleet_access(fleet_id):
         return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403

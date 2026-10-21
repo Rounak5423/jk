@@ -18,8 +18,10 @@ import {
   ArrowRight,
   AlertCircle,
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const TripsPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const vehicleIdParam = searchParams.get('vehicle_id') || '';
 
@@ -29,7 +31,7 @@ export const TripsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
 
   const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles-list'],
+    queryKey: ['fleet-vehicles-list', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;
@@ -37,7 +39,7 @@ export const TripsPage: React.FC = () => {
   });
 
   const { data: trips, isLoading, refetch } = useQuery<Trip[]>({
-    queryKey: ['fleet-trips', vehicleIdParam, startDate, endDate, statusFilter],
+    queryKey: ['fleet-trips', activeFleetId, vehicleIdParam, startDate, endDate, statusFilter],
     queryFn: async () => {
       const params: any = {};
       if (vehicleIdParam) params.vehicle_id = vehicleIdParam;

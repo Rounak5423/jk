@@ -16,14 +16,16 @@ import {
   ChevronRight,
   Sparkles
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const Vehicle3DPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // Fetch all fleet vehicles for quick switcher
   const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles'],
+    queryKey: ['fleet-vehicles', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;

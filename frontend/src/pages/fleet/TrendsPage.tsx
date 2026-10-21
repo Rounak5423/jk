@@ -15,8 +15,10 @@ import {
   Area,
 } from 'recharts';
 import { TrendingUp, Activity, Gauge, Thermometer, Brain, Sparkles, Filter, Info, Truck } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const TrendsPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
   const [days, setDays] = useState(14);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [testKm, setTestKm] = useState('35000');
@@ -24,7 +26,7 @@ export const TrendsPage: React.FC = () => {
   const [prediction, setPrediction] = useState<any>(null);
 
   const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles-trends'],
+    queryKey: ['fleet-vehicles-trends', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/vehicles');
       return res.data;
@@ -32,7 +34,7 @@ export const TrendsPage: React.FC = () => {
   });
 
   const { data: trendsData, isLoading: trendsLoading } = useQuery({
-    queryKey: ['health-trends', days, selectedVehicleId],
+    queryKey: ['health-trends', activeFleetId, days, selectedVehicleId],
     queryFn: async () => {
       const params: any = { days };
       if (selectedVehicleId) params.vehicle_id = selectedVehicleId;

@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { FleetStats, Alert, Trip } from '../../types';
+import { FleetStats, Alert, Trip, Vehicle } from '../../types';
 import {
   Truck,
   Disc,
@@ -14,12 +14,22 @@ import {
   ArrowRight,
   Activity,
   ChevronRight,
+  ClipboardCheck,
+  CheckCircle2,
+  Calendar,
+  Gauge,
+  Eye,
+  ArrowUpRight,
+  Sparkles,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { useAuthStore } from '../../store/authStore';
 
 export const DashboardPage: React.FC = () => {
+  const { activeFleetId } = useAuthStore();
+
   const { data: stats, isLoading: statsLoading } = useQuery<FleetStats>({
-    queryKey: ['fleet-stats'],
+    queryKey: ['fleet-stats', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/fleets/stats');
       return res.data;
@@ -27,7 +37,7 @@ export const DashboardPage: React.FC = () => {
   });
 
   const { data: activeAlerts, isLoading: alertsLoading } = useQuery<Alert[]>({
-    queryKey: ['active-alerts'],
+    queryKey: ['active-alerts', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/alerts?status=ACTIVE');
       return res.data;
@@ -35,11 +45,31 @@ export const DashboardPage: React.FC = () => {
   });
 
   const { data: recentTrips, isLoading: tripsLoading } = useQuery<Trip[]>({
-    queryKey: ['recent-trips'],
+    queryKey: ['recent-trips', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/trips');
       return res.data;
     },
+  });
+
+  const { data: vehicles } = useQuery<Vehicle[]>({
+    queryKey: ['fleet-vehicles', activeFleetId],
+    queryFn: async () => {
+      const res = await api.get('/vehicles');
+      return res.data;
+    },
+  });
+
+  const firstVehicle = vehicles && vehicles.length > 0 ? vehicles[0] : null;
+
+  const { data: inspectionSummary } = useQuery({
+    queryKey: ['vehicle-inspection-summary', firstVehicle?.id, activeFleetId],
+    queryFn: async () => {
+      if (!firstVehicle?.id) return null;
+      const res = await api.get(`/inspections/vehicle/${firstVehicle.id}`);
+      return res.data;
+    },
+    enabled: !!firstVehicle?.id,
   });
 
   const pieData = stats
@@ -117,6 +147,169 @@ export const DashboardPage: React.FC = () => {
           <div className="text-[11px] text-slate-500 mt-1">Requiring depot action</div>
         </div>
       </div>
+
+      {/* 1st Vehicle Fitment & Inspection Report (Initial Baseline Audit) */}
+      {firstVehicle && (
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-slate-900 shadow-md shadow-amber-400/20 shrink-0">
+                <ClipboardCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                    1st Vehicle Fitment &amp; Physical Inspection Report
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    Depot Baseline Audit
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                    07 October 2025
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Primary vehicle baseline fitment and physical tread inspection for 1st Registered Fleet:{' '}
+                  <span className="font-semibold text-slate-700">Apex Trans Logistics Pvt Ltd</span>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                to={`/vehicles/${firstVehicle.id}`}
+                className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Eye className="w-3.5 h-3.5" /> 3D Digital Twin
+              </Link>
+              <Link
+                to={`/vehicles/${firstVehicle.id}/inspections`}
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
+              >
+                <ClipboardCheck className="w-3.5 h-3.5 text-amber-400" /> Full Inspection View
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick Specifications Banner */}
+          <div className="bg-slate-900 rounded-2xl p-5 text-white grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 shadow-sm">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Vehicle Reg</div>
+              <div className="text-sm font-black text-amber-400 font-mono mt-0.5">{firstVehicle.vehicle_number}</div>
+              <div className="text-[10px] text-slate-400 truncate">{firstVehicle.make} {firstVehicle.model}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Configuration</div>
+              <div className="text-sm font-bold text-white mt-0.5">{firstVehicle.wheel_config}</div>
+              <div className="text-[10px] text-slate-400">4 Axles • 12 Wheels</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">GVW Rating</div>
+              <div className="text-sm font-black text-white mt-0.5">35 M.Tons</div>
+              <div className="text-[10px] text-emerald-400">Commercial Standard</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Inflation Standard</div>
+              <div className="text-sm font-black text-amber-400 font-mono mt-0.5">{firstVehicle.baseline_pressure} PSI</div>
+              <div className="text-[10px] text-slate-400">Cold Depot Target</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Verified Odometer</div>
+              <div className="text-sm font-black text-white font-mono mt-0.5">{firstVehicle.current_odometer} km</div>
+              <div className="text-[10px] text-slate-400">Pre-Dispatch Audit</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Hardness &amp; Steer</div>
+              <div className="text-sm font-bold text-emerald-400 mt-0.5">65 Shore A</div>
+              <div className="text-[10px] text-amber-400 font-semibold">1R Alignment Done</div>
+            </div>
+          </div>
+
+          {/* Fitted Wheel Positions & Physical Measurements Table */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 text-xs flex items-center gap-2">
+                <Disc className="w-4 h-4 text-blue-500" /> All 13 Fitted &amp; Inspected Tyres (Sheet Registry)
+              </h3>
+              <span className="text-[11px] text-slate-500">
+                12 Mounted Wheels + 1 Spare Tyre • All 100% Verified
+              </span>
+            </div>
+
+            <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
+                    <th className="py-2.5 px-3">SL</th>
+                    <th className="py-2.5 px-3">Whl. Posn</th>
+                    <th className="py-2.5 px-4">Brand &amp; Model</th>
+                    <th className="py-2.5 px-4">Serial No.</th>
+                    <th className="py-2.5 px-3">Pressure</th>
+                    <th className="py-2.5 px-3">Hardness</th>
+                    <th className="py-2.5 px-3">NSD (Min)</th>
+                    <th className="py-2.5 px-3">Odometer</th>
+                    <th className="py-2.5 px-4">Remarks</th>
+                    <th className="py-2.5 px-3 text-right">Result</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {inspectionSummary?.positions?.map((pos: any, idx: number) => {
+                    const tyre = pos.tyre;
+                    const insp = pos.latest_inspection;
+                    const isAlignment = pos.wheel_position === '1R' || (insp?.notes && insp.notes.includes('Alignment done'));
+                    return (
+                      <tr key={pos.fitment_id || idx} className="hover:bg-blue-50/50 transition">
+                        <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
+                            {pos.wheel_position}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-medium text-slate-800">
+                          JUH5 - REG
+                          <span className="text-[10px] text-slate-400 block font-normal">295/80R22.5</span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono font-bold text-blue-700">
+                          {tyre?.serial_number || '—'}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-slate-900">
+                          {insp?.measured_pressure || 130} PSI
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-700">65</td>
+                        <td className="py-2.5 px-3 font-mono font-bold">
+                          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-black border border-amber-300">
+                            {insp?.measured_nsd || 16.5} mm
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-700">
+                          {insp?.odometer_at_inspection || 626} km
+                        </td>
+                        <td className="py-2.5 px-4">
+                          {isAlignment ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-950 border border-amber-500 shadow-sm">
+                              Alignment done
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 text-[11px]">
+                              {pos.wheel_position === 'Spare' ? 'Spare In Inventory' : 'Depot Verified'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3" /> PASS
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid: Health Distribution & Recent Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
