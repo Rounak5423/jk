@@ -22,7 +22,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Uploads
-    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", str(UPLOAD_DIR))
+    _upload_env = os.getenv("UPLOAD_FOLDER")
+    UPLOAD_FOLDER = str((BASE_DIR / _upload_env).resolve()) if _upload_env else str(UPLOAD_DIR)
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(16 * 1024 * 1024)))  # 16 MB max
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 

@@ -31,10 +31,15 @@ def jwt_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
+        token = None
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        elif request.args.get("token"):
+            token = request.args.get("token")
+
+        if not token:
             return jsonify({"error": "Missing or invalid Authorization header", "code": "UNAUTHORIZED"}), 401
 
-        token = auth_header.split(" ")[1]
         try:
             payload = decode_token(token)
             # Lazily load user

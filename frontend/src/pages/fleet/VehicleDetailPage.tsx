@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   X,
   ChevronRight,
+  ClipboardCheck,
+  Camera,
 } from 'lucide-react';
 
 export const VehicleDetailPage: React.FC = () => {
@@ -81,8 +83,14 @@ export const VehicleDetailPage: React.FC = () => {
           </p>
         </div>
 
-        {/* 3D View Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* 3D View & Inspection Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to={`/vehicles/${vehicle.id}/inspections`}
+            className="flex items-center gap-2 px-4 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 rounded-xl text-xs font-bold shadow-md shadow-yellow-400/20 transition self-start sm:self-auto cursor-pointer"
+          >
+            <ClipboardCheck className="w-4 h-4" /> Physical Inspection &amp; Photos
+          </Link>
           <Link
             to={`/vehicles/${vehicle.id}/3d`}
             className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition self-start sm:self-auto"
@@ -91,7 +99,7 @@ export const VehicleDetailPage: React.FC = () => {
           </Link>
           <button
             onClick={() => setShow3DModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/30 transition self-start sm:self-auto"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/30 transition self-start sm:self-auto cursor-pointer"
           >
             <Eye className="w-4 h-4" /> Open 3D Inspector
           </button>
@@ -168,12 +176,21 @@ export const VehicleDetailPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3 text-right">
-                    <button
-                      onClick={() => setShow3DModal(true)}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
-                    >
-                      Inspect in 3D <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="inline-flex items-center gap-2 justify-end">
+                      <Link
+                        to={`/vehicles/${vehicle.id}/inspections`}
+                        className="text-xs text-amber-700 hover:text-amber-800 font-bold bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition shadow-sm"
+                        title="Record physical measurement and tyre photo"
+                      >
+                        <Camera className="w-3 h-3 text-amber-600" /> Inspect
+                      </Link>
+                      <button
+                        onClick={() => setShow3DModal(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+                      >
+                        3D <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -6,7 +6,6 @@ import {
   Truck,
   Disc,
   Route,
-  ClipboardCheck,
   AlertTriangle,
   TrendingUp,
   BarChart3,
@@ -32,7 +31,6 @@ export const Sidebar: React.FC = () => {
     { to: '/fitment', label: 'Tyre Fitment', icon: Wrench },
     { to: '/tyres', label: 'Tyres Lifecycle', icon: Disc },
     { to: '/trips', label: 'Trips & Scoring', icon: Route },
-    { to: '/inspections', label: 'Inspections', icon: ClipboardCheck },
     { to: '/alerts', label: 'Alerts', icon: AlertTriangle },
     { to: '/trends', label: 'Trend Analysis', icon: TrendingUp },
     { to: '/comparison', label: 'Comparison', icon: BarChart3 },
@@ -51,7 +49,6 @@ export const Sidebar: React.FC = () => {
 
   const driverLinks = [
     { to: '/driver', label: 'Driver Dashboard', icon: Smartphone },
-    { to: '/inspections', label: 'Submit Inspection', icon: ClipboardCheck },
     { to: '/alerts', label: 'Tyre Alerts', icon: AlertTriangle },
   ];
 

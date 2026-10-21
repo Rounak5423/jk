@@ -16,6 +16,8 @@ import {
   Gauge,
   Calendar,
   X,
+  Eye,
+  ExternalLink,
 } from 'lucide-react';
 
 interface PositionData {
@@ -70,6 +72,17 @@ export const VehicleInspectionPage: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Photo state
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  // Photo viewer lightbox modal
+  const [viewingPhoto, setViewingPhoto] = useState<{
+    url: string;
+    title: string;
+    subtitle?: string;
+  } | null>(null);
+
   // New inspection fields
   const [inspectionResult, setInspectionResult] = useState<'PASS' | 'WARNING' | 'FAIL' | 'FURTHER_ASSESSMENT'>('PASS');
   const [temperature, setTemperature] = useState('');
@@ -89,8 +102,10 @@ export const VehicleInspectionPage: React.FC = () => {
   });
 
   const createInspectionMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/inspections', payload);
+    mutationFn: async (formData: FormData) => {
+      const res = await api.post('/inspections', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return res.data;
     },
     onSuccess: () => {
@@ -118,6 +133,26 @@ export const VehicleInspectionPage: React.FC = () => {
     setRetreadDate('');
     setRetreadProvider('');
     setRetreadNsd('');
+    setPhotoFile(null);
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    setPhotoPreview(null);
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const f = e.target.files[0];
+      setPhotoFile(f);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(URL.createObjectURL(f));
+    }
+  };
+
+  const removeSelectedPhoto = () => {
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
   };
 
   const openInspectionModal = (tyreId?: string) => {
@@ -143,22 +178,30 @@ export const VehicleInspectionPage: React.FC = () => {
       return;
     }
 
-    createInspectionMutation.mutate({
-      vehicle_id: id,
-      tyre_id: selectedTyreId,
-      measured_nsd: parseFloat(measuredNsd),
-      measured_pressure: measuredPressure ? parseFloat(measuredPressure) : null,
-      odometer: parseFloat(odometer),
-      visual_condition: visualCondition,
-      notes: notes.trim(),
-      inspection_result: inspectionResult,
-      temperature_at_inspection: temperature ? parseFloat(temperature) : null,
-      lifecycle_type_change: lifecycleDecision || null,
-      lifecycle_reason: lifecycleReason || null,
-      retread_date: retreadDate || null,
-      retread_provider: retreadProvider || null,
-      measured_nsd_retread: retreadNsd ? parseFloat(retreadNsd) : null,
-    });
+    const formData = new FormData();
+    formData.append('vehicle_id', id!);
+    formData.append('tyre_id', selectedTyreId);
+    formData.append('measured_nsd', measuredNsd);
+    if (measuredPressure) formData.append('measured_pressure', measuredPressure);
+    formData.append('odometer', odometer);
+    formData.append('visual_condition', visualCondition);
+    formData.append('notes', notes.trim());
+    formData.append('inspection_result', inspectionResult);
+    if (temperature) formData.append('temperature_at_inspection', temperature);
+    if (lifecycleDecision) {
+      formData.append('lifecycle_type_change', lifecycleDecision);
+      formData.append('lifecycle_reason', lifecycleReason || '');
+      if (lifecycleDecision === 'RETREAD') {
+        if (retreadDate) formData.append('retread_date', retreadDate);
+        if (retreadProvider) formData.append('retread_provider', retreadProvider);
+        if (retreadNsd) formData.append('measured_nsd', retreadNsd);
+      }
+    }
+    if (photoFile) {
+      formData.append('photo', photoFile);
+    }
+
+    createInspectionMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -189,6 +232,7 @@ export const VehicleInspectionPage: React.FC = () => {
   }
 
   const { vehicle, positions, recent_inspections } = data;
+  const token = localStorage.getItem('jk_token') || '';
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -208,7 +252,7 @@ export const VehicleInspectionPage: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-secondary mt-1 ml-8">
-            Physical tread-depth (NSD) inspection, verified odometer checks, and visual condition audits.
+            Physical tread-depth (NSD) inspection, verified odometer checks, visual condition audits, and tyre defect photos.
           </p>
         </div>
 
@@ -221,7 +265,7 @@ export const VehicleInspectionPage: React.FC = () => {
           </Link>
           <button
             onClick={() => openInspectionModal()}
-            className="px-4 py-2 bg-fleet hover:bg-yellow-400 text-graphite font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition"
+            className="px-4 py-2 bg-fleet hover:bg-yellow-400 text-graphite font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Record New Inspection
           </button>
@@ -263,7 +307,7 @@ export const VehicleInspectionPage: React.FC = () => {
           <div>
             <h2 className="text-base font-bold text-graphite">Wheel Positions &amp; Physical Measurements</h2>
             <p className="text-xs text-secondary">
-              Actual mounted tyre readings. No simulated or fabricated measurements for uninspected wheels.
+              Actual mounted tyre readings with photographic defect verification. No simulated or fabricated measurements.
             </p>
           </div>
         </div>
@@ -331,9 +375,10 @@ export const VehicleInspectionPage: React.FC = () => {
                           </span>
                         </div>
                       )}
-                      {/* Latest Inspection Note */}
+
+                      {/* Latest Inspection Note & Photo Button */}
                       {insp && (
-                        <div className="mt-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] space-y-1">
+                        <div className="mt-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] space-y-1.5">
                           <div className="flex justify-between text-secondary text-[10px]">
                             <span>Last Inspected:</span>
                             <span>{new Date(insp.inspected_at).toLocaleDateString()}</span>
@@ -343,6 +388,25 @@ export const VehicleInspectionPage: React.FC = () => {
                           </div>
                           {insp.notes && (
                             <p className="text-[10px] text-secondary italic line-clamp-2">"{insp.notes}"</p>
+                          )}
+
+                          {/* Photo preview button if attached */}
+                          {insp.photo_url && (
+                            <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setViewingPhoto({
+                                    url: `/api/v1/inspections/photo/${insp.photo_url}?token=${token}`,
+                                    title: `Wheel ${pos.wheel_position} — Tyre ${tyre.serial_number}`,
+                                    subtitle: `Measured NSD: ${insp.measured_nsd} mm • Inspected: ${new Date(insp.inspected_at).toLocaleDateString()}`,
+                                  })
+                                }
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold transition shadow-sm cursor-pointer"
+                              >
+                                <Camera className="w-3 h-3 text-blue-600" /> View Tyre Photo
+                              </button>
+                            </div>
                           )}
                         </div>
                       )}
@@ -356,7 +420,7 @@ export const VehicleInspectionPage: React.FC = () => {
                 {tyre && (
                   <button
                     onClick={() => openInspectionModal(tyre.id)}
-                    className="mt-3 w-full py-1.5 bg-slate-100 hover:bg-fleet hover:text-graphite text-secondary font-bold rounded-lg text-xs transition"
+                    className="mt-3 w-full py-1.5 bg-slate-100 hover:bg-fleet hover:text-graphite text-secondary font-bold rounded-lg text-xs transition cursor-pointer"
                   >
                     Inspect Wheel {pos.wheel_position}
                   </button>
@@ -371,7 +435,7 @@ export const VehicleInspectionPage: React.FC = () => {
       <div className="bg-white rounded-2xl border border-bordergray overflow-hidden shadow-sm">
         <div className="p-6 pb-4 border-b border-bordergray">
           <h2 className="text-base font-bold text-graphite">Recent Inspection Records for {vehicle.vehicle_number}</h2>
-          <p className="text-xs text-secondary mt-0.5">Physical depot audits, technician records, and tread observations.</p>
+          <p className="text-xs text-secondary mt-0.5">Physical depot audits, technician records, tread observations, and photo evidence.</p>
         </div>
 
         <div className="overflow-x-auto">
@@ -385,12 +449,13 @@ export const VehicleInspectionPage: React.FC = () => {
                 <th className="py-3 px-4">Odometer</th>
                 <th className="py-3 px-4">Condition</th>
                 <th className="py-3 px-6">Notes</th>
+                <th className="py-3 px-4 text-right">Evidence Photo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-bordergray text-graphite">
               {recent_inspections.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-secondary">
+                  <td colSpan={8} className="py-8 text-center text-secondary">
                     No physical inspection logs recorded yet for this vehicle.
                   </td>
                 </tr>
@@ -418,6 +483,25 @@ export const VehicleInspectionPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3.5 px-6 text-secondary text-[11px] max-w-xs truncate">{ins.notes || '—'}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      {ins.photo_url ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingPhoto({
+                              url: `/api/v1/inspections/photo/${ins.photo_url}?token=${token}`,
+                              title: `Inspection Evidence — Tyre ${ins.tyre_serial || ''}`,
+                              subtitle: `NSD: ${ins.measured_nsd} mm • ${ins.visual_condition} • ${new Date(ins.inspected_at).toLocaleString()}`,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer"
+                        >
+                          <Camera className="w-3.5 h-3.5" /> View Photo
+                        </button>
+                      ) : (
+                        <span className="text-secondary text-[11px] font-mono">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -428,8 +512,8 @@ export const VehicleInspectionPage: React.FC = () => {
 
       {/* Inspection Submission Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-bordergray shadow-2xl max-w-lg w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-bordergray shadow-2xl max-w-lg w-full p-6 space-y-4 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-bordergray">
               <div className="flex items-center gap-2">
                 <ClipboardCheck className="w-5 h-5 text-fleet" />
@@ -437,7 +521,7 @@ export const VehicleInspectionPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1.5 text-secondary hover:text-graphite rounded-lg"
+                className="p-1.5 text-secondary hover:text-graphite rounded-lg cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -528,6 +612,60 @@ export const VehicleInspectionPage: React.FC = () => {
                   <option value="BULGE">Carcass Bulge / Separation</option>
                   <option value="PUNCTURE">Puncture / Foreign Object</option>
                 </select>
+              </div>
+
+              {/* Tyre Photograph Evidence Section */}
+              <div className="border border-bordergray rounded-xl p-3.5 bg-slate-50/70 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-graphite flex items-center gap-1.5">
+                    <Camera className="w-4 h-4 text-blue-600" /> Tyre Photograph (Evidence / Defects)
+                  </label>
+                  <span className="text-[10px] text-secondary font-medium">JPEG, PNG, WebP (Max 16MB)</span>
+                </div>
+
+                {!photoPreview ? (
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-amber-400 bg-white rounded-xl p-4 cursor-pointer transition group">
+                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 group-hover:bg-amber-100 group-hover:text-amber-800 flex items-center justify-center mb-1.5 transition">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-graphite group-hover:text-amber-700">
+                      Click to upload or take tyre photo
+                    </span>
+                    <span className="text-[10px] text-secondary mt-0.5">
+                      Attach clear visual proof of tread depth, wear pattern, or casing defect
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-start gap-3 p-2.5 bg-white rounded-xl border border-bordergray">
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-bordergray shrink-0 bg-slate-900">
+                      <img src={photoPreview} alt="Tyre Preview" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-between h-20 py-0.5">
+                      <div>
+                        <div className="text-xs font-bold text-graphite truncate">{photoFile?.name}</div>
+                        <div className="text-[10px] text-secondary mt-0.5">
+                          {photoFile ? `${(photoFile.size / 1024).toFixed(1)} KB` : 'Image selected'}
+                        </div>
+                        <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full mt-1">
+                          <CheckCircle2 className="w-3 h-3" /> Attached for upload
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeSelectedPhoto}
+                        className="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-semibold self-start cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Inspection Result */}
@@ -657,19 +795,64 @@ export const VehicleInspectionPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-bordergray text-secondary hover:text-graphite rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 border border-bordergray text-secondary hover:text-graphite rounded-xl text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createInspectionMutation.isPending}
-                  className="px-4 py-2 bg-fleet hover:bg-yellow-400 text-graphite font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50"
+                  className="px-4 py-2 bg-fleet hover:bg-yellow-400 text-graphite font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {createInspectionMutation.isPending ? 'Saving...' : 'Submit Inspection'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Lightbox Preview Modal */}
+      {viewingPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden text-white animate-in fade-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-800">
+              <div>
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-amber-400" />
+                  {viewingPhoto.title}
+                </h3>
+                {viewingPhoto.subtitle && (
+                  <p className="text-xs text-slate-400 mt-0.5">{viewingPhoto.subtitle}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setViewingPhoto(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 bg-slate-950 flex items-center justify-center max-h-[70vh] overflow-hidden">
+              <img
+                src={viewingPhoto.url}
+                alt={viewingPhoto.title}
+                className="max-h-[65vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+              />
+            </div>
+
+            <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Verified Physical Depot Inspection Evidence</span>
+              <a
+                href={viewingPhoto.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 hover:underline font-semibold flex items-center gap-1"
+              >
+                Open Original Image <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           </div>
         </div>
       )}
