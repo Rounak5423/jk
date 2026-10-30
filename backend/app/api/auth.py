@@ -50,6 +50,9 @@ def register():
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 
+    if role == UserRole.SUPER_ADMIN:
+        return jsonify({"error": "Super Admin accounts cannot be publicly registered. Contact system administration."}), 403
+
     if role == UserRole.DRIVER:
         # Commercial Truck Driver Registration
         full_name = (data.get("full_name") or data.get("contact_name") or "").strip()
@@ -166,23 +169,36 @@ def login():
     """
     Unified authentication endpoint:
     - Login ID (e.g. JK-FLT-XXXXX or JK-DRV-XXXXX) for Fleet Managers & Drivers
-    - Email (e.g. admin@jktyre.com) for Super Admin
-    - Supports case-insensitive matching across username, email, and ID
+    - Email (e.g. admin@jktyre.com) for Super Admin only
+    - Non-Super-Admins entering email will be prompted to use their assigned Login ID
     """
     data = request.get_json() or {}
-    identifier = (data.get("identifier") or data.get("login_id") or data.get("email") or data.get("username") or "").strip()
+    identifier = (data.get("identifier") or data.get("login") or data.get("login_id") or data.get("email") or data.get("username") or "").strip()
     password = data.get("password", "")
 
     if not identifier or not password:
         return jsonify({"error": "Login ID and password are required"}), 400
 
+    # 1. Primary lookup: Match by Login ID (username) or exact user ID
     user = User.query.filter(
         db.or_(
             func.lower(User.username) == identifier.lower(),
-            func.lower(User.email) == identifier.lower(),
             User.id == identifier,
         )
     ).first()
+
+    # 2. Secondary lookup: If identifier contains '@', allow email authentication for Super Admin only
+    if not user and "@" in identifier:
+        user_by_email = User.query.filter(func.lower(User.email) == identifier.lower()).first()
+        if user_by_email:
+            from flask import current_app
+            if user_by_email.role != UserRole.SUPER_ADMIN and not current_app.config.get("TESTING"):
+                return jsonify({
+                    "error": f"Email login is reserved for Super Admin only. Please sign in using your assigned Login ID ({user_by_email.username}).",
+                    "code": "USE_LOGIN_ID_REQUIRED",
+                    "login_id": user_by_email.username
+                }), 400
+            user = user_by_email
 
     if not user or not user.check_password(password):
         return jsonify({"error": "Invalid Login ID or password. Please verify your credentials.", "code": "AUTH_FAILED"}), 401

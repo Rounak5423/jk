@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
-from app.models import User, Vehicle, Trip, TripStatus, Alert
+from app.models import User, Vehicle, Trip, TripStatus, Alert, AlertStatus
 from app.services.trip_score_engine import TripScoreEngine
 from app.utils.security import roles_required, jwt_required
 from app.utils.audit import record_audit

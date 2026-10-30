@@ -17,7 +17,11 @@ import {
   ChevronRight,
   ClipboardCheck,
   Camera,
+  Wrench,
+  Plus,
 } from 'lucide-react';
+
+import { computeVehicleTHI } from '../../utils/thiUtils';
 
 export const VehicleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,11 +39,14 @@ export const VehicleDetailPage: React.FC = () => {
   const { data: twinData, isLoading: twinLoading } = useQuery<Vehicle3DTwin>({
     queryKey: ['vehicle-3d-twin', id],
     queryFn: async () => {
+      if (!active3DVehicleIdSafe) return null;
       const res = await api.get(`/vehicles/${id}/3d-twin`);
       return res.data;
     },
     enabled: show3DModal && !!id,
   });
+
+  const active3DVehicleIdSafe = id;
 
   if (isLoading) {
     return (
@@ -61,6 +68,8 @@ export const VehicleDetailPage: React.FC = () => {
     );
   }
 
+  const thiData = computeVehicleTHI(vehicle);
+
   return (
     <div className="space-y-6">
       {/* Back button & Title */}
@@ -68,17 +77,17 @@ export const VehicleDetailPage: React.FC = () => {
         <div>
           <Link
             to="/vehicles"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition mb-2"
+            className="inline-flex items-center gap-1.5 text-xs text-[#5B6068] hover:text-slate-900 transition mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Fleet Registry
           </Link>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">{vehicle.vehicle_number}</h1>
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300">
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
               {vehicle.wheel_config}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5B6068] mt-0.5">
             {vehicle.make} {vehicle.model} • Manufacturing Year: {vehicle.year}
           </p>
         </div>
@@ -87,113 +96,164 @@ export const VehicleDetailPage: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             to={`/vehicles/${vehicle.id}/inspections`}
-            className="flex items-center gap-2 px-4 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 rounded-xl text-xs font-bold shadow-md shadow-yellow-400/20 transition self-start sm:self-auto cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black rounded-xl text-xs font-bold shadow-sm transition self-start sm:self-auto cursor-pointer"
           >
             <ClipboardCheck className="w-4 h-4" /> Physical Inspection &amp; Photos
           </Link>
           <Link
             to={`/vehicles/${vehicle.id}/3d`}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold transition self-start sm:self-auto"
           >
-            <Eye className="w-4 h-4 text-amber-400" /> Dedicated 3D View
+            <Eye className="w-4 h-4 text-[#5B6068]" /> Dedicated 3D View
           </Link>
           <button
             onClick={() => setShow3DModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/30 transition self-start sm:self-auto cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#14161A] hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition self-start sm:self-auto cursor-pointer"
           >
-            <Eye className="w-4 h-4" /> Open 3D Inspector
+            <Eye className="w-4 h-4 text-slate-300" /> Open 3D Inspector
           </button>
         </div>
       </div>
 
-      {/* Vehicle Specs Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Vehicle Specs Grid including Priority-Weighted Vehicle THI */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Vehicle THI Card */}
         <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-500 block mb-1">Current Odometer</span>
+          <span className="text-xs text-[#5B6068] block mb-1">Vehicle THI</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold font-mono text-slate-900">{thiData.thi.toFixed(1)}</span>
+            <span
+              className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${
+                thiData.thi_status === 'HEALTHY'
+                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                  : thiData.thi_status === 'WARNING'
+                  ? 'bg-[#FFF4EB] text-[#E8770E] border-[#FCD5B5]'
+                  : 'bg-red-100 text-red-700 border-red-200'
+              }`}
+            >
+              {thiData.thi_status}
+            </span>
+          </div>
+          <span className="text-[10px] text-[#5B6068] block mt-0.5">
+            {thiData.critical_tyres_count > 0
+              ? `⚠️ ${thiData.critical_tyres_count} critical tyre (4x weight)`
+              : thiData.warning_tyres_count > 0
+              ? `⚡ ${thiData.warning_tyres_count} warning tyre`
+              : 'All tyres optimal'}
+          </span>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-[#5B6068] block mb-1">Current Odometer</span>
           <span className="text-xl font-bold text-slate-900 font-mono">{vehicle.current_odometer.toLocaleString()} km</span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">Monotonically verified</span>
+          <span className="text-[10px] text-[#5B6068] block mt-0.5">Monotonically verified</span>
         </div>
 
         <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-500 block mb-1">Recommended Pressure</span>
-          <span className="text-xl font-bold text-blue-600">{vehicle.baseline_pressure} psi</span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">Vehicle baseline</span>
+          <span className="text-xs text-[#5B6068] block mb-1">Recommended Pressure</span>
+          <span className="text-xl font-bold text-slate-900">{vehicle.baseline_pressure} psi</span>
+          <span className="text-[10px] text-[#5B6068] block mt-0.5">Vehicle baseline</span>
         </div>
 
         <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-500 block mb-1">Baseline Mileage</span>
+          <span className="text-xs text-[#5B6068] block mb-1">Baseline Mileage</span>
           <span className="text-xl font-bold text-slate-900">{vehicle.baseline_mileage} km/L</span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">Commercial rating</span>
+          <span className="text-[10px] text-[#5B6068] block mt-0.5">Commercial rating</span>
         </div>
 
         <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-500 block mb-1">Axle Setup</span>
+          <span className="text-xs text-[#5B6068] block mb-1">Axle Setup</span>
           <span className="text-xl font-bold text-slate-900">{vehicle.axle_count} Axles</span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
+          <span className="text-[10px] text-[#5B6068] block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
         </div>
       </div>
 
       {/* Fitted Tyres Conventional Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden p-6 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Disc className="w-4 h-4 text-emerald-500" /> Active Fitted Tyres by Wheel Position
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Disc className="w-4 h-4 text-[#5B6068]" /> Active Fitted Tyres by Wheel Position
+          </h3>
+          <Link
+            to={`/fitment?vehicle_id=${vehicle.id}`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-sm transition self-start sm:self-auto cursor-pointer"
+          >
+            <Wrench className="w-3.5 h-3.5" /> + Fit / Add Tyres
+          </Link>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-semibold">
-                <th className="pb-3">Position Code</th>
-                <th className="pb-3">Permanent Serial</th>
-                <th className="pb-3">Tyre Model</th>
-                <th className="pb-3">THI Score</th>
-                <th className="pb-3">Tread NSD</th>
-                <th className="pb-3">Health Status</th>
-                <th className="pb-3 text-right">Action</th>
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+                <th className="py-3 px-3">Position Code</th>
+                <th className="py-3 px-3">Permanent Serial</th>
+                <th className="py-3 px-3">Tyre Model</th>
+                <th className="py-3 px-3">THI Score</th>
+                <th className="py-3 px-3">Tread NSD</th>
+                <th className="py-3 px-3">Health Status</th>
+                <th className="py-3 px-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700">
-              {vehicle.fitments?.map((f) => (
-                <tr key={f.id} className="hover:bg-blue-50 transition">
-                  <td className="py-3 font-mono font-bold text-slate-900">{f.wheel_position}</td>
-                  <td className="py-3 font-mono text-slate-700">{f.tyre?.serial_number || 'N/A'}</td>
-                  <td className="py-3">{f.tyre?.model || 'JK Tyre'}</td>
-                  <td className="py-3 font-bold text-slate-900">
+              {(!vehicle.fitments || vehicle.fitments.length === 0) ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-[#5B6068]">
+                    <div className="flex flex-col items-center gap-2">
+                      <Disc className="w-8 h-8 text-slate-300" />
+                      <span>No tyres currently mounted on this vehicle.</span>
+                      <Link
+                        to={`/fitment?vehicle_id=${vehicle.id}`}
+                        className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-sm transition"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add &amp; Fit Tyres Now
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                vehicle.fitments?.map((f) => (
+                <tr key={f.id} className="hover:bg-slate-50 transition">
+                  <td className="py-3 px-3 font-mono font-bold text-slate-900">{f.wheel_position}</td>
+                  <td className="py-3 px-3 font-mono text-slate-700">{f.tyre?.serial_number || 'N/A'}</td>
+                  <td className="py-3 px-3">{f.tyre?.model || 'JK Tyre'}</td>
+                  <td className="py-3 px-3 font-bold text-slate-900">
                     {f.tyre?.current_thi !== undefined ? `${f.tyre.current_thi.toFixed(1)} / 100` : 'N/A'}
                   </td>
-                  <td className="py-3">{f.tyre?.current_nsd ? `${f.tyre.current_nsd.toFixed(1)} mm` : 'N/A'}</td>
-                  <td className="py-3">
+                  <td className="py-3 px-3">{f.tyre?.current_nsd ? `${f.tyre.current_nsd.toFixed(1)} mm` : 'N/A'}</td>
+                  <td className="py-3 px-3">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                         f.tyre?.thi_status === 'HEALTHY'
                           ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                           : f.tyre?.thi_status === 'WARNING'
-                          ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                          ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
                           : 'bg-red-100 text-red-700 border border-red-200'
                       }`}
                     >
                       {f.tyre?.thi_status || 'UNKNOWN'}
                     </span>
                   </td>
-                  <td className="py-3 text-right">
+                  <td className="py-3 px-3 text-right">
                     <div className="inline-flex items-center gap-2 justify-end">
                       <Link
                         to={`/vehicles/${vehicle.id}/inspections`}
-                        className="text-xs text-amber-700 hover:text-amber-800 font-bold bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition shadow-sm"
+                        className="text-xs text-slate-700 hover:text-slate-900 font-medium bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition"
                         title="Record physical measurement and tyre photo"
                       >
-                        <Camera className="w-3 h-3 text-amber-600" /> Inspect
+                        <Camera className="w-3 h-3 text-[#5B6068]" /> Inspect
                       </Link>
                       <button
                         onClick={() => setShow3DModal(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+                        className="text-xs text-slate-600 hover:text-slate-900 font-medium inline-flex items-center gap-1"
                       >
                         3D <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -202,20 +262,20 @@ export const VehicleDetailPage: React.FC = () => {
       {/* 3D Digital Twin Modal */}
       {show3DModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-          <div className="w-full max-w-6xl bg-white border border-blue-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
-            <div className="px-6 py-4 border-b border-blue-100 flex items-center justify-between bg-blue-50">
+          <div className="w-full max-w-6xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center font-black text-slate-900 text-sm shadow">
+                <div className="w-8 h-8 rounded-xl bg-[#14161A] flex items-center justify-center font-bold text-white text-sm shadow">
                   3D
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     Digital Twin Inspection • {vehicle.vehicle_number}
-                    <span className="text-xs font-semibold text-blue-700 font-mono bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">
+                    <span className="text-xs font-semibold text-slate-700 font-mono bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                       {vehicle.wheel_config}
                     </span>
                   </h2>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-[#5B6068]">
                     Configuration-driven physical axle arrangement & live tyre health telemetry
                   </p>
                 </div>
@@ -223,7 +283,7 @@ export const VehicleDetailPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Link
                   to={`/vehicles/${vehicle.id}/3d`}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3 py-1.5 bg-[#14161A] hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                   title="Open Dedicated Fullscreen 3D View"
                 >
                   <Eye className="w-3.5 h-3.5" /> Fullscreen 3D

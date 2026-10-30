@@ -109,6 +109,13 @@ export interface Vehicle {
   status: string;
   fitted_tyre_count: number;
   expected_tyre_count: number;
+  thi?: number;
+  unweighted_thi?: number;
+  thi_status?: 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'UNKNOWN';
+  critical_tyres_count?: number;
+  warning_tyres_count?: number;
+  healthy_tyres_count?: number;
+  lowest_tyre_thi?: number;
   fitments?: Array<{
     id: string;
     wheel_position: string;
@@ -289,3 +296,39 @@ export interface FleetStats {
     unknown: number;
   };
 }
+
+export interface VehicleInspectionReport {
+  id: string;
+  report_number: string;
+  fleet_id: string;
+  vehicle_id: string;
+  vehicle_number?: string;
+  inspector_id: string;
+  inspector_name?: string;
+  odometer: number;
+  total_wheels: number;
+  inspected_wheels: number;
+  pass_count: number;
+  warning_count: number;
+  fail_count: number;
+  roadworthiness_status: string;
+  summary_notes?: string;
+  details: Array<{
+    wheel_position: string;
+    axle_number: number;
+    is_dual: boolean;
+    is_inner: boolean;
+    tyre_id?: string | null;
+    tyre_serial?: string | null;
+    tyre_model?: string | null;
+    measured_nsd?: number | null;
+    measured_pressure?: number | null;
+    visual_condition?: string;
+    inspection_result?: string;
+    notes?: string | null;
+    photo_url?: string | null;
+    inspected: boolean;
+  }>;
+  completed_at: string;
+}
+

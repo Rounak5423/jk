@@ -138,12 +138,12 @@ export const MyFleetsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-graphite tracking-tight">My Authorized Fleets</h1>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">My Authorized Fleets</h1>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
               Fleet Portfolio
             </span>
           </div>
-          <p className="text-xs text-secondary mt-1">
+          <p className="text-xs text-[#5B6068] mt-1">
             Commercial fleets and subsidiaries assigned to your account ({user?.email}).
           </p>
         </div>
@@ -151,20 +151,20 @@ export const MyFleetsPage: React.FC = () => {
         {/* Search & Filters */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search fleet, city, or reg..."
-              className="bg-white border border-bordergray rounded-xl pl-9 pr-4 py-2 text-xs text-graphite placeholder-secondary focus:outline-none focus:border-fleet focus:ring-1 focus:ring-fleet shadow-sm"
+              className="bg-white border border-bordergray rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-[#5B6068] focus:outline-none focus:border-slate-400 shadow-sm"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-bordergray rounded-xl px-3 py-2 text-xs text-graphite focus:outline-none focus:border-fleet shadow-sm"
+            className="bg-white border border-bordergray rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-400 shadow-sm"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -174,7 +174,7 @@ export const MyFleetsPage: React.FC = () => {
 
           <button
             onClick={fetchFleets}
-            className="p-2 bg-white border border-bordergray rounded-xl text-secondary hover:text-graphite shadow-sm"
+            className="p-2 bg-white border border-bordergray rounded-xl text-[#5B6068] hover:text-slate-900 shadow-sm"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -185,7 +185,7 @@ export const MyFleetsPage: React.FC = () => {
               resetAddForm();
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold rounded-xl text-xs shadow-md shadow-yellow-400/20 transition cursor-pointer shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" /> Add Fleet
           </button>
@@ -256,12 +256,12 @@ export const MyFleetsPage: React.FC = () => {
                 {/* Card Top */}
                 <div className="p-6 pb-4 border-b border-bordergray/60">
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
-                      <Building2 className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5 text-[#5B6068]" />
                     </div>
                     <div className="flex items-center gap-1.5">
                       {isActive && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-graphite">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#14161A] text-white">
                           Active Selection
                         </span>
                       )}
@@ -277,14 +277,14 @@ export const MyFleetsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-sm text-graphite tracking-tight line-clamp-1">{fleet.name}</h3>
-                  <div className="text-[11px] text-secondary flex items-center gap-1 mt-0.5">
+                  <h3 className="font-bold text-sm text-slate-900 tracking-tight line-clamp-1">{fleet.name}</h3>
+                  <div className="text-[11px] text-[#5B6068] flex items-center gap-1 mt-0.5">
                     <span>Reg: {fleet.registration_no || 'Unassigned'}</span>
                     {fleet.city && (
                       <>
                         <span>•</span>
                         <span className="flex items-center gap-0.5">
-                          <MapPin className="w-3 h-3 text-secondary/70 inline" />
+                          <MapPin className="w-3 h-3 text-[#5B6068] inline" />
                           {fleet.city}
                         </span>
                       </>
@@ -293,45 +293,47 @@ export const MyFleetsPage: React.FC = () => {
                 </div>
 
                 {/* Metrics Grid */}
-                <div className="p-6 py-4 grid grid-cols-3 gap-2 border-b border-bordergray/60 bg-softgrey/30">
+                <div className="p-6 py-4 grid grid-cols-3 gap-2 border-b border-bordergray/60 bg-[#F4F3EF]/60">
                   <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
-                    <div className="flex items-center justify-center text-secondary mb-1">
+                    <div className="flex items-center justify-center text-[#5B6068] mb-1">
                       <Truck className="w-3.5 h-3.5" />
                     </div>
-                    <div className="text-base font-black text-graphite">{fleet.vehicle_count || 0}</div>
-                    <div className="text-[10px] text-secondary font-medium">Vehicles</div>
+                    <div className="text-base font-black text-slate-900">{fleet.vehicle_count || 0}</div>
+                    <div className="text-[10px] text-[#5B6068] font-medium">Vehicles</div>
                   </div>
 
                   <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
-                    <div className="flex items-center justify-center text-secondary mb-1">
+                    <div className="flex items-center justify-center text-[#5B6068] mb-1">
                       <Disc className="w-3.5 h-3.5" />
                     </div>
-                    <div className="text-base font-black text-graphite">{fleet.fitted_tyres_count || 0}</div>
-                    <div className="text-[10px] text-secondary font-medium">Fitted Tyres</div>
+                    <div className="text-base font-black text-slate-900">{fleet.fitted_tyres_count || 0}</div>
+                    <div className="text-[10px] text-[#5B6068] font-medium">Fitted Tyres</div>
                   </div>
 
                   <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
-                    <div className="flex items-center justify-center text-amber-600 mb-1">
-                      <AlertTriangle className="w-3.5 h-3.5" />
+                    <div className="flex items-center justify-center mb-1">
+                      <AlertTriangle className={`w-3.5 h-3.5 ${
+                        (fleet.active_alerts_count || 0) > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'
+                      }`} />
                     </div>
-                    <div className="text-base font-black text-graphite">{fleet.active_alerts_count || 0}</div>
-                    <div className="text-[10px] text-secondary font-medium">Active Alerts</div>
+                    <div className="text-base font-black text-slate-900">{fleet.active_alerts_count || 0}</div>
+                    <div className="text-[10px] text-[#5B6068] font-medium">Active Alerts</div>
                   </div>
                 </div>
 
                 {/* Health Summary */}
                 <div className="p-6 py-4 border-b border-bordergray/60 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[11px] font-semibold text-secondary">Tyre Health Overview</span>
-                    <span className="text-[10px] font-bold text-graphite">{totalHealthCount} Evaluated</span>
+                    <span className="text-[11px] font-semibold text-[#5B6068]">Tyre Health Overview</span>
+                    <span className="text-[10px] font-bold text-slate-900">{totalHealthCount} Evaluated</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs">
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       {health.healthy} Healthy
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700">
-                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#E8770E]">
+                      <span className="w-2 h-2 rounded-full bg-[#E8770E]"></span>
                       {health.warning} Warning
                     </span>
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700">
@@ -343,14 +345,14 @@ export const MyFleetsPage: React.FC = () => {
 
                 {/* Contact info & Action */}
                 <div className="p-6 pt-4 mt-auto space-y-3">
-                  <div className="space-y-1 text-[11px] text-secondary">
+                  <div className="space-y-1 text-[11px] text-[#5B6068]">
                     <div className="flex items-center gap-1.5 truncate">
-                      <Mail className="w-3 h-3 text-secondary/60 shrink-0" />
+                      <Mail className="w-3 h-3 text-[#5B6068]/60 shrink-0" />
                       <span className="truncate">{fleet.contact_email}</span>
                     </div>
                     {fleet.contact_phone && (
                       <div className="flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 text-secondary/60 shrink-0" />
+                        <Phone className="w-3 h-3 text-[#5B6068]/60 shrink-0" />
                         <span>{fleet.contact_phone}</span>
                       </div>
                     )}
@@ -358,11 +360,7 @@ export const MyFleetsPage: React.FC = () => {
 
                   <button
                     onClick={() => handleSelectFleet(fleet)}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm ${
-                      isActive
-                        ? 'bg-graphite text-white hover:bg-black'
-                        : 'bg-fleet hover:bg-yellow-400 text-graphite'
-                    }`}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm bg-[#14161A] hover:bg-black text-white"
                   >
                     <span>{isActive ? 'Manage Current Fleet' : 'Open Fleet'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -505,8 +503,8 @@ export const MyFleetsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Primary Contact Name, Email, Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Primary Contact Name & Phone (No email asked) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Primary Contact Name
@@ -516,18 +514,6 @@ export const MyFleetsPage: React.FC = () => {
                     value={newContactName}
                     onChange={(e) => setNewContactName(e.target.value)}
                     placeholder="e.g. Rajesh Sharma"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Contact Email
-                  </label>
-                  <input
-                    type="email"
-                    value={newContactEmail}
-                    onChange={(e) => setNewContactEmail(e.target.value)}
-                    placeholder="e.g. ops@apextrans.com"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
                   />
                 </div>

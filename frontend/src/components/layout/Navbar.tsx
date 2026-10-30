@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
       case 'SUPER_ADMIN':
         return <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[11px] font-semibold">JK Admin</span>;
       case 'FLEET_MANAGER':
-        return <span className="bg-yellow-400 text-slate-900 px-2 py-0.5 rounded text-[11px] font-semibold">Fleet Owner</span>;
+        return <span className="bg-[#14161A] text-white px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-700">Fleet Owner</span>;
       case 'DRIVER':
         return <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[11px] font-semibold">Driver</span>;
       default:
@@ -22,11 +22,11 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 shadow-sm px-6 flex items-center justify-between sticky top-0 z-40 overflow-visible">
+    <header className="h-14 bg-white border-b border-[#E2E0D8] shadow-sm px-6 flex items-center justify-between sticky top-0 z-40 overflow-visible">
       {/* Brand */}
       <div className="flex items-center gap-3" style={{ overflow: 'visible' }}>
         <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
-        <p className="text-[11px] font-semibold text-slate-700 leading-none tracking-wide">THI Tyre Intelligence Platform</p>
+        <p className="text-[11px] font-semibold text-[#5B6068] leading-none tracking-wide">THI Tyre Intelligence Platform</p>
       </div>
 
       {/* Right controls */}

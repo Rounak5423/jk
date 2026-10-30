@@ -11,14 +11,13 @@ import {
   BarChart3,
   FileText,
   Shield,
-  Users,
   Building2,
-  ScrollText,
   Smartphone,
   MapPin,
   Wrench,
   Database,
   ArrowLeft,
+  ClipboardCheck,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -42,38 +41,18 @@ export const Sidebar: React.FC = () => {
 
   const myFleetsOnly = [
     { to: '/my-fleets', label: 'My Fleets', icon: Building2 },
-<<<<<<< HEAD
-    { to: '/vehicles', label: 'Vehicles', icon: Truck },
-    { to: '/fitment', label: 'Tyre Fitment', icon: Wrench },
-    { to: '/tyres', label: 'Tyres Lifecycle', icon: Disc },
-    { to: '/trips', label: 'Trips & Scoring', icon: Route },
-    { to: '/alerts', label: 'Alerts', icon: AlertTriangle },
-    { to: '/trends', label: 'Trend Analysis', icon: TrendingUp },
-    { to: '/comparison', label: 'Comparison', icon: BarChart3 },
-    { to: '/reports', label: 'Reports', icon: FileText },
-=======
->>>>>>> origin/vaisiri-updates
   ];
 
   const adminLinks = [
     { to: '/admin',           label: 'Admin Overview',      icon: Shield },
     { to: '/admin/oem-vault', label: 'OEM Telemetry Vault', icon: Database },
     { to: '/admin/map',       label: 'Platform Usage Map',  icon: MapPin },
-    { to: '/admin/fleets',    label: 'All Fleets',          icon: Building2 },
-    { to: '/admin/users',     label: 'Users & Roles',       icon: Users },
-    { to: '/admin/audit-logs',label: 'Audit Trail',         icon: ScrollText },
-    { to: '/dashboard',       label: 'Fleet Portal View',   icon: LayoutDashboard },
   ];
 
   const driverLinks = [
-<<<<<<< HEAD
-    { to: '/driver', label: 'Driver Dashboard', icon: Smartphone },
-    { to: '/alerts', label: 'Tyre Alerts', icon: AlertTriangle },
-=======
     { to: '/driver',      label: 'Driver Dashboard',  icon: Smartphone },
     { to: '/inspections', label: 'Submit Inspection', icon: ClipboardCheck },
     { to: '/alerts',      label: 'Tyre Alerts',       icon: AlertTriangle },
->>>>>>> origin/vaisiri-updates
   ];
 
   /* Determine which links + section label to show */
@@ -99,7 +78,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-[#1e3a5f] border-r border-blue-900 flex flex-col shrink-0 min-h-[calc(100vh-3.5rem)]">
+    <aside className="w-64 bg-[#14161A] border-r border-[#262A30] flex flex-col shrink-0 min-h-[calc(100vh-3.5rem)]">
       <div className="p-4">
 
         {/* Fleet Manager — workspace open: show back button + active fleet badge */}
@@ -107,21 +86,21 @@ export const Sidebar: React.FC = () => {
           <div className="mb-3 space-y-2">
             <button
               onClick={handleBackToMyFleets}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-blue-200 hover:bg-blue-800/40 hover:text-white transition"
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-[#9AA0A6] hover:bg-[#20242B] hover:text-white transition"
             >
               <ArrowLeft className="w-4 h-4 shrink-0" />
               Back to My Fleets
             </button>
             {activeFleetName && (
-              <div className="px-3 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl">
-                <div className="text-[9px] font-bold text-yellow-400 uppercase tracking-wider mb-0.5">Active Fleet</div>
+              <div className="px-3 py-2 bg-[#1E2228] border border-[#2D333B] rounded-xl">
+                <div className="text-[9px] font-bold text-[#FFC800] uppercase tracking-wider mb-0.5">Active Fleet</div>
                 <div className="text-xs font-semibold text-white truncate">{activeFleetName}</div>
               </div>
             )}
           </div>
         )}
 
-        <div className="text-[11px] font-bold text-blue-400 uppercase tracking-wider px-3 mb-2">
+        <div className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider px-3 mb-2">
           {sectionLabel}
         </div>
 
@@ -133,10 +112,10 @@ export const Sidebar: React.FC = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition ${
                     isActive
-                      ? 'bg-yellow-400 text-slate-900 font-bold'
-                      : 'text-blue-200 hover:bg-blue-800/40 hover:text-white'
+                      ? 'bg-[#FFC800] text-black font-bold shadow-sm'
+                      : 'text-[#9AA0A6] font-medium hover:bg-[#20242B] hover:text-white'
                   }`
                 }
               >
@@ -149,9 +128,9 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Info card at bottom */}
-      <div className="mt-auto p-4 border-t border-blue-900">
-        <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-[11px] text-blue-700">
-          <div className="font-semibold text-blue-800 mb-0.5">Rule Engine v1.0</div>
+      <div className="mt-auto p-4 border-t border-[#262A30]">
+        <div className="bg-[#1A1D23] p-3 rounded-xl border border-[#262A30] text-[11px] text-[#80868B]">
+          <div className="font-semibold text-slate-200 mb-0.5">Rule Engine v1.0</div>
           <div>Provisional demo weights calibrated with JK Tyre datasets.</div>
         </div>
       </div>

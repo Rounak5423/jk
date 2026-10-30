@@ -62,7 +62,7 @@ export const AlertsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Operational Alerts Center</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5B6068] mt-0.5">
             Deduplicated real-time notifications with explicit acknowledgment and resolution audit history.
           </p>
         </div>
@@ -71,7 +71,7 @@ export const AlertsPage: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-sm"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -82,7 +82,7 @@ export const AlertsPage: React.FC = () => {
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-sm"
           >
             <option value="">All Severities</option>
             <option value="CRITICAL">Critical</option>
@@ -97,7 +97,7 @@ export const AlertsPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-blue-50">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Alert Code</th>
                 <th className="py-3.5 px-4">Vehicle &amp; Wheel</th>
                 <th className="py-3.5 px-4">Category</th>
@@ -110,38 +110,38 @@ export const AlertsPage: React.FC = () => {
             <tbody className="divide-y divide-slate-200 text-slate-700">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500">
+                  <td colSpan={7} className="py-8 text-center text-[#5B6068]">
                     Loading alerts...
                   </td>
                 </tr>
               ) : alerts?.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                  <td colSpan={7} className="py-12 text-center text-[#5B6068]">
                     No matching alerts found.
                   </td>
                 </tr>
               ) : (
                 alerts?.map((a) => (
-                  <tr key={a.id} className="hover:bg-blue-50 transition">
+                  <tr key={a.id} className="hover:bg-slate-50 transition">
                     <td className="py-4 px-6">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                           a.severity === 'CRITICAL'
                             ? 'bg-red-100 text-red-700 border border-red-200'
                             : a.severity === 'WARNING'
-                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                            ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
                             : 'bg-blue-100 text-blue-700 border border-blue-300'
                         }`}
                       >
                         {a.code}
                       </span>
-                      <span className="text-[10px] text-slate-500 block mt-1">
+                      <span className="text-[10px] text-[#5B6068] block mt-1">
                         {new Date(a.created_at).toLocaleDateString()}
                       </span>
                     </td>
                     <td className="py-4 px-4">
                       <span className="font-semibold text-slate-900 block">{a.vehicle_number}</span>
-                      <span className="text-[11px] font-mono text-slate-500">
+                      <span className="text-[11px] font-mono text-[#5B6068]">
                         {a.wheel_position || 'Vehicle Sensor'}
                       </span>
                     </td>
@@ -167,14 +167,14 @@ export const AlertsPage: React.FC = () => {
                           a.status === 'ACTIVE'
                             ? 'bg-red-100 text-red-700 border border-red-200'
                             : a.status === 'ACKNOWLEDGED'
-                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                            ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
                             : 'bg-slate-100 text-slate-500'
                         }`}
                       >
                         {a.status}
                       </span>
                       {a.status === 'ACKNOWLEDGED' && a.acknowledged_by && (
-                        <span className="text-[9px] text-slate-500 block mt-0.5">By {a.acknowledged_by}</span>
+                        <span className="text-[9px] text-[#5B6068] block mt-0.5">By {a.acknowledged_by}</span>
                       )}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">

@@ -9,9 +9,8 @@
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: radial-gradient(ellipse at top left, #ffe066 0%, #ffd700 25%, #fff176 50%, #fef08a 70%, #ffd000 100%);
-  background-attachment: fixed;
-  color: #1e3a5f;
+  background-color: #F4F3EF;
+  color: #14161A;
   overflow-x: hidden;
 }
 
@@ -39,3 +38,64 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 2D Inspection Road Paving & Vehicle Launch Keyframes */
+@keyframes highwayDash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -120px; }
+}
+.animate-highway-fast {
+  animation: highwayDash 0.35s linear infinite;
+}
+.animate-highway-cruising {
+  animation: highwayDash 0.65s linear infinite;
+}
+
+@keyframes paverBeamGlow {
+  0%, 100% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 1));
+  }
+}
+.animate-paver-beam {
+  animation: paverBeamGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes engineRumble {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-0.7px) rotate(-0.08deg); }
+  75% { transform: translateY(0.7px) rotate(0.08deg); }
+}
+.animate-engine-rumble {
+  animation: engineRumble 0.09s ease-in-out infinite;
+}
+
+@keyframes nitroFlamePuff {
+  0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.85; }
+  50% { transform: scaleX(1.4) scaleY(0.85); opacity: 1; }
+}
+.animate-nitro-flame {
+  transform-origin: 90px 178px;
+  animation: nitroFlamePuff 0.08s ease-in-out infinite;
+}
+
+@keyframes smokePuffMove {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(-120px, -8px) scale(2.2); opacity: 0; }
+}
+.animate-smoke-puff {
+  animation: smokePuffMove 0.8s ease-out infinite;
+}
+
+@keyframes headlightAura {
+  0%, 100% { opacity: 0.88; }
+  50% { opacity: 1; }
+}
+.animate-headlight-aura {
+  animation: headlightAura 0.3s ease-in-out infinite;
+}
+

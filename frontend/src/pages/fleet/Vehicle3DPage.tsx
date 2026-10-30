@@ -79,16 +79,16 @@ export const Vehicle3DPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f3c 30%, #1a3a5c 55%, #7a5c00 80%, #ffd700 100%)' }}>
+    <div className="space-y-4">
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-            <Link to="/vehicles" className="hover:text-blue-600 transition flex items-center gap-1">
+          <div className="flex items-center gap-2 text-xs text-[#5B6068] mb-1">
+            <Link to="/vehicles" className="hover:text-slate-900 transition flex items-center gap-1">
               <ArrowLeft className="w-3.5 h-3.5" /> Fleet Vehicles
             </Link>
             <span>/</span>
-            <Link to={`/vehicles/${vehicle.id}`} className="hover:text-blue-600 transition font-mono">
+            <Link to={`/vehicles/${vehicle.id}`} className="hover:text-slate-900 transition font-mono">
               {vehicle.vehicle_number}
             </Link>
             <span>/</span>
@@ -96,7 +96,7 @@ export const Vehicle3DPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center font-black text-slate-950 text-base shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-[#14161A] flex items-center justify-center font-bold text-white text-base shadow-sm">
               3D
             </div>
             <div>
@@ -104,14 +104,14 @@ export const Vehicle3DPage: React.FC = () => {
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight font-mono">
                   {vehicle.vehicle_number}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                   {vehicle.wheel_config}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   {vehicle.status}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#5B6068] mt-0.5">
                 {vehicle.make} {vehicle.model} • {vehicle.axle_count} Axles • {vehicle.expected_tyre_count} Physical Wheel Mounts
               </p>
             </div>

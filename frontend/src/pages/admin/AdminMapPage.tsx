@@ -128,7 +128,7 @@ export const AdminMapPage: React.FC = () => {
       case 'CURRENT':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Live &lt;12h</span>;
       case 'STALE':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">Stale &gt;12h</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]">Stale &gt;12h</span>;
       case 'SIMULATED':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Simulated</span>;
       default:
@@ -147,7 +147,7 @@ export const AdminMapPage: React.FC = () => {
               JK Admin Only
             </span>
           </div>
-          <p className="text-xs text-secondary mt-1">
+          <p className="text-xs text-[#5B6068] mt-1">
             Real-time geospatial fleet distribution and transit corridor telemetry across India.
           </p>
         </div>
@@ -238,7 +238,7 @@ export const AdminMapPage: React.FC = () => {
           {/* SVG Map Container */}
           <div className="relative w-full h-[520px] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
             {/* Visual Highway Grid Backdrop */}
-            <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#F5C400_1px,transparent_1px)] [background-size:24px_24px]"></div>
+            <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px]"></div>
 
             <svg viewBox="0 0 600 650" className="w-full h-full max-h-[520px]">
               {/* Simplified India Outer Contour Outline */}
@@ -251,11 +251,11 @@ export const AdminMapPage: React.FC = () => {
               />
 
               {/* Major Transit Corridor Corridors */}
-              <line x1="280" y1="160" x2="200" y2="350" stroke="#F5C400" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
-              <line x1="280" y1="160" x2="410" y2="280" stroke="#F5C400" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
-              <line x1="200" y1="350" x2="280" y2="520" stroke="#F5C400" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
-              <line x1="280" y1="520" x2="340" y2="480" stroke="#F5C400" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
-              <line x1="340" y1="480" x2="410" y2="280" stroke="#F5C400" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
+              <line x1="280" y1="160" x2="200" y2="350" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
+              <line x1="280" y1="160" x2="410" y2="280" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
+              <line x1="200" y1="350" x2="280" y2="520" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
+              <line x1="280" y1="520" x2="340" y2="480" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
+              <line x1="340" y1="480" x2="410" y2="280" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.4" />
 
               {/* Fleet Hub Markers */}
               {data?.fleets.map((fleet) => {

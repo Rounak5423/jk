@@ -73,3 +73,50 @@ class Inspection(db.Model):
             "retread_count_after": self.retread_count_after,
             "temperature_at_inspection": self.temperature_at_inspection,
         }
+
+
+class VehicleInspectionReport(db.Model):
+    __tablename__ = "vehicle_inspection_reports"
+
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    report_number = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    fleet_id = db.Column(db.String(36), db.ForeignKey("fleets.id", ondelete="CASCADE"), nullable=False, index=True)
+    vehicle_id = db.Column(db.String(36), db.ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True)
+    inspector_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    odometer = db.Column(db.Float, nullable=False)
+    total_wheels = db.Column(db.Integer, nullable=False, default=0)
+    inspected_wheels = db.Column(db.Integer, nullable=False, default=0)
+    pass_count = db.Column(db.Integer, nullable=False, default=0)
+    warning_count = db.Column(db.Integer, nullable=False, default=0)
+    fail_count = db.Column(db.Integer, nullable=False, default=0)
+    roadworthiness_status = db.Column(db.String(32), nullable=False, default="CERTIFIED_ROADWORTHY")
+    summary_notes = db.Column(db.Text, nullable=True)
+    details = db.Column(db.JSON, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+
+    # Relationships
+    fleet = db.relationship("Fleet")
+    vehicle = db.relationship("Vehicle")
+    inspector = db.relationship("User")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_number": self.report_number,
+            "fleet_id": self.fleet_id,
+            "vehicle_id": self.vehicle_id,
+            "vehicle_number": self.vehicle.vehicle_number if self.vehicle else None,
+            "inspector_id": self.inspector_id,
+            "inspector_name": self.inspector.full_name if self.inspector else None,
+            "odometer": self.odometer,
+            "total_wheels": self.total_wheels,
+            "inspected_wheels": self.inspected_wheels,
+            "pass_count": self.pass_count,
+            "warning_count": self.warning_count,
+            "fail_count": self.fail_count,
+            "roadworthiness_status": self.roadworthiness_status,
+            "summary_notes": self.summary_notes,
+            "details": self.details or [],
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+

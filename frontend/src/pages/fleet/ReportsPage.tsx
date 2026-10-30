@@ -75,7 +75,7 @@ export const ReportsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Fleet Intelligence &amp; Research Exports</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5B6068] mt-0.5">
             Download database-derived telemetry datasets and operational reports for academic and fleet audit reviews.
           </p>
         </div>
@@ -84,41 +84,41 @@ export const ReportsPage: React.FC = () => {
         <button
           onClick={handleDownloadExcel}
           disabled={downloadingExcel}
-          className="flex items-center gap-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-xl text-xs shadow-lg shadow-yellow-500/20 transition self-start sm:self-auto disabled:opacity-50"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition self-start sm:self-auto disabled:opacity-50"
         >
-          <FileSpreadsheet className="w-4 h-4 text-slate-900" />
+          <FileSpreadsheet className="w-4 h-4 text-black" />
           {downloadingExcel ? 'Generating 13-Sheet Workbook...' : 'Download 13-Sheet Excel Dataset (.xlsx)'}
         </button>
       </div>
 
       {/* Provenance and Disclaimer Note */}
-      <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-slate-700 text-xs flex items-start gap-3">
-        <Info className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-xs flex items-start gap-3 shadow-sm">
+        <Info className="w-4 h-4 text-[#5B6068] shrink-0 mt-0.5" />
         <div className="space-y-1">
           <span className="font-bold text-slate-900 block">Academic Review &amp; Data Integrity Compliance</span>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
+          <p className="text-[11px] text-[#5B6068] leading-relaxed">
             Exports contain live database records generated under deterministic physical models (monotonic odometers,
             calibrated thermal curves, and standard JK Tyre tyre models). Password hashes are strictly omitted.
-            Sheets named <strong className="text-slate-700 font-semibold">"NSD Inspection Data"</strong> from legacy
+            Sheets named <strong className="text-slate-800 font-semibold">"NSD Inspection Data"</strong> from legacy
             spreadsheets remain strictly excluded in compliance with data privacy protocols.
           </p>
         </div>
       </div>
 
       {/* 13-Sheet Dataset Featured Card */}
-      <div className="p-6 rounded-2xl bg-blue-700 border border-blue-600 shadow-xl space-y-4">
+      <div className="p-6 rounded-2xl bg-[#14161A] border border-[#262A30] shadow-md space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center">
-              <Layers className="w-5 h-5 text-slate-900" />
+            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+              <Layers className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold text-white">Full Multi-Sheet Academic &amp; Audit Dataset</h2>
-              <p className="text-xs text-blue-200">Standardized 13-sheet Microsoft Excel workbook (.xlsx)</p>
+              <p className="text-xs text-slate-400">Standardized 13-sheet Microsoft Excel workbook (.xlsx)</p>
             </div>
           </div>
 
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/40">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#1E2228] text-slate-200 border border-slate-700">
             13 Sheets Included
           </span>
         </div>
@@ -142,9 +142,9 @@ export const ReportsPage: React.FC = () => {
           ].map((sheetName, idx) => (
             <span
               key={sheetName}
-              className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-medium bg-blue-800 text-blue-100 border border-blue-700"
+              className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-medium bg-[#1E2228] text-slate-300 border border-slate-800"
             >
-              <span className="text-blue-300 mr-1">{idx + 1}.</span>
+              <span className="text-slate-500 mr-1">{idx + 1}.</span>
               {sheetName}
             </span>
           ))}

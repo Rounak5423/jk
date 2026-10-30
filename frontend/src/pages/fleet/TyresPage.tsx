@@ -55,7 +55,7 @@ export const TyresPage: React.FC = () => {
       case 'HEALTHY':
         return 'bg-emerald-100 text-emerald-700 border border-emerald-300';
       case 'WARNING':
-        return 'bg-orange-100 text-orange-700 border border-orange-300';
+        return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
       case 'CRITICAL':
         return 'bg-red-100 text-red-700 border border-red-300';
       default:
@@ -69,14 +69,14 @@ export const TyresPage: React.FC = () => {
       {/* 1. Page header */}
       <div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tyre Lifecycle Management</h1>
-        <p className="text-xs text-slate-500 mt-0.5">Visual condition overview</p>
+        <p className="text-xs text-[#5B6068] mt-0.5">Visual condition overview</p>
       </div>
 
       {/* 2. Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         {/* Healthy */}
         <div className="bg-white border border-slate-200 border-t-2 border-t-emerald-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <ShieldCheck className="w-8 h-8 text-emerald-500 shrink-0" />
+          <ShieldCheck className="w-8 h-8 text-[#5B6068] shrink-0" />
           <div>
             <div className="text-2xl font-black text-slate-900 leading-tight">{healthyCount}</div>
             <div className="text-xs text-emerald-600 font-semibold">Healthy</div>
@@ -84,17 +84,17 @@ export const TyresPage: React.FC = () => {
         </div>
 
         {/* Warning */}
-        <div className="bg-white border border-slate-200 border-t-2 border-t-orange-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <AlertTriangle className="w-8 h-8 text-orange-500 shrink-0" />
+        <div className="bg-white border border-slate-200 border-t-2 border-t-[#E8770E] rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+          <AlertTriangle className={`w-8 h-8 shrink-0 ${warningCount > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'}`} />
           <div>
             <div className="text-2xl font-black text-slate-900 leading-tight">{warningCount}</div>
-            <div className="text-xs text-orange-600 font-semibold">Warning</div>
+            <div className="text-xs text-[#E8770E] font-semibold">Warning</div>
           </div>
         </div>
 
         {/* Critical */}
         <div className="bg-white border border-slate-200 border-t-2 border-t-red-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <AlertCircle className="w-8 h-8 text-red-500 shrink-0" />
+          <AlertCircle className={`w-8 h-8 shrink-0 ${criticalCount > 0 ? 'text-red-500' : 'text-[#5B6068]'}`} />
           <div>
             <div className="text-2xl font-black text-slate-900 leading-tight">{criticalCount}</div>
             <div className="text-xs text-red-500 font-semibold">Critical</div>

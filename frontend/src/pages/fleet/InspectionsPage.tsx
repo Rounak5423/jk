@@ -15,7 +15,7 @@ function getLifecycleBadge(lt: string | null | undefined) {
     case 'REUSE':
       return 'bg-blue-100 text-blue-700 border border-blue-200';
     case 'RETREAD':
-      return 'bg-amber-100 text-amber-700 border border-amber-200';
+      return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
     case 'SCRAP':
       return 'bg-red-100 text-red-700 border border-red-200';
     default:
@@ -28,7 +28,7 @@ function getResultBadge(result: string | null | undefined) {
     case 'PASS':
       return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
     case 'WARNING':
-      return 'bg-amber-100 text-amber-700 border border-amber-200';
+      return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
     case 'FAIL':
       return 'bg-red-100 text-red-700 border border-red-200';
     case 'FURTHER_ASSESSMENT':
@@ -177,14 +177,14 @@ export const InspectionsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Depot Tyre Inspections</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5B6068] mt-0.5">
             Physical non-skid depth (NSD) measurements, visual defect audits, and lifecycle decisions.
           </p>
         </div>
 
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-600/20 transition self-start sm:self-auto"
+          className="flex items-center gap-2 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Log Physical Inspection
         </button>
@@ -195,7 +195,7 @@ export const InspectionsPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-blue-50">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Timestamp</th>
                 <th className="py-3.5 px-4">Vehicle</th>
                 <th className="py-3.5 px-4">Tyre Serial</th>

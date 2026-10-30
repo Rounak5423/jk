@@ -23,13 +23,7 @@ export const AppLayout: React.FC = () => {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col text-slate-900"
-      style={{
-        background: 'radial-gradient(ellipse at top left, #ffe066 0%, #ffd700 25%, #fff176 50%, #fef08a 70%, #ffd000 100%)',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-screen flex flex-col bg-[#F4F3EF] text-[#14161A]">
       <Navbar />
       <div className="flex-1 flex">
         <Sidebar />

@@ -7,23 +7,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: '#F4F3EF',
+        sidebar: '#14161A',
+        brand: {
+          yellow: '#FFC800',
+          orange: '#E8770E',
+          dark: '#14161A',
+        },
         fleet: {
-          yellow: '#F5C400',
-          DEFAULT: '#F5C400',
+          yellow: '#FFC800',
+          DEFAULT: '#FFC800',
         },
         graphite: {
-          DEFAULT: '#292D32',
-          dark: '#1E2125',
-          light: '#3A3F45',
+          DEFAULT: '#14161A',
+          dark: '#0F1012',
+          light: '#262A30',
         },
-        softgrey: '#F3F4F6',
+        secondary: '#5B6068',
+        bordergray: '#E2E0D8',
+        softgrey: '#F4F3EF',
         jk: {
           red: '#D9232D',
-          yellow: '#F5C400',
-          dark: '#292D32',
-          gray: '#6B7280',
-          soft: '#F3F4F6',
-          border: '#E5E7EB',
+          yellow: '#FFC800',
+          orange: '#E8770E',
+          dark: '#14161A',
+          gray: '#5B6068',
+          soft: '#F4F3EF',
+          border: '#E2E0D8',
         }
       }
     },

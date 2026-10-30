@@ -129,49 +129,51 @@ export const AdminDashboardPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-wider mb-1">
+        <div className="flex items-center gap-2 text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
           <Shield className="w-4 h-4" /> JK Tyre Enterprise Administration
         </div>
-        <h1 className="text-2xl font-black text-white tracking-tight">Platform Governance & Multi-Tenant Audit</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Platform Governance &amp; Multi-Tenant Audit</h1>
+        <p className="text-xs text-[#5B6068] mt-0.5">
           Authorized cross-fleet oversight, multi-tenant fleet isolation, and immutable audit logs.
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 block mb-1">Registered Fleets</span>
-          <span className="text-2xl font-black text-white">{stats?.total_fleets || 0}</span>
-          <span className="text-[11px] text-slate-500 block mt-1">Active transport operators</span>
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <span className="text-xs text-[#5B6068] block mb-1">Registered Fleets</span>
+          <span className="text-2xl font-black text-slate-900">{stats?.total_fleets || 0}</span>
+          <span className="text-[11px] text-[#5B6068] block mt-1">Active transport operators</span>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 block mb-1">Total Fleet Vehicles</span>
-          <span className="text-2xl font-black text-white">{stats?.total_vehicles || 0}</span>
-          <span className="text-[11px] text-slate-500 block mt-1">Across all operators</span>
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <span className="text-xs text-[#5B6068] block mb-1">Total Fleet Vehicles</span>
+          <span className="text-2xl font-black text-slate-900">{stats?.total_vehicles || 0}</span>
+          <span className="text-[11px] text-[#5B6068] block mt-1">Across all operators</span>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 block mb-1">Tracked JK Tyres</span>
-          <span className="text-2xl font-black text-white">{stats?.total_tyres || 0}</span>
-          <span className="text-[11px] text-slate-500 block mt-1">Permanent serial IDs</span>
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <span className="text-xs text-[#5B6068] block mb-1">Tracked JK Tyres</span>
+          <span className="text-2xl font-black text-slate-900">{stats?.total_tyres || 0}</span>
+          <span className="text-[11px] text-[#5B6068] block mt-1">Permanent serial IDs</span>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 block mb-1">Active Cross-Fleet Alerts</span>
-          <span className="text-2xl font-black text-amber-400">{stats?.active_alerts || 0}</span>
-          <span className="text-[11px] text-slate-500 block mt-1">Pending depot attention</span>
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+          <span className="text-xs text-[#5B6068] block mb-1">Active Cross-Fleet Alerts</span>
+          <span className={`text-2xl font-black ${(stats?.active_alerts || 0) > 0 ? 'text-[#E8770E]' : 'text-slate-900'}`}>
+            {stats?.active_alerts || 0}
+          </span>
+          <span className="text-[11px] text-[#5B6068] block mt-1">Pending depot attention</span>
         </div>
       </div>
 
       {/* Navigation Tabs & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('FLEETS')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'FLEETS' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              activeTab === 'FLEETS' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Building2 className="w-4 h-4" /> Transport Fleets ({fleets?.length || 0})
@@ -179,7 +181,7 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('USERS')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'USERS' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              activeTab === 'USERS' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Users className="w-4 h-4" /> Platform Users ({users?.length || 0})
@@ -187,7 +189,7 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('AUDIT')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'AUDIT' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              activeTab === 'AUDIT' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <ScrollText className="w-4 h-4" /> Security Audit Trail ({auditLogs?.length || 0})
@@ -200,7 +202,7 @@ export const AdminDashboardPage: React.FC = () => {
               resetAddForm();
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold rounded-xl text-xs shadow-md shadow-yellow-400/20 transition cursor-pointer self-start sm:self-auto shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer self-start sm:self-auto shrink-0"
           >
             <Plus className="w-4 h-4" /> Add Fleet
           </button>
@@ -209,10 +211,10 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Tab Panels */}
       {activeTab === 'FLEETS' && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Company Name</th>
                 <th className="py-3.5 px-4">Registration</th>
                 <th className="py-3.5 px-4">Primary Contact</th>
@@ -221,19 +223,19 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-slate-200 text-slate-700">
               {fleets?.map((f: any) => (
-                <tr key={f.id} className="hover:bg-slate-800/30 transition">
-                  <td className="py-4 px-6 font-bold text-white flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-400" />
+                <tr key={f.id} className="hover:bg-slate-50 transition">
+                  <td className="py-4 px-6 font-bold text-slate-900 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#5B6068]" />
                     {f.name}
                   </td>
                   <td className="py-4 px-4 font-mono">{f.registration_no || '—'}</td>
                   <td className="py-4 px-4">{f.contact_name}</td>
-                  <td className="py-4 px-4 font-mono text-slate-400">{f.contact_email}</td>
-                  <td className="py-4 px-4 font-bold text-white">{f.vehicle_count}</td>
+                  <td className="py-4 px-4 font-mono text-[#5B6068]">{f.contact_email}</td>
+                  <td className="py-4 px-4 font-bold text-slate-900">{f.vehicle_count}</td>
                   <td className="py-4 px-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                       {f.status}
                     </span>
                   </td>
@@ -245,10 +247,10 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'USERS' && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Full Name</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Assigned Role</th>
@@ -257,16 +259,16 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-slate-200 text-slate-700">
               {users?.map((u: any) => (
-                <tr key={u.id} className="hover:bg-slate-800/30 transition">
-                  <td className="py-4 px-6 font-bold text-white">{u.full_name}</td>
-                  <td className="py-4 px-4 font-mono text-slate-300">{u.email}</td>
-                  <td className="py-4 px-4 font-semibold text-red-400">{u.role}</td>
-                  <td className="py-4 px-4 text-slate-400">{u.fleet_name || 'Global Headquarters'}</td>
+                <tr key={u.id} className="hover:bg-slate-50 transition">
+                  <td className="py-4 px-6 font-bold text-slate-900">{u.full_name}</td>
+                  <td className="py-4 px-4 font-mono text-slate-700">{u.email}</td>
+                  <td className="py-4 px-4 font-semibold text-slate-900">{u.role}</td>
+                  <td className="py-4 px-4 text-[#5B6068]">{u.fleet_name || 'Global Headquarters'}</td>
                   <td className="py-4 px-4 font-mono">{u.driver_license_no || '—'}</td>
                   <td className="py-4 px-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                       {u.is_active ? 'ACTIVE' : 'DISABLED'}
                     </span>
                   </td>
@@ -278,10 +280,10 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'AUDIT' && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Timestamp</th>
                 <th className="py-3.5 px-4">Action</th>
                 <th className="py-3.5 px-4">Operator</th>
@@ -290,19 +292,19 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Audit Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-slate-200 text-slate-700">
               {auditLogs?.map((log: any) => (
-                <tr key={log.id} className="hover:bg-slate-800/30 transition">
-                  <td className="py-4 px-6 text-slate-400 font-mono">
+                <tr key={log.id} className="hover:bg-slate-50 transition">
+                  <td className="py-4 px-6 text-[#5B6068] font-mono">
                     {new Date(log.timestamp).toLocaleString()}
                   </td>
-                  <td className="py-4 px-4 font-bold text-white">{log.action}</td>
+                  <td className="py-4 px-4 font-bold text-slate-900">{log.action}</td>
                   <td className="py-4 px-4">{log.user_name}</td>
-                  <td className="py-4 px-4 font-mono text-slate-400">
+                  <td className="py-4 px-4 font-mono text-[#5B6068]">
                     {log.resource_type} ({log.resource_id?.slice(0, 8)})
                   </td>
-                  <td className="py-4 px-4 font-mono text-slate-500">{log.ip_address}</td>
-                  <td className="py-4 px-4 font-mono text-[11px] text-slate-400 max-w-xs truncate">
+                  <td className="py-4 px-4 font-mono text-[#5B6068]">{log.ip_address}</td>
+                  <td className="py-4 px-4 font-mono text-[11px] text-[#5B6068] max-w-xs truncate">
                     {JSON.stringify(log.details)}
                   </td>
                 </tr>
@@ -319,14 +321,14 @@ export const AdminDashboardPage: React.FC = () => {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center font-black text-slate-900 text-sm shadow">
+                <div className="w-10 h-10 rounded-xl bg-[#14161A] flex items-center justify-center font-bold text-white text-sm shadow">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
                     Register New Transport Fleet
                   </h2>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-[#5B6068]">
                     Administrative corporate onboarding &amp; credentials
                   </p>
                 </div>
@@ -495,7 +497,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={createFleetMutation.isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-slate-900 font-bold rounded-xl shadow-md shadow-yellow-400/20 transition cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] disabled:opacity-50 text-black font-bold rounded-xl shadow-sm transition cursor-pointer"
                 >
                   {createFleetMutation.isPending ? (
                     <>

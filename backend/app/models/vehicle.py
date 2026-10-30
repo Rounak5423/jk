@@ -153,6 +153,93 @@ class Vehicle(db.Model):
     def active_fitments(self):
         return [f for f in self.fitments if f.removed_at is None]
 
+    def calculate_thi(self):
+        """
+        Calculates vehicle THI as the weighted average of all currently fitted tyres,
+        giving higher priority/weight to critical and degraded tyres so that
+        safety risks and severe tyre faults impact the vehicle's THI more heavily.
+        
+        Weighting Policy:
+        - Critical tyre (THI < 70 or CRITICAL): weight = 4.0
+        - Warning tyre (70 <= THI < 85 or WARNING): weight = 2.0
+        - Healthy tyre (THI >= 85 or HEALTHY): weight = 1.0
+        """
+        active_fits = self.active_fitments
+        if not active_fits:
+            return {
+                "thi": 100.0,
+                "unweighted_thi": 100.0,
+                "thi_status": "HEALTHY",
+                "critical_tyres_count": 0,
+                "warning_tyres_count": 0,
+                "healthy_tyres_count": 0,
+                "lowest_tyre_thi": 100.0,
+            }
+
+        total_weight = 0.0
+        weighted_sum = 0.0
+        unweighted_sum = 0.0
+        crit_count = 0
+        warn_count = 0
+        healthy_count = 0
+        lowest_thi = 100.0
+
+        for f in active_fits:
+            tyre = f.tyre
+            if not tyre:
+                continue
+
+            score = tyre.current_thi if tyre.current_thi is not None else 100.0
+            status = (tyre.thi_status or "HEALTHY").upper()
+
+            lowest_thi = min(lowest_thi, score)
+            unweighted_sum += score
+
+            # Priority Weight: Critical tyres affect the vehicle THI 4x more, Warning 2x more
+            if score < 70.0 or status == "CRITICAL":
+                weight = 4.0
+                crit_count += 1
+            elif score < 85.0 or status == "WARNING":
+                weight = 2.0
+                warn_count += 1
+            else:
+                weight = 1.0
+                healthy_count += 1
+
+            weighted_sum += score * weight
+            total_weight += weight
+
+        if total_weight == 0.0:
+            return {
+                "thi": 100.0,
+                "unweighted_thi": 100.0,
+                "thi_status": "HEALTHY",
+                "critical_tyres_count": 0,
+                "warning_tyres_count": 0,
+                "healthy_tyres_count": 0,
+                "lowest_tyre_thi": 100.0,
+            }
+
+        veh_thi = round(weighted_sum / total_weight, 1)
+        unweighted_thi = round(unweighted_sum / len(active_fits), 1)
+
+        if veh_thi < 70.0 or crit_count > 0:
+            overall_status = "CRITICAL"
+        elif veh_thi < 85.0 or warn_count > 0:
+            overall_status = "WARNING"
+        else:
+            overall_status = "HEALTHY"
+
+        return {
+            "thi": veh_thi,
+            "unweighted_thi": unweighted_thi,
+            "thi_status": overall_status,
+            "critical_tyres_count": crit_count,
+            "warning_tyres_count": warn_count,
+            "healthy_tyres_count": healthy_count,
+            "lowest_tyre_thi": round(lowest_thi, 1),
+        }
+
     def to_dict(self, include_fitments=True):
         active_fits = self.active_fitments
         res = {
@@ -180,6 +267,7 @@ class Vehicle(db.Model):
             "expected_tyre_count": self.layout.get("total_wheels", 10),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+        res.update(self.calculate_thi())
         if include_fitments:
             res["fitments"] = [f.to_dict() for f in active_fits]
         return res

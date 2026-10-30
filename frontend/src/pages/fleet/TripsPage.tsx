@@ -77,14 +77,14 @@ export const TripsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Fleet Trips &amp; Driving Score</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5B6068] mt-0.5">
             Journey compliance tracking evaluating thermal stress, pressure stability, and speed behaviour.
           </p>
         </div>
 
         <button
           onClick={() => refetch()}
-          className="px-3 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition"
+          className="px-3 py-2 bg-white border border-slate-200 text-[#5B6068] hover:text-slate-900 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
         </button>
@@ -92,21 +92,21 @@ export const TripsPage: React.FC = () => {
 
       {/* Vehicle-Specific Filter Banner (when filtered by vehicle_id) */}
       {vehicleIdParam && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 text-xs flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
-            <Truck className="w-5 h-5 text-fleet" />
+            <Truck className="w-5 h-5 text-[#5B6068]" />
             <div>
               <span className="font-bold text-slate-900">
                 Filtered to Vehicle {selectedVehicleObj?.vehicle_number || vehicleIdParam}
               </span>
-              <p className="text-[11px] text-amber-800">
+              <p className="text-[11px] text-[#5B6068]">
                 Viewing vehicle-specific trip performance logs and odometer compliance.
               </p>
             </div>
           </div>
           <button
             onClick={() => handleVehicleChange('')}
-            className="px-3 py-1 bg-white border border-amber-400 text-amber-700 hover:text-slate-900 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
+            className="px-3 py-1 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-sm"
           >
             <X className="w-3.5 h-3.5" /> View All Vehicles
           </button>
@@ -184,7 +184,7 @@ export const TripsPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-blue-50">
+              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
                 <th className="py-3.5 px-6">Trip Code</th>
                 <th className="py-3.5 px-4">Vehicle</th>
                 <th className="py-3.5 px-4">Driver</th>
@@ -201,7 +201,7 @@ export const TripsPage: React.FC = () => {
             <tbody className="divide-y divide-slate-200 text-slate-700">
               {isLoading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-500">
+                  <td colSpan={11} className="py-12 text-center text-[#5B6068]">
                     Loading trips...
                   </td>
                 </tr>
@@ -210,28 +210,28 @@ export const TripsPage: React.FC = () => {
                   <td colSpan={11} className="py-12 text-center">
                     <Route className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                     <div className="font-semibold text-slate-900">No Trips Found</div>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    <p className="text-xs text-[#5B6068] mt-1 max-w-sm mx-auto">
                       No journeys match the specified vehicle or date parameters.
                     </p>
                   </td>
                 </tr>
               ) : (
                 trips?.map((t) => (
-                  <tr key={t.id} className="hover:bg-blue-50 transition">
+                  <tr key={t.id} className="hover:bg-slate-50 transition">
                     <td className="py-4 px-6 font-mono font-bold text-slate-900">{t.trip_code}</td>
                     <td className="py-4 px-4 font-semibold text-slate-900">
-                      <Link to={`/vehicles/${t.vehicle_id}`} className="hover:text-fleet transition">
+                      <Link to={`/vehicles/${t.vehicle_id}`} className="hover:text-blue-600 transition">
                         {t.vehicle_number}
                       </Link>
                     </td>
                     <td className="py-4 px-4">{t.driver_name || 'Driver Assigned'}</td>
                     <td className="py-4 px-4">{t.origin} → {t.destination}</td>
-                    <td className="py-4 px-4 text-[11px] text-slate-500 font-mono">
+                    <td className="py-4 px-4 text-[11px] text-[#5B6068] font-mono">
                       <div>{new Date(t.start_time).toLocaleDateString()}</div>
                       <div>{t.end_time ? new Date(t.end_time).toLocaleDateString() : 'Active'}</div>
                     </td>
                     <td className="py-4 px-4 font-mono">{t.start_odometer.toLocaleString()} km</td>
-                    <td className="py-4 px-4 font-mono text-slate-500">
+                    <td className="py-4 px-4 font-mono text-[#5B6068]">
                       {t.end_odometer ? `${t.end_odometer.toLocaleString()} km` : '—'}
                     </td>
                     <td className="py-4 px-4 font-medium text-slate-900">
@@ -245,22 +245,22 @@ export const TripsPage: React.FC = () => {
                               t.trip_score >= 85
                                 ? 'bg-emerald-400'
                                 : t.trip_score >= 70
-                                ? 'bg-amber-400'
+                                ? 'bg-[#E8770E]'
                                 : 'bg-red-400'
                             }`}
                           />
                           {t.trip_score.toFixed(1)} / 100
                         </span>
                       ) : (
-                        <span className="text-slate-500">In Progress</span>
+                        <span className="text-[#5B6068]">In Progress</span>
                       )}
                     </td>
                     <td className="py-4 px-4">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                           t.status === 'COMPLETED'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
                         }`}
                       >
                         {t.status}

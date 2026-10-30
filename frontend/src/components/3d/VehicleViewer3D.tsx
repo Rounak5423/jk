@@ -186,8 +186,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
     <div
       className={`relative w-full ${
         fullscreen ? 'h-[calc(100vh-140px)] min-h-[620px]' : 'h-[660px]'
-      } rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col`}
-      style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f3c 30%, #1a3a5c 55%, #7a5c00 80%, #ffd700 100%)' }}
+      } rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col bg-[#0a0d14]`}
     >
       {/* Top Controls Overlay */}
       <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2 max-w-[calc(100%-400px)]">
@@ -196,7 +195,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
           onClick={() => setIsAutoRotating(!isAutoRotating)}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold backdrop-blur-md border transition shadow-lg ${
             isAutoRotating
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+              ? 'bg-[#14161A] text-white border-slate-700'
               : 'bg-slate-900/80 text-slate-200 border-slate-700 hover:bg-slate-800'
           }`}
           title={isAutoRotating ? 'Pause 360° Auto-Rotation' : 'Play 360° Auto-Rotation'}
@@ -249,17 +248,17 @@ export const VehicleViewer3D: React.FC<Props> = ({
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold backdrop-blur-md border transition shadow-lg ${
             useGlbModel
               ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-              : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+              : 'bg-slate-800 text-slate-200 border-slate-700'
           }`}
           title="Switch between Realistic 3D Commercial GLB model and Procedural Twin"
         >
-          {useGlbModel ? <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> : <Box className="w-3.5 h-3.5 text-purple-400" />}
+          {useGlbModel ? <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> : <Box className="w-3.5 h-3.5 text-slate-400" />}
           {useGlbModel ? 'GLB Commercial Twin' : 'Procedural Twin'}
         </button>
 
         {/* Vehicle Axle & Wheel Configuration Badge */}
         <div className="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-900/85 border border-slate-700 text-slate-300 backdrop-blur-md flex items-center gap-2">
-          <Truck className="w-3.5 h-3.5 text-blue-400" />
+          <Truck className="w-3.5 h-3.5 text-[#5B6068]" />
           <span className="font-bold text-white">{vehicleNumber}</span>
           <span className="text-slate-400">
             • {wheelConfig} ({axleCount} Axles / {wheelCount} Wheels: {axleBreakdown.frontAxles} Front Steer + {axleBreakdown.rearAxles} Rear Dual
@@ -282,7 +281,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
       )}
 
       {/* Main Three.js Canvas */}
-      <div className="flex-1 w-full h-full relative cursor-grab active:cursor-grabbing" style={{ background: 'linear-gradient(160deg, #071426 0%, #0d2040 40%, #1a3a5c 70%, #4a3800 90%, #ffd000 100%)' }}>
+      <div className="flex-1 w-full h-full relative cursor-grab active:cursor-grabbing bg-[#070b0e]">
         <Canvas
           shadows
           camera={{

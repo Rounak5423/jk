@@ -1,9 +1,12 @@
+import uuid
+import random
+import string
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy import not_
 from app.extensions import db
 from app.models import Tyre, TyreFitment, Vehicle, Alert, THIRecord, TyreLifecycleHistory
-from app.models.tyre import TyreStatus, LifecycleType
+from app.models.tyre import TyreStatus, LifecycleType, HealthStatus
 from app.services.wear_engine import WearEngine
 from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
@@ -30,6 +33,107 @@ def list_tyres():
 
     tyres = query.order_by(Tyre.serial_number.asc()).all()
     return jsonify([t.to_dict(include_history=False) for t in tyres]), 200
+
+
+@tyres_bp.route("", methods=["POST"])
+@jwt_required
+def create_tyre():
+    """
+    Registers a new commercial tyre in the authorized fleet inventory.
+    Optionally immediately fits it to a vehicle and wheel position if specified.
+    """
+    fleet_id = get_effective_fleet_id()
+    if not fleet_id or not enforce_fleet_access(fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
+
+    data = request.get_json() or {}
+    serial_number = (data.get("serial_number") or "").strip().upper()
+    if not serial_number:
+        prefix = "JK"
+        code = "".join(random.choices(string.digits, k=6))
+        serial_number = f"{prefix}-{code}"
+
+    existing = Tyre.query.filter_by(serial_number=serial_number).first()
+    if existing:
+        return jsonify({"error": f"Tyre with serial '{serial_number}' already exists."}), 400
+
+    brand = (data.get("brand") or "JK Tyre").strip()
+    model = (data.get("model") or "Jetway JUH5").strip()
+    size = (data.get("size") or "295/80R22.5").strip()
+
+    try:
+        blueprint_nsd = float(data.get("blueprint_nsd") or 16.5)
+    except (ValueError, TypeError):
+        blueprint_nsd = 16.5
+
+    try:
+        current_nsd = float(data.get("current_nsd") or blueprint_nsd)
+    except (ValueError, TypeError):
+        current_nsd = blueprint_nsd
+
+    lifecycle_type = (data.get("lifecycle_type") or LifecycleType.NEW).strip().upper()
+    if lifecycle_type not in [LifecycleType.NEW, LifecycleType.REUSE, LifecycleType.RETREAD, LifecycleType.SCRAP]:
+        lifecycle_type = LifecycleType.NEW
+
+    tyre = Tyre(
+        id=str(uuid.uuid4()),
+        fleet_id=fleet_id,
+        serial_number=serial_number,
+        brand=brand,
+        model=model,
+        size=size,
+        blueprint_nsd=blueprint_nsd,
+        current_nsd=current_nsd,
+        retread_count=0,
+        total_km_run=0.0,
+        current_thi=100.0,
+        thi_status=HealthStatus.HEALTHY,
+        status=TyreStatus.IN_INVENTORY,
+        lifecycle_type=lifecycle_type,
+    )
+    db.session.add(tyre)
+
+    # If vehicle_id and wheel_position are specified, fit immediately!
+    vehicle_id = data.get("vehicle_id")
+    wheel_position = data.get("wheel_position")
+    axle_number = int(data.get("axle_number") or 1)
+
+    new_fit = None
+    if vehicle_id and wheel_position:
+        vehicle = Vehicle.query.get(vehicle_id)
+        if vehicle and vehicle.fleet_id == fleet_id:
+            existing_fit = TyreFitment.query.filter_by(
+                vehicle_id=vehicle.id, wheel_position=wheel_position, removed_at=None
+            ).first()
+            if existing_fit:
+                existing_fit.removed_at = datetime.now(timezone.utc)
+                existing_fit.removed_odometer = vehicle.current_odometer
+                existing_fit.removal_reason = "REPLACED_BY_NEW_TYRE"
+                existing_fit.tyre.status = TyreStatus.IN_INVENTORY
+
+            new_fit = TyreFitment(
+                id=str(uuid.uuid4()),
+                tyre_id=tyre.id,
+                vehicle_id=vehicle.id,
+                axle_number=axle_number,
+                wheel_position=wheel_position,
+                is_dual=("LO" in wheel_position or "LI" in wheel_position or "RO" in wheel_position or "RI" in wheel_position),
+                is_inner=("LI" in wheel_position or "RI" in wheel_position),
+                fitted_at=datetime.now(timezone.utc),
+                fitted_odometer=vehicle.current_odometer,
+                fitted_nsd=current_nsd,
+            )
+            tyre.status = TyreStatus.FITTED
+            db.session.add(new_fit)
+
+    db.session.commit()
+    record_audit("TYRE_REGISTERED", "TYRE", tyre.id, {"serial": serial_number, "model": model}, fleet_id)
+
+    return jsonify({
+        "message": f"Tyre {tyre.serial_number} registered successfully" + (f" and mounted to {wheel_position}" if new_fit else " in depot inventory"),
+        "tyre": tyre.to_dict(include_history=False),
+        "fitment": new_fit.to_dict() if new_fit else None,
+    }), 201
 
 
 @tyres_bp.route("/available", methods=["GET"])

@@ -4,7 +4,15 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g, send_from_directory, current_app
 from werkzeug.utils import secure_filename
 from app.extensions import db
-from app.models import Inspection, Vehicle, Tyre, InspectionCondition, InspectionResult, TyreLifecycleHistory
+from app.models import (
+    Inspection,
+    Vehicle,
+    Tyre,
+    InspectionCondition,
+    InspectionResult,
+    TyreLifecycleHistory,
+    VehicleInspectionReport,
+)
 from app.models.tyre import TyreStatus, LifecycleType
 from app.services.alert_engine import AlertEngine
 from app.services.thi_engine import THIEngine
@@ -53,7 +61,7 @@ def get_vehicle_inspections_summary(vehicle_id):
     """
     Returns complete physical tyre fitment and inspection status for a specific vehicle.
     Strictly verifies vehicle belongs to authorized fleet.
-    Never fabricates readings for uninspected positions.
+    Distinguishes active open inspection cycle from previously closed & archived reports.
     """
     vehicle = Vehicle.query.get(vehicle_id)
     if not vehicle:
@@ -63,11 +71,33 @@ def get_vehicle_inspections_summary(vehicle_id):
         return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
 
     active_fitments = vehicle.active_fitments
-    inspections = Inspection.query.filter_by(vehicle_id=vehicle.id).order_by(Inspection.inspected_at.desc()).limit(50).all()
 
-    # Map latest inspection per tyre
+    # Check for the most recently closed inspection report for this vehicle
+    latest_report = VehicleInspectionReport.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(VehicleInspectionReport.completed_at.desc()).first()
+
+    # Query all historical inspections
+    all_inspections = Inspection.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(Inspection.inspected_at.desc()).limit(100).all()
+
+    # The current active cycle only includes tyre inspections logged AFTER the latest closed report
+    cutoff_time = latest_report.completed_at if latest_report else None
+    if cutoff_time:
+        # Standardize cutoff comparison (handle naive vs aware)
+        current_cycle_inspections = []
+        for insp in all_inspections:
+            t_insp = insp.inspected_at.replace(tzinfo=timezone.utc) if insp.inspected_at.tzinfo is None else insp.inspected_at
+            t_cut = cutoff_time.replace(tzinfo=timezone.utc) if cutoff_time.tzinfo is None else cutoff_time
+            if t_insp > t_cut:
+                current_cycle_inspections.append(insp)
+    else:
+        current_cycle_inspections = all_inspections
+
+    # Map latest inspection per tyre for current cycle
     latest_by_tyre = {}
-    for insp in inspections:
+    for insp in current_cycle_inspections:
         if insp.tyre_id not in latest_by_tyre:
             latest_by_tyre[insp.tyre_id] = insp.to_dict()
 
@@ -101,6 +131,11 @@ def get_vehicle_inspections_summary(vehicle_id):
             "has_inspection_data": latest_insp is not None,
         })
 
+    # Saved closed inspection reports
+    saved_reports = VehicleInspectionReport.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(VehicleInspectionReport.completed_at.desc()).limit(20).all()
+
     return jsonify({
         "vehicle": {
             "id": vehicle.id,
@@ -114,8 +149,12 @@ def get_vehicle_inspections_summary(vehicle_id):
             "layout": vehicle.layout,
         },
         "positions": positions_data,
-        "recent_inspections": [i.to_dict() for i in inspections[:10]],
+        "recent_inspections": [i.to_dict() for i in all_inspections[:15]],
+        "saved_reports": [r.to_dict() for r in saved_reports],
+        "latest_closed_report": latest_report.to_dict() if latest_report else None,
+        "is_new_cycle": len(current_cycle_inspections) == 0,
     }), 200
+
 
 
 @inspections_bp.route("", methods=["POST"])
@@ -338,3 +377,174 @@ def get_inspection_photo(filename):
     """
     safe_name = secure_filename(filename)
     return send_from_directory(current_app.config["UPLOAD_FOLDER"], safe_name)
+
+
+@inspections_bp.route("/vehicle/<vehicle_id>/close", methods=["POST"])
+@jwt_required
+def close_vehicle_inspection(vehicle_id):
+    """
+    Closes the current physical vehicle inspection session.
+    Compiles full tyre measurement data, creates and permanently saves a VehicleInspectionReport
+    to the database, and resets the active cycle so a fresh inspection can begin.
+    """
+    user = g.current_user
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    if not enforce_fleet_access(vehicle.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
+
+    data = request.get_json() or {}
+    summary_notes = data.get("notes", "").strip() or "Vehicle physical tyre audit verified & completed."
+    roadworthiness_status = data.get("status", "CERTIFIED_ROADWORTHY")
+
+    # Generate unique branded report number: JK-IR-YYYYMMDD-XXXX
+    date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+    unique_suffix = uuid.uuid4().hex[:6].upper()
+    report_num = f"JK-IR-{date_str}-{unique_suffix}"
+
+    # Active fitments on this vehicle
+    active_fitments = vehicle.active_fitments
+
+    # Cutoff from any previous closed report
+    latest_report = VehicleInspectionReport.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(VehicleInspectionReport.completed_at.desc()).first()
+    cutoff_time = latest_report.completed_at if latest_report else None
+
+    all_inspections = Inspection.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(Inspection.inspected_at.desc()).limit(100).all()
+
+    if cutoff_time:
+        current_cycle_inspections = []
+        for insp in all_inspections:
+            t_insp = insp.inspected_at.replace(tzinfo=timezone.utc) if insp.inspected_at.tzinfo is None else insp.inspected_at
+            t_cut = cutoff_time.replace(tzinfo=timezone.utc) if cutoff_time.tzinfo is None else cutoff_time
+            if t_insp > t_cut:
+                current_cycle_inspections.append(insp)
+    else:
+        current_cycle_inspections = all_inspections
+
+    insp_by_tyre = {i.tyre_id: i for i in current_cycle_inspections}
+
+    details = []
+    pass_cnt = 0
+    warn_cnt = 0
+    fail_cnt = 0
+    inspected_cnt = 0
+
+    for fit in active_fitments:
+        tyre = fit.tyre
+        insp = insp_by_tyre.get(fit.tyre_id) if tyre else None
+        if insp:
+            inspected_cnt += 1
+            if insp.inspection_result == InspectionResult.PASS:
+                pass_cnt += 1
+            elif insp.inspection_result == InspectionResult.WARNING:
+                warn_cnt += 1
+            elif insp.inspection_result in (InspectionResult.FAIL, InspectionResult.FURTHER_ASSESSMENT):
+                fail_cnt += 1
+
+        details.append({
+            "wheel_position": fit.wheel_position,
+            "axle_number": fit.axle_number,
+            "is_dual": fit.is_dual,
+            "is_inner": fit.is_inner,
+            "tyre_id": tyre.id if tyre else None,
+            "tyre_serial": tyre.serial_number if tyre else None,
+            "tyre_model": tyre.model if tyre else None,
+            "measured_nsd": round(insp.measured_nsd, 2) if insp else (round(tyre.current_nsd, 2) if tyre else None),
+            "measured_pressure": round(insp.measured_pressure, 1) if (insp and insp.measured_pressure) else vehicle.baseline_pressure,
+            "visual_condition": insp.visual_condition if insp else "NORMAL",
+            "inspection_result": insp.inspection_result if insp else "PASS",
+            "notes": insp.notes if insp else None,
+            "photo_url": insp.photo_url if insp else None,
+            "inspected": insp is not None,
+        })
+
+    # Also capture spare tyre if mounted/available in positions
+    spare_pos = Tyre.query.filter_by(fleet_id=vehicle.fleet_id, status=TyreStatus.IN_INVENTORY).first()
+
+    report = VehicleInspectionReport(
+        id=str(uuid.uuid4()),
+        report_number=report_num,
+        fleet_id=vehicle.fleet_id,
+        vehicle_id=vehicle.id,
+        inspector_id=user.id,
+        odometer=vehicle.current_odometer,
+        total_wheels=len(active_fitments),
+        inspected_wheels=inspected_cnt,
+        pass_count=pass_cnt,
+        warning_count=warn_cnt,
+        fail_count=fail_cnt,
+        roadworthiness_status=roadworthiness_status,
+        summary_notes=summary_notes,
+        details=details,
+        completed_at=datetime.now(timezone.utc),
+    )
+
+    try:
+        db.session.add(report)
+        db.session.commit()
+
+        record_audit(
+            "INSPECTION_REPORT_SAVED",
+            "INSPECTION_REPORT",
+            report.id,
+            {
+                "report_number": report.report_number,
+                "vehicle_number": vehicle.vehicle_number,
+                "inspected_wheels": inspected_cnt,
+                "status": roadworthiness_status,
+            },
+            vehicle.fleet_id,
+        )
+
+        return jsonify({
+            "message": f"Inspection Report {report.report_number} successfully saved to database. New inspection cycle initialized.",
+            "report": report.to_dict(),
+        }), 201
+
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error(f"Closing inspection failed: {exc}")
+        return jsonify({"error": "Failed to close and save inspection report."}), 500
+
+
+@inspections_bp.route("/vehicle/<vehicle_id>/reports", methods=["GET"])
+@jwt_required
+def get_vehicle_inspection_reports(vehicle_id):
+    """
+    Returns all historical closed inspection reports for a specific vehicle.
+    """
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    if not enforce_fleet_access(vehicle.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
+
+    reports = VehicleInspectionReport.query.filter_by(
+        vehicle_id=vehicle.id
+    ).order_by(VehicleInspectionReport.completed_at.desc()).all()
+
+    return jsonify([r.to_dict() for r in reports]), 200
+
+
+@inspections_bp.route("/reports/<report_id>", methods=["GET"])
+@jwt_required
+def get_single_inspection_report(report_id):
+    """
+    Fetches detailed certificate data for a specific saved inspection report.
+    """
+    report = VehicleInspectionReport.query.get(report_id)
+    if not report:
+        return jsonify({"error": "Report not found"}), 404
+
+    if not enforce_fleet_access(report.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized access"}), 403
+
+    return jsonify(report.to_dict()), 200
+

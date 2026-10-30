@@ -34,11 +34,13 @@ export const LoginPage: React.FC = () => {
   const [identifier, setIdentifier] = useState(searchParams.get('login_id') || '');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState<string | null>(null);
+  const [suggestedId, setSuggestedId] = useState<string | null>(null);
   const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuggestedId(null);
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { identifier: identifier.trim(), password });
@@ -48,9 +50,21 @@ export const LoginPage: React.FC = () => {
       else if (res.data.user.role === 'FLEET_MANAGER')  navigate('/my-fleets');
       else                                              navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid Login ID or password. Please try again.');
+      const msg = err.response?.data?.error || 'Invalid Login ID or password. Please try again.';
+      setError(msg);
+      if (err.response?.data?.login_id) {
+        setSuggestedId(err.response.data.login_id);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUseSuggested = () => {
+    if (suggestedId) {
+      setIdentifier(suggestedId);
+      setSuggestedId(null);
+      setError(null);
     }
   };
 
@@ -207,15 +221,9 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          RIGHT PANEL  —  yellow gradient login form
+          RIGHT PANEL  —  neutral #F4F3EF canvas with white card
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col justify-center items-center flex-1 h-full relative overflow-hidden px-8" style={{ background: 'radial-gradient(ellipse at top left, #ffe066 0%, #ffd700 25%, #fff176 50%, #fef08a 70%, #ffd000 100%)' }}>
-
-        {/* Subtle yellow glow in corner */}
-        <div
-          className="absolute bottom-0 right-0 w-72 h-72 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(234,179,8,0.07) 0%, transparent 70%)', filter: 'blur(30px)' }}
-        />
+      <div className="flex flex-col justify-center items-center flex-1 h-full relative overflow-hidden px-8 bg-[#F4F3EF]">
 
         {/* Back to Home */}
         <motion.div
@@ -225,31 +233,70 @@ export const LoginPage: React.FC = () => {
         >
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition group"
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#5B6068] hover:text-slate-900 transition group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back to Home
           </Link>
         </motion.div>
 
-        <div className="relative z-10 w-full max-w-sm">
+        <div className="relative z-10 w-full max-w-sm bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
 
           {/* Heading */}
-          <motion.div className="mb-8" {...drop(0.25)}>
-            <h1 className="text-3xl font-black text-blue-900 tracking-tight">Login</h1>
-            <p className="text-sm text-blue-600 mt-1">
-              Sign in to monitor vehicles and tyre health.
+          <motion.div className="mb-4" {...drop(0.25)}>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Login</h1>
+            <p className="text-sm text-[#5B6068] mt-1">
+              Sign in with your assigned Login ID.
             </p>
           </motion.div>
+
+          {/* Quick Demo Fill */}
+          <div className="mb-5 p-2 bg-[#F4F3EF] border border-slate-200/80 rounded-2xl flex items-center justify-between text-xs">
+            <span className="text-[10px] uppercase font-bold text-[#5B6068] tracking-wider pl-1">Quick Demo:</span>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setIdentifier('apex_manager'); setPassword('Password123!'); setError(null); }}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-[11px] font-bold shadow-xs border border-slate-200/60 transition cursor-pointer"
+              >
+                Fleet
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIdentifier('driver1'); setPassword('Password123!'); setError(null); }}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-[11px] font-bold shadow-xs border border-slate-200/60 transition cursor-pointer"
+              >
+                Driver
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIdentifier('jkadmin'); setPassword('Password123!'); setError(null); }}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-[11px] font-bold shadow-xs border border-slate-200/60 transition cursor-pointer"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
 
           {/* Error banner */}
           {error && (
             <motion.div
-              className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2"
+              className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex flex-col gap-2"
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
             >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+              {suggestedId && (
+                <button
+                  type="button"
+                  onClick={handleUseSuggested}
+                  className="mt-1 self-start px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px] transition cursor-pointer"
+                >
+                  Use Assigned ID: {suggestedId}
+                </button>
+              )}
             </motion.div>
           )}
 
@@ -259,44 +306,44 @@ export const LoginPage: React.FC = () => {
             {/* Login ID */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] font-bold text-blue-700 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                   Login ID
                 </label>
-                <span className="text-[10px] text-blue-400 font-medium">
-                  Fleet ID / Driver ID / Admin Email
+                <span className="text-[10px] text-[#5B6068] font-medium">
+                  Fleet ID / Driver ID
                 </span>
               </div>
               <div className="relative">
-                <User className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-[#5B6068] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. JK-FLT-84219 or admin@jktyre.com"
+                  placeholder="e.g. JK-FLT-84219 or JK-DRV-19402"
                   required
                   autoComplete="username"
-                  className="w-full bg-white/80 border border-blue-200 rounded-xl pl-10 pr-4 py-3 text-sm text-blue-900 placeholder-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition shadow-sm font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition font-medium"
                 />
               </div>
-              <p className="text-[11px] text-blue-400 mt-1">
-                Log in with your generated ID. No email required for fleet or driver accounts.
+              <p className="text-[11px] text-[#5B6068] mt-1.5 leading-snug">
+                Fleet Managers and Drivers: Sign in with your assigned Login ID. Only Super Admin uses email.
               </p>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[11px] font-bold text-blue-700 mb-1.5 uppercase tracking-wider">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#5B6068] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-white/80 border border-blue-200 rounded-xl pl-10 pr-4 py-3 text-sm text-blue-900 placeholder-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition shadow-sm"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition"
                 />
               </div>
             </div>
@@ -305,9 +352,9 @@ export const LoginPage: React.FC = () => {
             <motion.button
               type="submit"
               disabled={loading}
-              whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(234,179,8,0.35)' }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-black rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 cursor-pointer"
             >
               {loading ? 'Authenticating…' : 'Sign in'}
               <ArrowRight className="w-4 h-4" />
@@ -316,13 +363,13 @@ export const LoginPage: React.FC = () => {
 
           {/* Register link */}
           <motion.p
-            className="mt-5 text-center text-xs text-blue-700"
+            className="mt-5 text-center text-xs text-[#5B6068]"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ delay: 0.65, duration: 0.45 }}
           >
-            New fleet operator?{' '}
-            <Link to="/register" className="text-blue-800 underline font-bold transition">
-              Register here
+            Need an account?{' '}
+            <Link to="/register" className="text-slate-900 underline font-bold transition">
+              Register as Fleet Manager or Driver
             </Link>
           </motion.p>
         </div>

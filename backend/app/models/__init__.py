@@ -7,7 +7,7 @@ from app.models.trip import Trip, TripStatus
 from app.models.telemetry import TelemetryRecord, TelemetryProvenance
 from app.models.thi import THIRecord
 from app.models.alert import Alert, AlertSeverity, AlertStatus
-from app.models.inspection import Inspection, InspectionCondition, InspectionResult
+from app.models.inspection import Inspection, InspectionCondition, InspectionResult, VehicleInspectionReport
 from app.models.audit import AuditLog
 from app.models.lifecycle_history import TyreLifecycleHistory
 from app.models.oem_vault import OEMFleetVault
@@ -36,6 +36,7 @@ __all__ = [
     "Inspection",
     "InspectionCondition",
     "InspectionResult",
+    "VehicleInspectionReport",
     "AuditLog",
     "TyreLifecycleHistory",
     "OEMFleetVault",
