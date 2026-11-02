@@ -23,7 +23,7 @@ export const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F3EF] text-[#14161A]">
+    <div className="min-h-screen flex flex-col bg-transparent text-slate-200">
       <Navbar />
       <div className="flex-1 flex">
         <Sidebar />

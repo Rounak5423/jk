@@ -78,7 +78,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-[#14161A] border-r border-[#262A30] flex flex-col shrink-0 min-h-[calc(100vh-3.5rem)]">
+    <aside className="w-64 bg-[#101010] border-r border-white/5 flex flex-col shrink-0 min-h-[calc(100vh-3.5rem)]">
       <div className="p-4">
 
         {/* Fleet Manager — workspace open: show back button + active fleet badge */}
@@ -86,21 +86,21 @@ export const Sidebar: React.FC = () => {
           <div className="mb-3 space-y-2">
             <button
               onClick={handleBackToMyFleets}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-[#9AA0A6] hover:bg-[#20242B] hover:text-white transition"
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-white/5 hover:text-white transition"
             >
               <ArrowLeft className="w-4 h-4 shrink-0" />
               Back to My Fleets
             </button>
             {activeFleetName && (
-              <div className="px-3 py-2 bg-[#1E2228] border border-[#2D333B] rounded-xl">
-                <div className="text-[9px] font-bold text-[#FFC800] uppercase tracking-wider mb-0.5">Active Fleet</div>
+              <div className="px-3 py-2 bg-[#17191D] border border-gold-border rounded-xl">
+                <div className="text-[9px] font-bold text-brand-gold uppercase tracking-wider mb-0.5">Active Fleet</div>
                 <div className="text-xs font-semibold text-white truncate">{activeFleetName}</div>
               </div>
             )}
           </div>
         )}
 
-        <div className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider px-3 mb-2">
+        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">
           {sectionLabel}
         </div>
 
@@ -114,8 +114,8 @@ export const Sidebar: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition ${
                     isActive
-                      ? 'bg-[#FFC800] text-black font-bold shadow-sm'
-                      : 'text-[#9AA0A6] font-medium hover:bg-[#20242B] hover:text-white'
+                      ? 'bg-brand-gold text-[#111111] font-bold shadow-sm'
+                      : 'text-[#E5E5E5] font-medium hover:bg-white/5 hover:text-white'
                   }`
                 }
               >
@@ -129,7 +129,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Info card at bottom */}
       <div className="mt-auto p-4 border-t border-[#262A30]">
-        <div className="bg-[#1A1D23] p-3 rounded-xl border border-[#262A30] text-[11px] text-[#80868B]">
+        <div className="bg-[#17191D] p-3 rounded-xl border border-gold-border text-[11px] text-slate-400">
           <div className="font-semibold text-slate-200 mb-0.5">Rule Engine v1.0</div>
           <div>Provisional demo weights calibrated with JK Tyre datasets.</div>
         </div>
