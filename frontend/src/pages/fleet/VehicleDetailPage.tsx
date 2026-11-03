@@ -262,7 +262,7 @@ export const VehicleDetailPage: React.FC = () => {
       {/* 3D Digital Twin Modal */}
       {show3DModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-          <div className="w-full max-w-6xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
+          <div className="w-full max-w-6xl cream-glow-card overflow-hidden shadow-2xl flex flex-col relative">
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#14161A] flex items-center justify-center font-bold text-white text-sm shadow">
