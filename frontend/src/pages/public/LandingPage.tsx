@@ -98,12 +98,12 @@ export const LandingPage: React.FC = () => {
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
 
-        {/* Gradient overlay — stronger on left for text readability, lighter on right to show image */}
+        {/* Gradient overlay — lighter, less blue for brighter background */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(to right, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.70) 45%, rgba(2,6,23,0.35) 75%, rgba(2,6,23,0.15) 100%), linear-gradient(to bottom, rgba(2,6,23,0.4) 0%, transparent 40%, transparent 70%, rgba(2,6,23,0.75) 100%)',
+              'linear-gradient(to right, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.45) 40%, rgba(2,6,23,0.20) 70%, rgba(2,6,23,0.05) 100%), linear-gradient(to bottom, rgba(2,6,23,0.25) 0%, transparent 35%, transparent 75%, rgba(2,6,23,0.50) 100%)',
           }}
         />
 

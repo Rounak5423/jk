@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
           </div>
         )}
 
-        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">
+        <div className="text-[11px] font-bold text-brand-gold uppercase tracking-wider px-3 mb-2">
           {sectionLabel}
         </div>
 
@@ -114,8 +114,8 @@ export const Sidebar: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition ${
                     isActive
-                      ? 'bg-brand-gold text-[#111111] font-bold shadow-sm'
-                      : 'text-[#E5E5E5] font-medium hover:bg-white/5 hover:text-white'
+                      ? 'bg-brand-gold text-black font-bold shadow-sm'
+                      : 'text-white font-medium hover:bg-white/10'
                   }`
                 }
               >

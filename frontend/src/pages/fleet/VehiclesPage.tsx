@@ -175,15 +175,15 @@ export const VehiclesPage: React.FC = () => {
       {/* Header with Add Vehicle Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Fleet Vehicles</h1>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">Fleet Vehicles</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
             Commercial multi-axle vehicle registry with configuration-driven wheel arrangements.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             to="/my-fleets"
-            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] font-semibold rounded-xl text-xs transition cursor-pointer"
             title="Switch or Register New Fleets"
           >
             <Building2 className="w-4 h-4 text-[#5B6068]" /> Manage / Add Fleet
@@ -193,7 +193,7 @@ export const VehiclesPage: React.FC = () => {
               resetAddForm();
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Vehicle
           </button>
@@ -202,7 +202,7 @@ export const VehiclesPage: React.FC = () => {
 
       {/* ══ VEHICLE THI INTELLIGENCE SECTION ══════════════════════════════ */}
       {(!isLoading && vehicles && vehicles.length > 0) && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+        <div className="cream-glow-card p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export const VehiclesPage: React.FC = () => {
                 <h2 className="text-base font-black text-slate-900 tracking-tight">
                   Tyre Health Index (THI) Section
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-[#5B6068] uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cream-100 text-slate-600 border border-gold-light uppercase tracking-wider">
                   Critical Priority Weighted
                 </span>
               </div>
@@ -228,8 +228,8 @@ export const VehiclesPage: React.FC = () => {
                 onClick={() => setThiFilter('ALL')}
                 className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                   thiFilter === 'ALL'
-                    ? 'bg-white text-slate-900 shadow-sm font-bold'
-                    : 'text-[#5B6068] hover:text-slate-900'
+                    ? 'bg-brand-gold text-black border border-gold-border font-bold'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 All ({vehiclesWithThi.length})
@@ -239,8 +239,8 @@ export const VehiclesPage: React.FC = () => {
                 onClick={() => setThiFilter('CRITICAL')}
                 className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
                   thiFilter === 'CRITICAL'
-                    ? 'bg-white text-red-600 shadow-sm font-bold'
-                    : 'text-[#5B6068] hover:text-red-600'
+                    ? 'bg-brand-gold text-black border border-gold-border font-bold'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 Critical ({criticalVehicles.length})
@@ -250,8 +250,8 @@ export const VehiclesPage: React.FC = () => {
                 onClick={() => setThiFilter('WARNING')}
                 className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
                   thiFilter === 'WARNING'
-                    ? 'bg-white text-[#E8770E] shadow-sm font-bold'
-                    : 'text-[#5B6068] hover:text-[#E8770E]'
+                    ? 'bg-brand-gold text-black border border-gold-border font-bold'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 Warning ({warningVehicles.length})
@@ -261,8 +261,8 @@ export const VehiclesPage: React.FC = () => {
                 onClick={() => setThiFilter('HEALTHY')}
                 className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
                   thiFilter === 'HEALTHY'
-                    ? 'bg-white text-emerald-600 shadow-sm font-bold'
-                    : 'text-[#5B6068] hover:text-emerald-600'
+                    ? 'bg-brand-gold text-black border border-gold-border font-bold'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 Healthy ({healthyVehicles.length})
@@ -273,27 +273,27 @@ export const VehiclesPage: React.FC = () => {
           {/* 4 THI Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Card 1: Fleet Average Vehicle THI */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition">
+            <div className="black-glow-card p-4 transition">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                   Fleet Average Vehicle THI
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-[#5B6068] flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 flex items-center justify-center">
                   <Gauge className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black font-mono text-slate-900">
+                <span className="text-2xl font-black font-mono text-white">
                   {avgFleetVehicleTHI.toFixed(1)}
                 </span>
-                <span className="text-xs text-[#5B6068] font-medium">/ 100</span>
+                <span className="text-xs text-slate-300 font-medium">/ 100</span>
                 <span
-                  className={`ml-auto px-2 py-0.5 rounded text-[10px] font-bold border ${
+                  className={`ml-auto px-2 py-0.5 rounded text-[10px] font-bold ${
                     avgFleetVehicleTHI >= 85
-                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                      ? 'bg-emerald-500 text-white'
                       : avgFleetVehicleTHI >= 70
-                      ? 'bg-[#FFF4EB] text-[#E8770E] border-[#FCD5B5]'
-                      : 'bg-red-100 text-red-700 border-red-200'
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-red-500 text-white'
                   }`}
                 >
                   {avgFleetVehicleTHI >= 85 ? 'HEALTHY' : avgFleetVehicleTHI >= 70 ? 'WARNING' : 'CRITICAL'}
@@ -311,7 +311,7 @@ export const VehiclesPage: React.FC = () => {
                   style={{ width: `${Math.min(100, Math.max(0, avgFleetVehicleTHI))}%` }}
                 />
               </div>
-              <span className="text-[10px] text-[#5B6068] block mt-2">
+              <span className="text-[10px] text-slate-400 block mt-2">
                 Mean of all {vehiclesWithThi.length} vehicles in fleet
               </span>
             </div>
@@ -319,28 +319,28 @@ export const VehiclesPage: React.FC = () => {
             {/* Card 2: Healthy Vehicles */}
             <div
               onClick={() => setThiFilter('HEALTHY')}
-              className={`p-4 rounded-2xl bg-slate-50 border transition cursor-pointer ${
-                thiFilter === 'HEALTHY' ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30' : 'border-slate-200 hover:border-slate-300'
+              className={`black-glow-card p-4 transition cursor-pointer ${
+                thiFilter === 'HEALTHY' ? 'ring-2 ring-emerald-500/30' : ''
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                   Optimal Vehicles
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black font-mono text-slate-900">
+                <span className="text-2xl font-black font-mono text-white">
                   {healthyVehicles.length}
                 </span>
-                <span className="text-xs text-[#5B6068] font-medium">vehicles</span>
-                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <span className="text-xs text-slate-300 font-medium">vehicles</span>
+                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">
                   THI ≥ 85
                 </span>
               </div>
-              <span className="text-[10px] text-[#5B6068] block mt-3">
+              <span className="text-[10px] text-slate-400 block mt-3">
                 All mounted tyres in safe, optimal condition
               </span>
             </div>
@@ -348,28 +348,28 @@ export const VehiclesPage: React.FC = () => {
             {/* Card 3: Warning Vehicles */}
             <div
               onClick={() => setThiFilter('WARNING')}
-              className={`p-4 rounded-2xl bg-slate-50 border transition cursor-pointer ${
-                thiFilter === 'WARNING' ? 'border-[#E8770E] ring-2 ring-[#E8770E]/20 bg-[#FFF4EB]/30' : 'border-slate-200 hover:border-slate-300'
+              className={`black-glow-card p-4 transition cursor-pointer ${
+                thiFilter === 'WARNING' ? 'ring-2 ring-[#E8770E]/30' : ''
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                   Warning Vehicles
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-[#FFF4EB] text-[#E8770E] flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#E8770E]/10 text-[#E8770E] flex items-center justify-center">
                   <AlertTriangle className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black font-mono text-slate-900">
+                <span className="text-2xl font-black font-mono text-white">
                   {warningVehicles.length}
                 </span>
-                <span className="text-xs text-[#5B6068] font-medium">vehicles</span>
-                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]">
+                <span className="text-xs text-slate-300 font-medium">vehicles</span>
+                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white">
                   70 ≤ THI &lt; 85
                 </span>
               </div>
-              <span className="text-[10px] text-[#5B6068] block mt-3">
+              <span className="text-[10px] text-slate-400 block mt-3">
                 Under-inflation or accelerated tread wear
               </span>
             </div>
@@ -377,28 +377,28 @@ export const VehiclesPage: React.FC = () => {
             {/* Card 4: Critical Vehicles */}
             <div
               onClick={() => setThiFilter('CRITICAL')}
-              className={`p-4 rounded-2xl bg-slate-50 border transition cursor-pointer ${
-                thiFilter === 'CRITICAL' ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+              className={`black-glow-card p-4 transition cursor-pointer ${
+                thiFilter === 'CRITICAL' ? 'ring-2 ring-red-500/30' : ''
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#5B6068] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                   Critical Vehicles
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-red-100 text-red-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center">
                   <AlertCircle className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black font-mono text-slate-900">
+                <span className="text-2xl font-black font-mono text-white">
                   {criticalVehicles.length}
                 </span>
-                <span className="text-xs text-[#5B6068] font-medium">vehicles</span>
-                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                <span className="text-xs text-slate-300 font-medium">vehicles</span>
+                <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">
                   THI &lt; 70
                 </span>
               </div>
-              <span className="text-[10px] text-[#5B6068] block mt-3">
+              <span className="text-[10px] text-slate-400 block mt-3">
                 Severe blowout risk • Critical tyre weighted 4x
               </span>
             </div>
@@ -408,8 +408,8 @@ export const VehiclesPage: React.FC = () => {
 
       {/* Empty State when 0 vehicles */}
       {!isLoading && (!vehicles || vehicles.length === 0) && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-[#5B6068] shadow-sm">
+        <div className="bg-cream border border-gold-border rounded-3xl p-12 text-center shadow-sm space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-cream-100 border border-gold-light flex items-center justify-center mx-auto text-[#5B6068] shadow-sm">
             <Truck className="w-8 h-8" />
           </div>
           <div>
@@ -423,7 +423,7 @@ export const VehiclesPage: React.FC = () => {
               resetAddForm();
               setShowAddModal(true);
             }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add First Vehicle
           </button>
@@ -432,11 +432,11 @@ export const VehiclesPage: React.FC = () => {
 
       {/* Vehicles Table Card */}
       {(!vehicles || vehicles.length > 0 || isLoading) && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="cream-glow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+                <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
                   <th className="py-3.5 px-6">Vehicle Number</th>
                   <th className="py-3.5 px-4">Configuration</th>
                   <th className="py-3.5 px-4">Model &amp; Year</th>
@@ -448,7 +448,7 @@ export const VehiclesPage: React.FC = () => {
                   <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-700">
+              <tbody className="divide-y divide-gold-light text-[#344054]">
                 {isLoading ? (
                   <tr>
                     <td colSpan={9} className="py-8 text-center text-[#5B6068]">
@@ -463,7 +463,7 @@ export const VehiclesPage: React.FC = () => {
                   </tr>
                 ) : (
                   displayedVehicles.map((v) => (
-                    <tr key={v.id} className="hover:bg-slate-50 transition">
+                    <tr key={v.id} className="hover:bg-[#FFF9E8] transition">
                       <td className="py-4 px-6 font-mono font-bold text-slate-900 flex items-center gap-2">
                         <Truck className="w-4 h-4 text-[#5B6068]" />
                         {v.vehicle_number}
@@ -485,12 +485,12 @@ export const VehiclesPage: React.FC = () => {
                             {v.thi.toFixed(1)}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                               v.thi_status === 'HEALTHY'
-                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                ? 'bg-emerald-500 text-white'
                                 : v.thi_status === 'WARNING'
-                                ? 'bg-[#FFF4EB] text-[#E8770E] border-[#FCD5B5]'
-                                : 'bg-red-100 text-red-700 border-red-200'
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-red-500 text-white'
                             }`}
                           >
                             {v.thi_status}
@@ -547,7 +547,7 @@ export const VehiclesPage: React.FC = () => {
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500 text-white">
                           {v.status}
                         </span>
                       </td>
@@ -556,7 +556,7 @@ export const VehiclesPage: React.FC = () => {
                           {/* Fit Tyres Action */}
                           <Link
                             to={`/fitment?vehicle_id=${v.id}`}
-                            className="px-2.5 py-1.5 bg-[#FFC800] hover:bg-[#e6b400] text-black rounded-lg text-xs font-bold transition inline-flex items-center gap-1 shadow-sm"
+                            className="px-2.5 py-1.5 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-lg text-xs font-bold transition inline-flex items-center gap-1 shadow-sm"
                             title="Mount &amp; Manage Tyres in Fitment Section"
                           >
                             <Wrench className="w-3 h-3" /> Fit Tyres
@@ -565,7 +565,7 @@ export const VehiclesPage: React.FC = () => {
                           {/* Details */}
                           <Link
                             to={`/vehicles/${v.id}`}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
+                            className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
                             title="Vehicle Details"
                           >
                             Details <ArrowUpRight className="w-3 h-3" />
@@ -574,7 +574,7 @@ export const VehiclesPage: React.FC = () => {
                           {/* 3D View */}
                           <button
                             onClick={() => setActive3DVehicleId(v.id)}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
+                            className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
                             title="Interactive 3D Wheel Viewer"
                           >
                             <Eye className="w-3 h-3" /> 3D View
@@ -583,7 +583,7 @@ export const VehiclesPage: React.FC = () => {
                           {/* Inspection */}
                           <Link
                             to={`/vehicles/${v.id}/inspections`}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
+                            className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
                             title="Tread NSD &amp; Visual Inspections"
                           >
                             <ClipboardCheck className="w-3.5 h-3.5 text-emerald-600" /> 2D Inspection
@@ -592,7 +592,7 @@ export const VehiclesPage: React.FC = () => {
                           {/* Trips */}
                           <Link
                             to={`/trips?vehicle_id=${v.id}`}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
+                            className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm"
                             title="Vehicle Journey &amp; Telemetry Trips"
                           >
                             <Route className="w-3 h-3 text-blue-500" /> Trips
@@ -610,10 +610,10 @@ export const VehiclesPage: React.FC = () => {
 
       {/* Register New Vehicle Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col my-8 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-xl bg-cream border border-gold-border rounded-3xl overflow-hidden shadow-2xl flex flex-col my-8 animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-cream-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center font-black text-slate-900 text-sm shadow">
                   <Truck className="w-5 h-5" />
@@ -651,7 +651,7 @@ export const VehiclesPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl max-w-sm mx-auto text-left text-xs space-y-2">
+                <div className="p-4 bg-cream border border-gold-border rounded-2xl max-w-sm mx-auto text-left text-xs space-y-2">
                   <div className="flex justify-between text-slate-600">
                     <span>Axle Configuration:</span>
                     <span className="font-bold text-slate-900">{registeredVehicle.wheel_config}</span>
@@ -669,7 +669,7 @@ export const VehiclesPage: React.FC = () => {
                       setShowAddModal(false);
                       resetAddForm();
                     }}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
                   >
                     <Wrench className="w-4 h-4" /> Add &amp; Fit Tyres Now
                   </Link>
@@ -679,7 +679,7 @@ export const VehiclesPage: React.FC = () => {
                       setShowAddModal(false);
                       resetAddForm();
                     }}
-                    className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer"
+                    className="w-full sm:w-auto px-5 py-3 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] font-semibold text-xs rounded-xl transition cursor-pointer"
                   >
                     Done / Later
                   </button>
@@ -713,7 +713,7 @@ export const VehiclesPage: React.FC = () => {
                       value={vehicleNumber}
                       onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                       placeholder="e.g. DL-01-AF-3525"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                   <div>
@@ -726,7 +726,7 @@ export const VehiclesPage: React.FC = () => {
                       max="2030"
                       value={year}
                       onChange={(e) => setYear(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                 </div>
@@ -740,7 +740,7 @@ export const VehiclesPage: React.FC = () => {
                     <select
                       value={wheelConfig}
                       onChange={(e) => handleWheelConfigChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-brand-gold"
                     >
                       <option value="10-Wheeler">10-Wheeler (3 Axles, 10 Wheels — 28T Hauler)</option>
                       <option value="12-Wheeler">12-Wheeler (4 Axles, 12 Wheels — 35T Tipper/Hauler)</option>
@@ -759,7 +759,7 @@ export const VehiclesPage: React.FC = () => {
                     <select
                       value={vehicleType}
                       onChange={(e) => setVehicleType(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-brand-gold"
                     >
                       <option value="HEAVY_TRUCK">Heavy Commercial Truck (Cargo / Hauler)</option>
                       <option value="TIPPER_TRUCK">Heavy Duty Tipper / Mining Dumper</option>
@@ -783,7 +783,7 @@ export const VehiclesPage: React.FC = () => {
                       value={make}
                       onChange={(e) => setMake(e.target.value)}
                       placeholder="e.g. Tata Motors"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                   <div>
@@ -795,7 +795,7 @@ export const VehiclesPage: React.FC = () => {
                       value={model}
                       onChange={(e) => setModel(e.target.value)}
                       placeholder="e.g. Signa 2823.K"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                 </div>
@@ -811,7 +811,7 @@ export const VehiclesPage: React.FC = () => {
                       step="0.5"
                       value={baselinePressure}
                       onChange={(e) => setBaselinePressure(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
                       Recommended: 110 PSI (10-Wheeler), 130 PSI (12/14-Wheeler), 135 PSI (16-Wheeler)
@@ -827,7 +827,7 @@ export const VehiclesPage: React.FC = () => {
                       step="0.1"
                       value={currentOdometer}
                       onChange={(e) => setCurrentOdometer(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                 </div>
@@ -844,7 +844,7 @@ export const VehiclesPage: React.FC = () => {
                       value={locationName}
                       onChange={(e) => setLocationName(e.target.value)}
                       placeholder="e.g. Okhla Logistics Center, New Delhi"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                      className="w-full pl-9 pr-3 py-2 bg-cream border border-gold-border rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                 </div>
@@ -854,14 +854,14 @@ export const VehiclesPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition cursor-pointer"
+                    className="px-4 py-2 bg-cream border border-gold-light text-[#344054] hover:bg-cream-100 rounded-xl text-xs font-semibold transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createVehicleMutation.isPending}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-slate-900 font-bold rounded-xl text-xs shadow-md shadow-yellow-400/20 transition cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold disabled:opacity-50 text-black font-bold rounded-xl text-xs shadow-md shadow-brand-gold/20 transition cursor-pointer"
                   >
                     {createVehicleMutation.isPending ? (
                       <>
@@ -882,9 +882,9 @@ export const VehiclesPage: React.FC = () => {
 
       {/* 3D Digital Twin Inspection Modal */}
       {active3DVehicleId && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-          <div className="w-full max-w-6xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+          <div className="w-full max-w-6xl bg-cream border border-gold-border rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
+            <div className="px-6 py-4 border-b border-gold-light flex items-center justify-between bg-cream-100">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#14161A] flex items-center justify-center font-bold text-white text-sm shadow">
                   3D

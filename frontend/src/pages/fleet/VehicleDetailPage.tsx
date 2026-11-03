@@ -82,12 +82,12 @@ export const VehicleDetailPage: React.FC = () => {
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Fleet Registry
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">{vehicle.vehicle_number}</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">{vehicle.vehicle_number}</h1>
             <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
               {vehicle.wheel_config}
             </span>
           </div>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <p className="text-xs text-slate-300 mt-0.5">
             {vehicle.make} {vehicle.model} • Manufacturing Year: {vehicle.year}
           </p>
         </div>
@@ -118,8 +118,8 @@ export const VehicleDetailPage: React.FC = () => {
       {/* Vehicle Specs Grid including Priority-Weighted Vehicle THI */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Vehicle THI Card */}
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Vehicle THI</span>
+        <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-slate-300 block mb-1">Vehicle THI</span>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-bold font-mono text-slate-900">{thiData.thi.toFixed(1)}</span>
             <span
@@ -134,7 +134,7 @@ export const VehicleDetailPage: React.FC = () => {
               {thiData.thi_status}
             </span>
           </div>
-          <span className="text-[10px] text-[#5B6068] block mt-0.5">
+          <span className="text-[10px] text-slate-300 block mt-0.5">
             {thiData.critical_tyres_count > 0
               ? `⚠️ ${thiData.critical_tyres_count} critical tyre (4x weight)`
               : thiData.warning_tyres_count > 0
@@ -143,28 +143,28 @@ export const VehicleDetailPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Current Odometer</span>
+        <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-slate-300 block mb-1">Current Odometer</span>
           <span className="text-xl font-bold text-slate-900 font-mono">{vehicle.current_odometer.toLocaleString()} km</span>
-          <span className="text-[10px] text-[#5B6068] block mt-0.5">Monotonically verified</span>
+          <span className="text-[10px] text-slate-300 block mt-0.5">Monotonically verified</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Recommended Pressure</span>
-          <span className="text-xl font-bold text-slate-900">{vehicle.baseline_pressure} psi</span>
-          <span className="text-[10px] text-[#5B6068] block mt-0.5">Vehicle baseline</span>
+        <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-slate-300 block mb-1">Recommended Pressure</span>
+          <span className="text-xl font-bold text-white">{vehicle.baseline_pressure} psi</span>
+          <span className="text-[10px] text-slate-300 block mt-0.5">Vehicle baseline</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Baseline Mileage</span>
-          <span className="text-xl font-bold text-slate-900">{vehicle.baseline_mileage} km/L</span>
-          <span className="text-[10px] text-[#5B6068] block mt-0.5">Commercial rating</span>
+        <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-slate-300 block mb-1">Baseline Mileage</span>
+          <span className="text-xl font-bold text-white">{vehicle.baseline_mileage} km/L</span>
+          <span className="text-[10px] text-slate-300 block mt-0.5">Commercial rating</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Axle Setup</span>
-          <span className="text-xl font-bold text-slate-900">{vehicle.axle_count} Axles</span>
-          <span className="text-[10px] text-[#5B6068] block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
+        <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
+          <span className="text-xs text-slate-300 block mb-1">Axle Setup</span>
+          <span className="text-xl font-bold text-white">{vehicle.axle_count} Axles</span>
+          <span className="text-[10px] text-slate-300 block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
         </div>
       </div>
 
@@ -185,7 +185,7 @@ export const VehicleDetailPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100">
                 <th className="py-3 px-3">Position Code</th>
                 <th className="py-3 px-3">Permanent Serial</th>
                 <th className="py-3 px-3">Tyre Model</th>
@@ -204,7 +204,7 @@ export const VehicleDetailPage: React.FC = () => {
                       <span>No tyres currently mounted on this vehicle.</span>
                       <Link
                         to={`/fitment?vehicle_id=${vehicle.id}`}
-                        className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-sm transition"
+                        className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold text-xs rounded-xl shadow-sm transition"
                       >
                         <Plus className="w-3.5 h-3.5" /> Add &amp; Fit Tyres Now
                       </Link>
@@ -213,7 +213,7 @@ export const VehicleDetailPage: React.FC = () => {
                 </tr>
               ) : (
                 vehicle.fitments?.map((f) => (
-                <tr key={f.id} className="hover:bg-slate-50 transition">
+                <tr key={f.id} className="hover:bg-[#FFF9E8] transition">
                   <td className="py-3 px-3 font-mono font-bold text-slate-900">{f.wheel_position}</td>
                   <td className="py-3 px-3 font-mono text-slate-700">{f.tyre?.serial_number || 'N/A'}</td>
                   <td className="py-3 px-3">{f.tyre?.model || 'JK Tyre'}</td>
@@ -269,13 +269,13 @@ export const VehicleDetailPage: React.FC = () => {
                   3D
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
                     Digital Twin Inspection • {vehicle.vehicle_number}
                     <span className="text-xs font-semibold text-slate-700 font-mono bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                       {vehicle.wheel_config}
                     </span>
                   </h2>
-                  <p className="text-[11px] text-[#5B6068]">
+                  <p className="text-[11px] text-slate-300">
                     Configuration-driven physical axle arrangement & live tyre health telemetry
                   </p>
                 </div>

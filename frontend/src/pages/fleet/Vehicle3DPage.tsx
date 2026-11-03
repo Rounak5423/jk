@@ -101,7 +101,7 @@ export const Vehicle3DPage: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight font-mono">
+                <h1 className="text-2xl font-black text-white tracking-tight font-mono">
                   {vehicle.vehicle_number}
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
@@ -111,7 +111,7 @@ export const Vehicle3DPage: React.FC = () => {
                   {vehicle.status}
                 </span>
               </div>
-              <p className="text-xs text-[#5B6068] mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 {vehicle.make} {vehicle.model} • {vehicle.axle_count} Axles • {vehicle.expected_tyre_count} Physical Wheel Mounts
               </p>
             </div>
@@ -137,21 +137,21 @@ export const Vehicle3DPage: React.FC = () => {
 
           <Link
             to={`/vehicles/${vehicle.id}`}
-            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-slate-200"
+            className="px-3.5 py-2 bg-cream hover:bg-[#FFF9E8] text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-gold-light"
           >
             Vehicle Details <ChevronRight className="w-3.5 h-3.5" />
           </Link>
 
           <Link
             to={`/vehicles/${vehicle.id}/inspections`}
-            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-slate-200"
+            className="px-3.5 py-2 bg-cream hover:bg-[#FFF9E8] text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-gold-light"
           >
             <ClipboardCheck className="w-3.5 h-3.5 text-emerald-600" /> Inspections
           </Link>
 
           <Link
             to={`/trips?vehicle_id=${vehicle.id}`}
-            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-slate-200"
+            className="px-3.5 py-2 bg-cream hover:bg-[#FFF9E8] text-slate-700 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm border border-gold-light"
           >
             <Route className="w-3.5 h-3.5 text-blue-600" /> Trips
           </Link>

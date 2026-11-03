@@ -242,15 +242,45 @@ export const RegisterPage: React.FC = () => {
         </div>
       )}
 
-      {/* Animated dropdown text — top-left overlay */}
+      {/* JK Logo — top-left overlay */}
       <motion.div
-        className="absolute top-12 left-12 z-10 pointer-events-none"
+        className="absolute top-8 left-12 z-10 pointer-events-none"
         initial={{opacity: 0}}
         animate={{opacity: 1}}
       >
+        {/* JK Tyre Logo - Larger */}
+        <motion.div
+          initial={{y: -40, opacity: 0}}
+          animate={{y: 0, opacity: 1}}
+          transition={{delay: 0.1, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
+        >
+          <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '80px' }} />
+        </motion.div>
+      </motion.div>
+
+      {/* Animated text with strong gradient shade — top-right overlay, lower position */}
+      <motion.div
+        className="absolute top-32 right-16 z-10 pointer-events-none text-right"
+        initial={{opacity: 0}}
+        animate={{opacity: 1}}
+      >
+        {/* Stronger radial gradient shade - more coverage */}
+        <div 
+          className="absolute -z-10"
+          style={{
+            top: '50%',
+            right: '0',
+            transform: 'translate(15%, -50%)',
+            width: '650px',
+            height: '400px',
+            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.35) 70%, transparent 100%)',
+            filter: 'blur(25px)',
+          }}
+        />
+        
         <motion.h2
           className="text-5xl font-black text-white leading-tight mb-2"
-          style={{textShadow: '0 2px 24px rgba(0,0,0,0.9)'}}
+          style={{textShadow: '0 6px 40px rgba(0,0,0,1), 0 2px 20px rgba(0,0,0,0.9)'}}
           initial={{y: -60, opacity: 0}}
           animate={{y: 0, opacity: 1}}
           transition={{delay: 0.2, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
@@ -259,7 +289,7 @@ export const RegisterPage: React.FC = () => {
         </motion.h2>
         <motion.h2
           className="text-5xl font-black text-yellow-400 leading-tight mb-4"
-          style={{textShadow: '0 2px 20px rgba(234,179,8,0.5)'}}
+          style={{textShadow: '0 6px 35px rgba(234,179,8,0.8), 0 2px 20px rgba(0,0,0,0.95)'}}
           initial={{y: -60, opacity: 0}}
           animate={{y: 0, opacity: 1}}
           transition={{delay: 0.4, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
@@ -267,7 +297,8 @@ export const RegisterPage: React.FC = () => {
           Safer Journeys.
         </motion.h2>
         <motion.p
-          className="text-sm text-slate-300 leading-relaxed max-w-xs"
+          className="text-sm text-white leading-relaxed max-w-xs ml-auto"
+          style={{textShadow: '0 4px 24px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.95)'}}
           initial={{y: -60, opacity: 0}}
           animate={{y: 0, opacity: 1}}
           transition={{delay: 0.6, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
@@ -276,8 +307,8 @@ export const RegisterPage: React.FC = () => {
         </motion.p>
       </motion.div>
 
-      {/* Centered black-glow card */}
-      <div className="flex items-center justify-center min-h-screen p-8">
+      {/* Left-aligned black-glow card */}
+      <div className="flex items-center justify-start min-h-screen p-8 pl-16">
         <div className="black-glow-card max-w-3xl w-full p-8 rounded-2xl overflow-y-auto" style={{maxHeight: '95vh'}}>
 
           {/* Back */}
@@ -292,8 +323,6 @@ export const RegisterPage: React.FC = () => {
           {/* Header */}
           <motion.div className="mb-4" {...up(0.12)}>
             <div className="flex items-center gap-3 mb-2">
-              <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '48px' }} />
-              <div className="h-5 w-px bg-yellow-400/30" />
               <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest">
                 {role === 'DRIVER' ? 'DRIVER ENROLMENT' : 'FLEET ENROLMENT'}
               </span>

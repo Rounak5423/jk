@@ -1,0 +1,7 @@
+{
+  "task_id": "task-ui-redesign",
+  "task_description": "Complete UI redesign of the JK Tyre THI Fleet Intelligence frontend: dark warm-gradient app shell with gold accents, cream cards, vanilla table headers, and solid status badges. className-only changes across tailwind.config.js, index.css, shared layout, and all 22 page components. No logic/API/routing changes; no new packages.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

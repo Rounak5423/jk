@@ -61,8 +61,8 @@ export const AlertsPage: React.FC = () => {
       {/* Header & Filter Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Operational Alerts Center</h1>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">Operational Alerts Center</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
             Deduplicated real-time notifications with explicit acknowledgment and resolution audit history.
           </p>
         </div>
@@ -71,7 +71,7 @@ export const AlertsPage: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-sm"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-gold shadow-sm"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -82,7 +82,7 @@ export const AlertsPage: React.FC = () => {
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-sm"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-gold shadow-sm"
           >
             <option value="">All Severities</option>
             <option value="CRITICAL">Critical</option>
@@ -93,11 +93,11 @@ export const AlertsPage: React.FC = () => {
       </div>
 
       {/* Alerts Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="cream-glow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
                 <th className="py-3.5 px-6">Alert Code</th>
                 <th className="py-3.5 px-4">Vehicle &amp; Wheel</th>
                 <th className="py-3.5 px-4">Category</th>
@@ -107,7 +107,7 @@ export const AlertsPage: React.FC = () => {
                 <th className="py-3.5 px-6 text-right">Workflow</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-gold-light text-[#344054]">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-[#5B6068]">
@@ -122,15 +122,15 @@ export const AlertsPage: React.FC = () => {
                 </tr>
               ) : (
                 alerts?.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50 transition">
+                  <tr key={a.id} className="hover:bg-[#FFF9E8] transition">
                     <td className="py-4 px-6">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                           a.severity === 'CRITICAL'
-                            ? 'bg-red-100 text-red-700 border border-red-200'
+                            ? 'bg-red-500 text-white'
                             : a.severity === 'WARNING'
-                            ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
-                            : 'bg-blue-100 text-blue-700 border border-blue-300'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-blue-500 text-white'
                         }`}
                       >
                         {a.code}
@@ -151,12 +151,12 @@ export const AlertsPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-4 max-w-md">
                       <div className="font-medium text-slate-900">{a.explanation}</div>
-                      <div className="text-[11px] text-blue-600 mt-1 flex items-start gap-1">
+                      <div className="text-[11px] text-brand-gold hover:text-brand-warm-gold mt-1 flex items-start gap-1">
                         <ArrowRight className="w-3 h-3 shrink-0 mt-0.5" />
                         <span>Action: {a.recommended_action}</span>
                       </div>
                       {a.status === 'RESOLVED' && a.resolution_note && (
-                        <div className="text-[10px] text-emerald-700 mt-1 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                        <div className="text-[10px] text-emerald-700 mt-1 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/30">
                           Resolved: {a.resolution_note} ({a.resolved_by})
                         </div>
                       )}
@@ -165,10 +165,10 @@ export const AlertsPage: React.FC = () => {
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                           a.status === 'ACTIVE'
-                            ? 'bg-red-100 text-red-700 border border-red-200'
+                            ? 'bg-red-500 text-white'
                             : a.status === 'ACKNOWLEDGED'
-                            ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
-                            : 'bg-slate-100 text-slate-500'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-slate-500 text-white'
                         }`}
                       >
                         {a.status}
@@ -182,7 +182,7 @@ export const AlertsPage: React.FC = () => {
                         <button
                           onClick={() => ackMutation.mutate(a.id)}
                           disabled={ackMutation.isPending}
-                          className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-300 rounded-lg text-xs font-semibold transition"
+                          className="px-2.5 py-1 bg-dark-surface hover:bg-dark-card text-white border border-white/10 rounded-lg text-xs font-semibold transition"
                         >
                           Acknowledge
                         </button>
@@ -194,14 +194,14 @@ export const AlertsPage: React.FC = () => {
                             setResolvingAlert(a);
                             setResolutionNote('');
                           }}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-sm"
+                          className="px-2.5 py-1 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-lg text-xs font-semibold transition shadow-sm"
                         >
                           Resolve
                         </button>
                       )}
 
                       {a.status === 'RESOLVED' && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
                           <Check className="w-3.5 h-3.5" /> Closed
                         </span>
                       )}
@@ -216,8 +216,8 @@ export const AlertsPage: React.FC = () => {
 
       {/* Resolve Modal */}
       {resolvingAlert && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-cream border border-gold-border rounded-2xl p-6 shadow-2xl relative">
             <button
               onClick={() => setResolvingAlert(null)}
               className="absolute top-4 right-4 p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
@@ -244,7 +244,7 @@ export const AlertsPage: React.FC = () => {
                   onChange={(e) => setResolutionNote(e.target.value)}
                   placeholder="Explain corrective maintenance action performed (e.g. reinflated to 110 psi, replaced valve core, remounted spare)..."
                   required
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                 />
               </div>
 
@@ -252,14 +252,14 @@ export const AlertsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setResolvingAlert(null)}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200"
+                  className="px-4 py-2 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-xl font-semibold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={resolveMutation.isPending}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shadow-lg shadow-emerald-600/20"
+                  className="px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-xl font-bold transition shadow-lg shadow-brand-gold/30"
                 >
                   {resolveMutation.isPending ? 'Closing...' : 'Mark Alert Resolved'}
                 </button>

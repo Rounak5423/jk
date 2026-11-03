@@ -76,23 +76,23 @@ export const TripsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Fleet Trips &amp; Driving Score</h1>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">Fleet Trips &amp; Driving Score</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
             Journey compliance tracking evaluating thermal stress, pressure stability, and speed behaviour.
           </p>
         </div>
 
         <button
           onClick={() => refetch()}
-          className="px-3 py-2 bg-white border border-slate-200 text-[#5B6068] hover:text-slate-900 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition"
+          className="px-3 py-2 bg-dark-surface border border-white/10 text-white hover:bg-dark-card rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+          <RefreshCw className={`w-3.5 h-3.5 text-brand-gold ${isLoading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
 
       {/* Vehicle-Specific Filter Banner (when filtered by vehicle_id) */}
       {vehicleIdParam && (
-        <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-4 rounded-2xl bg-cream border border-gold-border text-[#344054] text-xs flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <Truck className="w-5 h-5 text-[#5B6068]" />
             <div>
@@ -106,7 +106,7 @@ export const TripsPage: React.FC = () => {
           </div>
           <button
             onClick={() => handleVehicleChange('')}
-            className="px-3 py-1 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-sm"
+            className="px-3 py-1 bg-cream border border-gold-light text-[#344054] hover:bg-cream-100 rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-sm"
           >
             <X className="w-3.5 h-3.5" /> View All Vehicles
           </button>
@@ -114,14 +114,14 @@ export const TripsPage: React.FC = () => {
       )}
 
       {/* Filter Bar */}
-      <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-wrap items-center gap-3 text-xs">
+      <div className="cream-glow-card p-4 flex flex-wrap items-center gap-3 text-xs">
         {/* Vehicle filter */}
         <div className="flex items-center gap-2">
-          <span className="text-slate-600 font-semibold">Vehicle:</span>
+          <span className="text-slate-500 font-semibold">Vehicle:</span>
           <select
             value={vehicleIdParam}
             onChange={(e) => handleVehicleChange(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold"
           >
             <option value="">All Fleet Vehicles</option>
             {vehicles?.map((v) => (
@@ -134,11 +134,11 @@ export const TripsPage: React.FC = () => {
 
         {/* Status filter */}
         <div className="flex items-center gap-2">
-          <span className="text-slate-600 font-semibold">Status:</span>
+          <span className="text-slate-500 font-semibold">Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold"
           >
             <option value="">All Statuses</option>
             <option value="COMPLETED">Completed</option>
@@ -149,30 +149,30 @@ export const TripsPage: React.FC = () => {
 
         {/* Start Date filter */}
         <div className="flex items-center gap-1.5">
-          <span className="text-slate-600 font-semibold">From:</span>
+          <span className="text-slate-500 font-semibold">From:</span>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold"
           />
         </div>
 
         {/* End Date filter */}
         <div className="flex items-center gap-1.5">
-          <span className="text-slate-600 font-semibold">To:</span>
+          <span className="text-slate-500 font-semibold">To:</span>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+            className="bg-cream border border-gold-border rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold"
           />
         </div>
 
         {(startDate || endDate || statusFilter || vehicleIdParam) && (
           <button
             onClick={handleClearFilters}
-            className="px-2.5 py-1.5 text-slate-500 hover:text-slate-900 text-xs underline ml-auto"
+            className="px-2.5 py-1.5 text-brand-gold hover:text-brand-warm-gold text-xs underline ml-auto"
           >
             Reset Filters
           </button>
@@ -180,11 +180,11 @@ export const TripsPage: React.FC = () => {
       </div>
 
       {/* Trips Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="cream-glow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
                 <th className="py-3.5 px-6">Trip Code</th>
                 <th className="py-3.5 px-4">Vehicle</th>
                 <th className="py-3.5 px-4">Driver</th>
@@ -198,7 +198,7 @@ export const TripsPage: React.FC = () => {
                 <th className="py-3.5 px-6 text-right">Analysis</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-gold-light text-[#344054]">
               {isLoading ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-[#5B6068]">
@@ -217,7 +217,7 @@ export const TripsPage: React.FC = () => {
                 </tr>
               ) : (
                 trips?.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition">
+                  <tr key={t.id} className="hover:bg-[#FFF9E8] transition">
                     <td className="py-4 px-6 font-mono font-bold text-slate-900">{t.trip_code}</td>
                     <td className="py-4 px-4 font-semibold text-slate-900">
                       <Link to={`/vehicles/${t.vehicle_id}`} className="hover:text-blue-600 transition">
@@ -239,7 +239,7 @@ export const TripsPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-4">
                       {t.trip_score !== null && t.trip_score !== undefined ? (
-                        <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className={`font-bold flex items-center gap-1.5 ${t.trip_score >= 85 ? 'text-brand-gold' : 'text-slate-900'}`}>
                           <span
                             className={`w-2.5 h-2.5 rounded-full ${
                               t.trip_score >= 85
@@ -259,8 +259,8 @@ export const TripsPage: React.FC = () => {
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                           t.status === 'COMPLETED'
-                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                            : 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-amber-500 text-white'
                         }`}
                       >
                         {t.status}
@@ -269,7 +269,7 @@ export const TripsPage: React.FC = () => {
                     <td className="py-4 px-6 text-right">
                       <button
                         onClick={() => setSelectedTrip(t)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition"
+                        className="px-3 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition"
                       >
                         Breakdown
                       </button>
@@ -284,8 +284,8 @@ export const TripsPage: React.FC = () => {
 
       {/* Trip Score Breakdown Modal */}
       {selectedTrip && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream border border-gold-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative space-y-4">
             <button
               onClick={() => setSelectedTrip(null)}
               className="absolute top-5 right-5 p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
@@ -298,7 +298,7 @@ export const TripsPage: React.FC = () => {
               <h3 className="font-bold text-base">Trip Evaluation Breakdown</h3>
             </div>
 
-            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-cream-100 border border-gold-light flex items-center justify-between">
               <div>
                 <span className="font-mono text-sm font-bold text-slate-900">{selectedTrip.trip_code}</span>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -315,7 +315,7 @@ export const TripsPage: React.FC = () => {
 
             {selectedTrip.score_breakdown && (
               <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-cream-100 border border-gold-light flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Gauge className="w-4 h-4 text-cyan-400" />
                     <span className="text-slate-700">Pressure Compliance</span>
@@ -325,7 +325,7 @@ export const TripsPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-cream-100 border border-gold-light flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Thermometer className="w-4 h-4 text-amber-400" />
                     <span className="text-slate-700">Thermal Stability</span>
@@ -335,7 +335,7 @@ export const TripsPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-cream-100 border border-gold-light flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-emerald-400" />
                     <span className="text-slate-700">Speed / Driving Smoothness</span>
@@ -346,7 +346,7 @@ export const TripsPage: React.FC = () => {
                 </div>
 
                 {selectedTrip.score_breakdown.explanation && (
-                  <div className="p-3 rounded-xl bg-slate-100 text-slate-600 text-[11px] leading-relaxed">
+                  <div className="p-3 rounded-xl bg-cream-50 text-slate-600 text-[11px] leading-relaxed">
                     <span className="font-semibold text-slate-700 block mb-0.5">Analysis Summary:</span>
                     {selectedTrip.score_breakdown.explanation}
                   </div>

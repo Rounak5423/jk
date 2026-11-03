@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Redesign the four vehicle/tyre detail pages: VehicleDetailPage, TyreDetailPage, Vehicle3DPage, VehicleInspectionPage. These include the largest files (VehicleInspectionPage ~1492 lines). className-only changes — preserve ALL JSX, useParams queries, 3D viewer component usage, inspection creation logic, and lifecycle-history fetches. Depends on FEAT-001. NOTE: read each file fully before editing; VehicleInspectionPage and VehicleDetailPage are large.",
+  "status": "pending",
+  "steps": [
+    "VehicleDetailPage.tsx: read fully, then apply universal mapping — page title/subtitle->white/light, back link text-blue-600->text-brand-gold, all cards bg-white border-slate-200->bg-cream border-gold-border, any spec strip panel bg-[#14161A]->bg-[#17191D] border-gold-border/30 with white values + emerald/orange accents kept, all tables->vanilla header bg-cream-200 text-[#344054] hover #FFF9E8, all status/THI/lifecycle badges->solid white-text, action buttons->primary gold or secondary light per context, any modal->cream card. Keep all useParams + useQuery.",
+    "TyreDetailPage.tsx: read fully, then apply universal mapping — back link text-blue-600->text-brand-gold; cards bg-white border-slate-200->bg-cream border-gold-border; lifecycle history badges via getLifecycleBadgeClasses->solid NEW bg-emerald-500 text-white, REUSE bg-blue-500 text-white, RETREAD bg-amber-500 text-white, SCRAP bg-red-500 text-white; tyre image container bg-slate-50->bg-cream-100; any table->vanilla header; buttons->primary gold/secondary light. Keep all useParams + lifecycle-history useQuery.",
+    "Vehicle3DPage.tsx: read fully, then apply universal mapping to the page chrome (title/subtitle, back link, surrounding cards/buttons). Do NOT modify the VehicleViewer3D / Three.js canvas internals or any R3F component props — only restyle the wrapper divs and labels around the canvas. Keep all useParams + twin queries.",
+    "VehicleInspectionPage.tsx: read fully (it is ~1492 lines), then apply universal mapping systematically — title/subtitle->white/light, all cards bg-white border-slate-200->bg-cream border-gold-border, all tables->vanilla header bg-cream-200 text-[#344054] hover #FFF9E8, NSD progress bars keep status colours (emerald/amber/red) but restyle their track/container to bg-cream-50, all result/THI/lifecycle/visual-condition badges->solid white-text, 'Physical Inspection' button->primary gold, action buttons->secondary light, any modal->bg-cream card + bg-cream-50 inputs + primary gold submit + bg-black/70 backdrop. Do NOT change the 2D exploded viewer (Vehicle2DExplodedViewer) internals, any useQuery/useMutation, FormData/photo upload, or inspection result logic."
+  ],
+  "acceptance_criteria": [
+    "All four detail pages build with npm run build exiting 0.",
+    "Vehicle spec strips are dark #17191D panels; NSD gauges keep health-status colours; all badges are solid with white text; the 3D/2D viewer canvases are untouched internally.",
+    "No useParams query, R3F/viewer component prop, inspection mutation, or FormData handling was changed on any of the four pages."
+  ],
+  "verification": [
+    "cd c:/Users/vaisi/OneDrive/Desktop/jk-new/frontend && npm run build — exits 0."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
