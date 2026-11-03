@@ -178,33 +178,33 @@ export const AdminMapPage: React.FC = () => {
       {/* Aggregate Platform Metrics */}
       {data && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="p-4 rounded-2xl bg-white border border-bordergray shadow-sm">
+          <div className="cream-glow-card p-4">
             <div className="text-[11px] font-semibold text-slate-300">Total Fleets</div>
-            <div className="text-2xl font-black text-white mt-1">{data.metrics.total_fleets}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{data.metrics.total_fleets}</div>
             <div className="text-[10px] text-emerald-700 font-medium mt-0.5">{data.metrics.active_fleets} Active</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-bordergray shadow-sm">
+          <div className="cream-glow-card p-4">
             <div className="text-[11px] font-semibold text-slate-300">Total Vehicles</div>
-            <div className="text-2xl font-black text-white mt-1">{data.metrics.total_vehicles}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{data.metrics.total_vehicles}</div>
             <div className="text-[10px] text-slate-300 font-medium mt-0.5">Commercial Units</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-bordergray shadow-sm">
+          <div className="cream-glow-card p-4">
             <div className="text-[11px] font-semibold text-slate-300">Geolocated</div>
-            <div className="text-2xl font-black text-white mt-1">{data.metrics.mapped_vehicles}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{data.metrics.mapped_vehicles}</div>
             <div className="text-[10px] text-blue-700 font-medium mt-0.5">Plot On Map</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-bordergray shadow-sm">
+          <div className="cream-glow-card p-4">
             <div className="text-[11px] font-semibold text-slate-300">Simulated Telemetry</div>
-            <div className="text-2xl font-black text-white mt-1">{data.metrics.freshness_breakdown.simulated}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{data.metrics.freshness_breakdown.simulated}</div>
             <div className="text-[10px] text-amber-700 font-medium mt-0.5">Synthetic Feeds</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-bordergray shadow-sm">
+          <div className="cream-glow-card p-4">
             <div className="text-[11px] font-semibold text-slate-300">Unmapped Vehicles</div>
-            <div className="text-2xl font-black text-white mt-1">{data.metrics.unmapped_vehicles}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{data.metrics.unmapped_vehicles}</div>
             <div className="text-[10px] text-slate-500 font-medium mt-0.5">GPS Offline / Depot</div>
           </div>
         </div>

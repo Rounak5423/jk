@@ -152,7 +152,7 @@ export const OEMFleetVaultPage: React.FC = () => {
 
       {/* KPI Metrics Ribbon */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Ingested Fleets</span>
             <Layers className="w-4 h-4 text-[#5B6068]" />
@@ -163,7 +163,7 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-[10px] text-slate-300 mt-0.5">Active transport operators</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Monitored Vehicles</span>
             <Truck className="w-4 h-4 text-[#5B6068]" />
@@ -174,7 +174,7 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-[10px] text-slate-300 mt-0.5">Equipped commercial trucks</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Tracked JK Tyres</span>
             <Disc className="w-4 h-4 text-[#5B6068]" />
@@ -185,7 +185,7 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-[10px] text-slate-300 mt-0.5">With permanent RFID/Stencil</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Active Fault Alerts</span>
             <AlertTriangle className={`w-4 h-4 ${(vaultSummary?.aggregate_totals?.active_alerts ?? 0) > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'}`} />
@@ -196,7 +196,7 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-[10px] text-slate-300 mt-0.5">Pending depot remediation</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Total Snapshots</span>
             <CheckCircle2 className="w-4 h-4 text-[#5B6068]" />
@@ -209,7 +209,7 @@ export const OEMFleetVaultPage: React.FC = () => {
       </div>
 
       {/* Search and Table Section */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="cream-glow-card overflow-hidden">
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />

@@ -122,25 +122,25 @@ export const TyreDetailPage: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <span className="text-xs text-slate-500 block mb-1">Measured NSD</span>
           <span className="text-xl font-bold text-slate-900 font-mono">{tyre.current_nsd?.toFixed(1)} mm</span>
           <span className="text-[10px] text-slate-400 block mt-0.5">Virgin: {tyre.blueprint_nsd} mm</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <span className="text-xs text-slate-500 block mb-1">Wear Progression</span>
           <span className="text-xl font-bold text-amber-500">{tyre.wear_percentage}%</span>
           <span className="text-[10px] text-slate-400 block mt-0.5">Tread consumption</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <span className="text-xs text-slate-500 block mb-1">Cumulative Distance</span>
           <span className="text-xl font-bold text-slate-900 font-mono">{tyre.total_km_run.toLocaleString()} km</span>
           <span className="text-[10px] text-slate-400 block mt-0.5">Across all fitments</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <span className="text-xs text-slate-500 block mb-1">Remaining Useful Life</span>
           <span className="text-xl font-bold text-emerald-600">
             {rul?.remaining_life_km ? `~${rul.remaining_life_km.toLocaleString()} km` : 'Insufficient history'}
@@ -150,7 +150,7 @@ export const TyreDetailPage: React.FC = () => {
       </div>
 
       {/* RUL Estimation Analysis Card */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="cream-glow-card p-6">
         <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
           <Activity className="w-4 h-4 text-emerald-500" /> Tread Wear & Remaining Life Analysis
         </h3>
@@ -177,7 +177,7 @@ export const TyreDetailPage: React.FC = () => {
       </div>
 
       {/* Fitment History Lifecycle Card */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="cream-glow-card p-6">
         <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
           <RotateCcw className="w-4 h-4 text-blue-500" /> Permanent Fitment &amp; Remount History
         </h3>
@@ -226,7 +226,7 @@ export const TyreDetailPage: React.FC = () => {
 
       {/* Lifecycle History Card */}
       {lifecycleHistory && lifecycleHistory.length > 0 && (
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+        <div className="cream-glow-card p-6">
           <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
             <History className="w-4 h-4 text-purple-500" /> Lifecycle Change History
           </h3>

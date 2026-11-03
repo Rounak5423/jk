@@ -438,7 +438,7 @@ export const VehicleInspectionPage: React.FC = () => {
       )}
 
       {/* ── Real-Time Inspection Progress Bar & 100% Confirmation ── */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
+      <div className="cream-glow-card p-5 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div
@@ -556,7 +556,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
       {/* ── Active Selected Tyre Inspection & Removal/Replacement Panel ── */}
       {selectedPos && selectedPos.tyre ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5 animate-in fade-in duration-200">
+        <div className="cream-glow-card p-6 space-y-5 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#14161A] text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">

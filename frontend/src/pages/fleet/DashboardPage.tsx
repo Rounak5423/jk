@@ -241,7 +241,7 @@ export const DashboardPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto bg-white border border-gold-light rounded-2xl shadow-sm">
+            <div className="overflow-x-auto cream-glow-card">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
@@ -413,7 +413,7 @@ export const DashboardPage: React.FC = () => {
               activeAlerts.slice(0, 5).map((a) => (
                 <div
                   key={a.id}
-                  className="bg-white border border-gold-light p-3.5 rounded-xl flex items-start justify-between gap-3 text-xs"
+                  className="cream-glow-card p-3.5 flex items-start justify-between gap-3 text-xs"
                 >
                   <div className="flex items-start gap-3">
                     <span

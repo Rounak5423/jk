@@ -247,7 +247,7 @@ export const MyFleetsPage: React.FC = () => {
             return (
               <div
                 key={fleet.id}
-                className={`bg-cream rounded-2xl border transition-all duration-200 overflow-hidden shadow-sm flex flex-col ${
+                className={`cream-glow-card rounded-2xl border transition-all duration-200 overflow-hidden shadow-sm flex flex-col ${
                   isActive
                     ? 'border-brand-gold ring-2 ring-brand-gold/30 shadow-md'
                     : 'border-gold-border hover:border-gold-light hover:shadow'
@@ -294,7 +294,7 @@ export const MyFleetsPage: React.FC = () => {
 
                 {/* Metrics Grid */}
                 <div className="p-6 py-4 grid grid-cols-3 gap-2 border-b border-bordergray/60 bg-[#F4F3EF]/60">
-                  <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
+                  <div className="text-center p-2 rounded-xl cream-glow-card">
                     <div className="flex items-center justify-center text-[#5B6068] mb-1">
                       <Truck className="w-3.5 h-3.5" />
                     </div>
@@ -302,7 +302,7 @@ export const MyFleetsPage: React.FC = () => {
                     <div className="text-[10px] text-[#5B6068] font-medium">Vehicles</div>
                   </div>
 
-                  <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
+                  <div className="text-center p-2 rounded-xl cream-glow-card">
                     <div className="flex items-center justify-center text-[#5B6068] mb-1">
                       <Disc className="w-3.5 h-3.5" />
                     </div>
@@ -310,7 +310,7 @@ export const MyFleetsPage: React.FC = () => {
                     <div className="text-[10px] text-[#5B6068] font-medium">Fitted Tyres</div>
                   </div>
 
-                  <div className="text-center p-2 rounded-xl bg-white border border-bordergray/80">
+                  <div className="text-center p-2 rounded-xl cream-glow-card">
                     <div className="flex items-center justify-center mb-1">
                       <AlertTriangle className={`w-3.5 h-3.5 ${
                         (fleet.active_alerts_count || 0) > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'

@@ -169,7 +169,7 @@ export const VehicleDetailPage: React.FC = () => {
       </div>
 
       {/* Fitted Tyres Conventional Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden p-6 shadow-sm">
+      <div className="cream-glow-card p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <Disc className="w-4 h-4 text-[#5B6068]" /> Active Fitted Tyres by Wheel Position
