@@ -197,8 +197,8 @@ export const TyreDetailsPanel: React.FC<Props> = ({
 
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Recommended Maintenance Action</h4>
-          <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-900/40 text-xs text-blue-300 flex items-start gap-2">
-            <ArrowRight className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+          <div className="p-3 rounded-xl bg-[#14161A] border border-yellow-400/40 text-xs text-white flex items-start gap-2">
+            <ArrowRight className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
             <div>
               {selectedWheel.status === 'CRITICAL' && 'Stop vehicle immediately; inspect for severe under-inflation, thermal damage or bald tread.'}
               {selectedWheel.status === 'WARNING' && 'Schedule cold pressure verification and tread rotation check at next scheduled depot stop.'}
