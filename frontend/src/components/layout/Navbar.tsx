@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
       case 'SUPER_ADMIN':
         return <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[11px] font-semibold">JK Admin</span>;
       case 'FLEET_MANAGER':
-        return <span className="bg-[#14161A] text-white px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-700">Fleet Owner</span>;
+        return <span className="bg-brand-gold text-black px-2 py-0.5 rounded-full text-[11px] font-semibold">Fleet Owner</span>;
       case 'DRIVER':
         return <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[11px] font-semibold">Driver</span>;
       default:
@@ -22,11 +22,11 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="h-14 bg-white border-b border-[#E2E0D8] shadow-sm px-6 flex items-center justify-between sticky top-0 z-40 overflow-visible">
+    <header className="h-14 bg-[#1C1D20] border-b border-gold-border/40 px-6 flex items-center justify-between sticky top-0 z-40 overflow-visible">
       {/* Brand */}
       <div className="flex items-center gap-3" style={{ overflow: 'visible' }}>
         <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
-        <p className="text-[11px] font-semibold text-[#5B6068] leading-none tracking-wide">THI Tyre Intelligence Platform</p>
+        <p className="text-[11px] font-semibold text-slate-400 leading-none tracking-wide">THI Tyre Intelligence Platform</p>
       </div>
 
       {/* Right controls */}
@@ -40,15 +40,15 @@ export const Navbar: React.FC = () => {
         )}
 
         {/* User profile */}
-        <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
+        <div className="flex items-center gap-3 pl-2 border-l border-white/10">
           <div className="text-right hidden sm:block">
-            <div className="text-xs font-semibold text-slate-900 flex items-center justify-end gap-1.5">
+            <div className="text-xs font-semibold text-white flex items-center justify-end gap-1.5">
               {user?.full_name}
               {getRoleBadge(user?.role)}
             </div>
             <Link
               to="/my-fleets"
-              className="text-[11px] text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center justify-end gap-1"
+              className="text-[11px] text-slate-300 hover:text-white font-medium hover:underline flex items-center justify-end gap-1"
               title="Click to Switch or Add Fleets"
             >
               <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
@@ -59,7 +59,7 @@ export const Navbar: React.FC = () => {
 
           <button
             onClick={logout}
-            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+            className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />

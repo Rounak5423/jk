@@ -209,7 +209,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
           onClick={() => setIsExploded(!isExploded)}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold backdrop-blur-md border transition shadow-lg ${
             isExploded
-              ? 'bg-blue-600/30 text-blue-300 border-blue-500/50 hover:bg-blue-600/40'
+              ? 'bg-[#14161A] text-white border-yellow-400/60 shadow-yellow-400/20'
               : 'bg-slate-900/80 text-slate-200 border-slate-700 hover:bg-slate-800'
           }`}
           title={isExploded ? 'Collapse Axles to Standard Stance' : 'Explode Axles Outward for Clear Inspection'}

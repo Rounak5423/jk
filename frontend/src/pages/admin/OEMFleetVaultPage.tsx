@@ -141,7 +141,7 @@ export const OEMFleetVaultPage: React.FC = () => {
             <button
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] disabled:opacity-50 text-black rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+              className="px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold disabled:opacity-50 text-black rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
               {syncMutation.isPending ? 'Ingesting Snapshots…' : 'Sync All Fleets Now'}
@@ -152,7 +152,7 @@ export const OEMFleetVaultPage: React.FC = () => {
 
       {/* KPI Metrics Ribbon */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Ingested Fleets</span>
             <Layers className="w-4 h-4 text-[#5B6068]" />
@@ -160,10 +160,10 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-2xl font-black text-slate-900 mt-1">
             {vaultSummary?.total_fleets_ingested ?? 0}
           </div>
-          <div className="text-[10px] text-[#5B6068] mt-0.5">Active transport operators</div>
+          <div className="text-[10px] text-slate-300 mt-0.5">Active transport operators</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Monitored Vehicles</span>
             <Truck className="w-4 h-4 text-[#5B6068]" />
@@ -171,10 +171,10 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-2xl font-black text-slate-900 mt-1">
             {vaultSummary?.aggregate_totals?.vehicles ?? 0}
           </div>
-          <div className="text-[10px] text-[#5B6068] mt-0.5">Equipped commercial trucks</div>
+          <div className="text-[10px] text-slate-300 mt-0.5">Equipped commercial trucks</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Tracked JK Tyres</span>
             <Disc className="w-4 h-4 text-[#5B6068]" />
@@ -182,10 +182,10 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-2xl font-black text-slate-900 mt-1">
             {vaultSummary?.aggregate_totals?.tyres ?? 0}
           </div>
-          <div className="text-[10px] text-[#5B6068] mt-0.5">With permanent RFID/Stencil</div>
+          <div className="text-[10px] text-slate-300 mt-0.5">With permanent RFID/Stencil</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Active Fault Alerts</span>
             <AlertTriangle className={`w-4 h-4 ${(vaultSummary?.aggregate_totals?.active_alerts ?? 0) > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'}`} />
@@ -193,10 +193,10 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className={`text-2xl font-black mt-1 ${(vaultSummary?.aggregate_totals?.active_alerts ?? 0) > 0 ? 'text-[#E8770E]' : 'text-slate-900'}`}>
             {vaultSummary?.aggregate_totals?.active_alerts ?? 0}
           </div>
-          <div className="text-[10px] text-[#5B6068] mt-0.5">Pending depot remediation</div>
+          <div className="text-[10px] text-slate-300 mt-0.5">Pending depot remediation</div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div className="cream-glow-card p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#5B6068]">Total Snapshots</span>
             <CheckCircle2 className="w-4 h-4 text-[#5B6068]" />
@@ -204,12 +204,12 @@ export const OEMFleetVaultPage: React.FC = () => {
           <div className="text-2xl font-black text-slate-900 mt-1">
             {vaultSummary?.total_snapshots_recorded ?? 0}
           </div>
-          <div className="text-[10px] text-[#5B6068] mt-0.5">Archived in corporate store</div>
+          <div className="text-[10px] text-slate-300 mt-0.5">Archived in corporate store</div>
         </div>
       </div>
 
       {/* Search and Table Section */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="cream-glow-card overflow-hidden">
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -218,7 +218,7 @@ export const OEMFleetVaultPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search fleet name or ID…"
-              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
+              className="w-full bg-cream border border-gold-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
             />
           </div>
 
@@ -238,7 +238,7 @@ export const OEMFleetVaultPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-[#5B6068] border-b border-slate-200 font-semibold uppercase tracking-wider text-[11px]">
+              <thead className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100 uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Fleet Transport Operator</th>
                   <th className="py-3 px-3">Telemetry Channel</th>
@@ -251,9 +251,9 @@ export const OEMFleetVaultPage: React.FC = () => {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-700">
+              <tbody className="divide-y divide-gold-light text-slate-700">
                 {filteredFleets.map((fleet) => (
-                  <tr key={fleet.id} className="hover:bg-slate-50 transition">
+                  <tr key={fleet.id} className="hover:bg-[#FFF9E8] transition">
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900 text-sm">{fleet.fleet_name}</div>
                       <div className="font-mono text-[10px] text-[#5B6068]">{fleet.fleet_id}</div>
@@ -388,11 +388,11 @@ export const OEMFleetVaultPage: React.FC = () => {
             <div className="px-5 pt-3 border-b border-slate-800 flex items-center gap-2 bg-slate-950/40">
               <button
                 onClick={() => setDetailTab('VEHICLES')}
-                className={`px-3.5 py-2 text-xs font-semibold rounded-t-xl transition border-b-2 flex items-center gap-1.5 ${
-                  detailTab === 'VEHICLES'
-                    ? 'border-red-500 text-white bg-slate-900'
-                    : 'border-transparent text-slate-400 hover:text-white'
-                }`}
+                    className={`px-3.5 py-2 text-xs font-semibold rounded-t-xl transition border-b-2 flex items-center gap-1.5 ${
+                      detailTab === 'VEHICLES'
+                        ? 'border-red-500 text-white bg-dark-surface'
+                        : 'border-transparent text-slate-400 hover:text-white'
+                    }`}
               >
                 <Truck className="w-3.5 h-3.5" /> Vehicles ({payload?.vehicles?.length || 0})
               </button>

@@ -86,14 +86,14 @@ export const ComparisonPage: React.FC = () => {
     <div className="space-y-6">
       {/* Title */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Cross-Vehicle Fleet Comparison</h1>
-        <p className="text-xs text-[#5B6068] mt-0.5">
+        <h1 className="text-2xl font-black text-white tracking-tight">Cross-Vehicle Fleet Comparison</h1>
+        <p className="text-xs text-slate-300 mt-0.5">
           Multi-select vehicle benchmarking comparing Tyre Health Index (THI) and operational risk against the 95.0 target standard.
         </p>
       </div>
 
       {/* Vehicle Selection Drawer */}
-      <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-4">
+      <div className="cream-glow-card p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-[#5B6068]" />
@@ -101,8 +101,8 @@ export const ComparisonPage: React.FC = () => {
             <span
               className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                 selectedIds.length >= 2 && selectedIds.length <= 10
-                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                  : 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-amber-500 text-white'
               }`}
             >
               {selectedIds.length} of 10 selected (min: 2)
@@ -116,18 +116,18 @@ export const ComparisonPage: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search vehicle number..."
-              className="bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
+              className="bg-cream border border-gold-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-gold"
             />
           </div>
         </div>
 
         {warningMessage && (
-          <div className="p-3 rounded-xl bg-[#FFF4EB] border border-[#FCD5B5] text-[#E8770E] text-xs flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-[#E8770E]" />
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
               <span>{warningMessage}</span>
             </div>
-            <button onClick={() => setWarningMessage(null)} className="text-[#E8770E] hover:text-slate-900">
+            <button onClick={() => setWarningMessage(null)} className="text-amber-400 hover:text-slate-900">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -150,18 +150,18 @@ export const ComparisonPage: React.FC = () => {
                   disabled={atLimit}
                   className={`p-2 rounded-xl text-left border transition flex items-center justify-between ${
                     isSelected
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                      ? 'bg-brand-gold border-brand-gold text-black shadow-sm'
                       : atLimit
-                      ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-400'
+                      ? 'bg-cream-50 border-gold-light text-slate-400 cursor-not-allowed'
+                      : 'bg-cream border-gold-light text-slate-500 hover:text-slate-700 hover:border-gold-border'
                   }`}
                 >
                   <div className="truncate pr-1">
                     <span className="font-mono text-xs font-bold block truncate">{v.vehicle_number}</span>
-                    <span className={`text-[10px] block truncate ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>{v.wheel_config}</span>
+                    <span className={`text-[10px] block truncate ${isSelected ? 'text-black/70' : 'text-slate-400'}`}>{v.wheel_config}</span>
                   </div>
                   {isSelected ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
                   ) : (
                     <Square className="w-4 h-4 text-slate-400 shrink-0" />
                   )}
@@ -174,7 +174,7 @@ export const ComparisonPage: React.FC = () => {
 
       {/* Validation Message if < 2 selected */}
       {selectedIds.length < 2 ? (
-        <div className="bg-white border border-slate-200 p-12 rounded-2xl text-center shadow-sm space-y-2">
+        <div className="bg-cream border border-gold-border p-12 rounded-2xl text-center shadow-sm space-y-2">
           <Info className="w-10 h-10 text-[#5B6068] mx-auto mb-2" />
           <h3 className="text-base font-bold text-slate-900">Select at Least 2 Vehicles to Compare</h3>
           <p className="text-xs text-[#5B6068] max-w-md mx-auto">
@@ -184,7 +184,7 @@ export const ComparisonPage: React.FC = () => {
       ) : (
         <>
           {/* Comparison Bar Chart */}
-          <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <div className="cream-glow-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#5B6068]" /> Vehicle Average THI vs. Target Standard (95.0)
@@ -217,11 +217,11 @@ export const ComparisonPage: React.FC = () => {
           </div>
 
           {/* Comparison Table */}
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="cream-glow-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+                  <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
                     <th className="py-3.5 px-6">Vehicle Number</th>
                     <th className="py-3.5 px-4">Type &amp; Wheel Config</th>
                     <th className="py-3.5 px-4">Current Odometer</th>
@@ -231,9 +231,9 @@ export const ComparisonPage: React.FC = () => {
                     <th className="py-3.5 px-6 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 text-slate-700">
+                <tbody className="divide-y divide-gold-light text-[#344054]">
                   {comparisons?.map((c: any) => (
-                    <tr key={c.vehicle_id} className="hover:bg-slate-50 transition">
+                    <tr key={c.vehicle_id} className="hover:bg-[#FFF9E8] transition">
                       <td className="py-4 px-6 font-mono font-bold text-slate-900 flex items-center gap-2">
                         <Truck className="w-4 h-4 text-[#5B6068]" />
                         {c.vehicle_number}
@@ -250,10 +250,10 @@ export const ComparisonPage: React.FC = () => {
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs ${
                             c.average_thi >= 80
-                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              ? 'bg-emerald-500 text-white'
                               : c.average_thi >= 60
-                              ? 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]'
-                              : 'bg-red-100 text-red-700 border border-red-200'
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-red-500 text-white'
                           }`}
                         >
                           {c.average_thi.toFixed(1)} / 100
@@ -261,7 +261,7 @@ export const ComparisonPage: React.FC = () => {
                       </td>
                       <td className="py-4 px-4">
                         {c.alert_count > 0 ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 border border-red-200">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500 text-white">
                             {c.alert_count} Active
                           </span>
                         ) : (
@@ -271,13 +271,13 @@ export const ComparisonPage: React.FC = () => {
                       <td className="py-4 px-6 text-right space-x-2">
                         <Link
                           to={`/vehicles/${c.vehicle_id}/inspections`}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
+                          className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
                         >
                           Inspect
                         </Link>
                         <Link
                           to={`/vehicles/${c.vehicle_id}`}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
+                          className="px-2.5 py-1.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
                         >
                           Details <ArrowUpRight className="w-3.5 h-3.5" />
                         </Link>

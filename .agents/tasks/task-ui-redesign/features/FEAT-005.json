@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Redesign the public, admin, and driver portal pages: LandingPage, LoginPage, RegisterPage, DriverPortalPage, AdminDashboardPage, AdminMapPage, OEMFleetVaultPage. className-only changes — preserve ALL auth logic, framer-motion animations, registration form logic, admin queries/mutations, map/SVG logic, and offline-queue logic. Depends on FEAT-001.",
+  "status": "pending",
+  "steps": [
+    "LoginPage.tsx: LEFT panel — keep hero image, multi-layer overlay gradient, golden particles, scanning light line, word-drop animations, and logo entirely; only swap literal yellow accents (text-yellow-400 -> text-brand-gold, bg-yellow-500/15 -> bg-brand-gold/15) for consistency, preserving every framer-motion variant. RIGHT panel — canvas bg-[#F4F3EF]->bg-transparent (inherits body gradient); back link text-[#5B6068]->text-slate-300; card bg-white border-slate-200 rounded-3xl->bg-cream border-gold-border rounded-3xl; 'Quick Demo' pills bg-white border-slate-200/60->bg-cream-50 border-gold-light; inputs bg-slate-50 border-slate-200->bg-cream-50 border-gold-border focus:border-brand-gold; 'Sign in' button bg-[#FFC800]->bg-brand-gold hover:bg-brand-warm-gold text-black; register link text-slate-900->text-brand-gold. Keep handleSubmit + useAuthStore login + navigate role logic.",
+    "RegisterPage.tsx: LEFT panel — keep tyre video + gradient overlay + logo; swap yellow accents -> brand-gold. RIGHT panel canvas bg-[#F4F3EF]->bg-transparent; card bg-white border-slate-200 rounded-3xl->bg-cream border-gold-border rounded-3xl; role switcher tabs active bg-white text-slate-900 border-slate-200->bg-brand-gold text-black border-gold-border, inactive->bg-cream text-slate-500; the inp() helper -> bg-cream-50 border-gold-border focus:border-brand-gold; submit button->primary gold; success modal backdrop bg-slate-900/70->bg-black/70, card->bg-cream border-gold-border, login-ID box bg-slate-50 border-2 border-slate-200->bg-cream-100 border-2 border-gold-border, 'Copy Login ID'->primary gold, 'Proceed'->primary gold. Keep handleSubmit + publicFleets fetch + handleProceed.",
+    "DriverPortalPage.tsx: title text-slate-900->text-white; 'Driver Mobile Portal' label text-[#5B6068]->text-slate-400; online badge->bg-emerald-500 text-white, offline badge->bg-amber-500 text-white; all cards bg-white border-slate-200 p-6 rounded-2xl->bg-cream border-gold-border p-6 rounded-2xl; info sub-cells bg-slate-50 border-slate-200->bg-cream-50 border-gold-light; 'ACTIVE' badge bg-slate-100 text-slate-800->bg-blue-500 text-white; trip start/end buttons bg-[#FFC800]->primary gold; offline queue box bg-[#FFF4EB] border-[#FCD5B5]->bg-amber-500/10 border-amber-500/30 text-amber-400, 'Sync Now'->secondary light; alert severity badges->solid. Keep all online/offline listeners, offlineQueue, handleStartTrip/handleEndTrip.",
+    "AdminDashboardPage.tsx: title/subtitle->white/light; KPI cards bg-white border-slate-200->bg-cream border-gold-border, metric values->text-[#344054], alerts value accent keep amber; tab buttons active bg-[#14161A] text-white->bg-brand-gold text-black, inactive->bg-cream text-slate-500; 'Add Fleet'->primary gold; all 3 tables (Fleets/Users/Audit)->vanilla header bg-cream-200 text-[#344054] hover #FFF9E8, status badges->solid bg-emerald-500 text-white; Add Fleet modal backdrop->bg-black/70, card->bg-cream border-gold-border, header->bg-cream-100, inputs->bg-cream-50 border-gold-border focus:border-brand-gold, 'Register Fleet'->primary gold. Keep createFleetMutation + all admin useQuery.",
+    "AdminMapPage.tsx: read fully first; apply universal mapping to all cards/tables/badges/buttons/labels around the India SVG map. Do NOT modify the SVG map geometry, freshness-indicator logic, or any map data query — only restyle the surrounding chrome and legend cards.",
+    "OEMFleetVaultPage.tsx: read fully first; apply universal mapping to all cards/tables/badges/buttons. Keep all telemetry/vault data queries and any table rendering logic intact — only change className strings.",
+    "LandingPage.tsx: read fully first; apply dark-gradient + gold-accent consistency — primary CTAs bg-[#FFC800]/bg-yellow-400->bg-brand-gold, links text-yellow-400->text-brand-gold, keep all framer-motion entrance animations and hero markup untouched. This page already uses a dark hero; ensure it harmonises with the new token palette."
+  ],
+  "acceptance_criteria": [
+    "All seven pages build with npm run build exiting 0.",
+    "LoginPage right panel card is cream with a gold border and a gold Sign In button; the left hero animations are untouched.",
+    "RegisterPage role tabs and submit are gold; the success modal is cream; all registration logic intact.",
+    "DriverPortalPage uses cream cards, gold trip buttons, and solid connectivity/alert badges; offline-queue logic intact.",
+    "AdminDashboardPage tabs are gold-active, tables have vanilla headers, badges are solid; admin queries intact.",
+    "No auth handler, framer-motion variant, mutation, SVG map geometry, or API call was changed on any of the seven pages."
+  ],
+  "verification": [
+    "cd c:/Users/vaisi/OneDrive/Desktop/jk-new/frontend && npm run build — exits 0."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

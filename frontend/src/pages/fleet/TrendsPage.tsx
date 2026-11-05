@@ -71,20 +71,20 @@ export const TrendsPage: React.FC = () => {
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Fleet Health Trend Analysis</h1>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">Fleet Health Trend Analysis</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
             Continuous telemetry trend evaluation comparing observed operational metrics against manufacturer ideal reference baselines.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Vehicle selector */}
-          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs">
+          <div className="flex items-center gap-1.5 bg-cream border border-gold-border rounded-xl px-3 py-1.5 text-xs">
             <Truck className="w-3.5 h-3.5 text-[#5B6068]" />
             <select
               value={selectedVehicleId}
               onChange={(e) => setSelectedVehicleId(e.target.value)}
-              className="bg-white text-slate-900 focus:outline-none text-xs"
+              className="bg-cream text-slate-900 focus:outline-none text-xs"
             >
               <option value="">All Fleet Vehicles</option>
               {vehicles?.map((v) => (
@@ -96,13 +96,13 @@ export const TrendsPage: React.FC = () => {
           </div>
 
           {/* Time window */}
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 text-xs">
+          <div className="flex items-center gap-1 bg-cream border border-gold-border rounded-xl p-1 text-xs">
             {[7, 14, 30].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition ${
-                  days === d ? 'bg-[#14161A] text-white font-bold shadow' : 'text-[#5B6068] hover:text-slate-900'
+                  days === d ? 'bg-brand-gold text-black font-bold shadow' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {d} Days
@@ -113,13 +113,13 @@ export const TrendsPage: React.FC = () => {
       </div>
 
       {/* Baseline Explanation Banner */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-3">
-        <Info className="w-4 h-4 text-[#5B6068] shrink-0 mt-0.5" />
+      <div className="p-4 rounded-2xl bg-[#17191D] border border-gold-border text-slate-300 text-xs flex items-start gap-3">
+        <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-bold text-slate-900 block">
+          <span className="font-bold text-white block">
             JK Tyre Benchmark Reference Baseline (95.0 Score)
           </span>
-          <p className="text-[11px] text-[#5B6068] leading-relaxed">
+          <p className="text-[11px] text-slate-400 leading-relaxed">
             The reference baseline indicates the ideal operational target (95.0 THI) maintained under manufacturer
             cold inflation pressures (110 psi for Heavy Haulers, 65 psi for LCVs), nominal thermal ranges (&lt;65°C), and routine
             depot inspections. Observed THI reflects true dynamic telemetry including ambient road temperatures and tyre deflection.
@@ -128,10 +128,10 @@ export const TrendsPage: React.FC = () => {
       </div>
 
       {/* Main Chart: Observed THI vs Ideal Baseline */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="cream-glow-card p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-base font-bold text-[#344054] flex items-center gap-2">
               <Activity className="w-5 h-5 text-emerald-500" /> Observed THI vs. Ideal Reference Baseline
             </h3>
             <p className="text-xs text-[#5B6068]">
@@ -193,10 +193,10 @@ export const TrendsPage: React.FC = () => {
       {/* Sub-Charts: Pressure Compliance & Thermal Exposure */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Pressure Health Score */}
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+        <div className="cream-glow-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gauge className="w-4 h-4 text-[#5B6068]" />
-            <h3 className="text-sm font-bold text-slate-900">Pressure Compliance Sub-Score</h3>
+            <h3 className="text-sm font-bold text-[#344054]">Pressure Compliance Sub-Score</h3>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -222,10 +222,10 @@ export const TrendsPage: React.FC = () => {
         </div>
 
         {/* Thermal Exposure Score */}
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+        <div className="cream-glow-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <Thermometer className="w-4 h-4 text-[#5B6068]" />
-            <h3 className="text-sm font-bold text-slate-900">Thermal Exposure Sub-Score</h3>
+            <h3 className="text-sm font-bold text-[#344054]">Thermal Exposure Sub-Score</h3>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -252,13 +252,13 @@ export const TrendsPage: React.FC = () => {
       </div>
 
       {/* Machine Learning Tabular Baseline Card */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="cream-glow-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-[#5B6068]" />
-            <h3 className="text-sm font-bold text-slate-900">Machine Learning Wear Baseline (Demonstration)</h3>
+            <h3 className="text-sm font-bold text-[#344054]">Machine Learning Wear Baseline (Demonstration)</h3>
           </div>
-          <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-300 px-2 py-0.5 rounded">
+          <span className="text-[10px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded">
             Held-Out Tabular Evaluation
           </span>
         </div>
@@ -270,44 +270,44 @@ export const TrendsPage: React.FC = () => {
 
         {/* ML Metrics Comparison */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-xs">
-          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+          <div className="bg-cream-50 border border-gold-light p-4 rounded-xl">
             <span className="text-xs font-bold text-slate-900 block mb-2">Linear Regression Baseline</span>
             <div className="space-y-1 font-mono text-[11px]">
               <div className="flex justify-between text-[#5B6068]">
                 <span>Holdout R² Score:</span>
-                <span className="text-slate-900 font-bold">{mlStatus?.linear_baseline?.r2_score}</span>
+                <span className="text-brand-gold font-bold">{mlStatus?.linear_baseline?.r2_score}</span>
               </div>
               <div className="flex justify-between text-[#5B6068]">
                 <span>Mean Absolute Error (MAE):</span>
-                <span className="text-slate-900 font-bold">{mlStatus?.linear_baseline?.mae_mm} mm</span>
+                <span className="text-brand-gold font-bold">{mlStatus?.linear_baseline?.mae_mm} mm</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+          <div className="bg-cream-50 border border-gold-light p-4 rounded-xl">
             <span className="text-xs font-bold text-slate-900 block mb-2">Random Forest Regressor</span>
             <div className="space-y-1 font-mono text-[11px]">
               <div className="flex justify-between text-[#5B6068]">
                 <span>Holdout R² Score:</span>
-                <span className="text-slate-900 font-bold">{mlStatus?.random_forest?.r2_score}</span>
+                <span className="text-brand-gold font-bold">{mlStatus?.random_forest?.r2_score}</span>
               </div>
               <div className="flex justify-between text-[#5B6068]">
                 <span>Mean Absolute Error (MAE):</span>
-                <span className="text-slate-900 font-bold">{mlStatus?.random_forest?.mae_mm} mm</span>
+                <span className="text-brand-gold font-bold">{mlStatus?.random_forest?.mae_mm} mm</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Interactive Model Test */}
-        <form onSubmit={handlePredict} className="flex flex-wrap items-end gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <form onSubmit={handlePredict} className="flex flex-wrap items-end gap-3 text-xs bg-cream-50 p-4 rounded-xl border border-gold-light">
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Achieved Distance (km)</label>
             <input
               type="number"
               value={testKm}
               onChange={(e) => setTestKm(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-900 font-mono focus:outline-none focus:border-slate-400"
+              className="bg-cream border border-gold-border rounded-lg px-3 py-1.5 text-slate-900 font-mono focus:outline-none focus:border-brand-gold"
             />
           </div>
 
@@ -324,7 +324,7 @@ export const TrendsPage: React.FC = () => {
 
           <button
             type="submit"
-            className="px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-lg transition inline-flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-lg transition inline-flex items-center gap-1.5 shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5" /> Predict Wear
           </button>
@@ -332,7 +332,7 @@ export const TrendsPage: React.FC = () => {
           {prediction && (
             <div className="ml-auto text-right font-mono">
               <span className="text-[11px] text-[#5B6068] block">Predicted Wear:</span>
-              <span className="text-sm font-bold text-purple-700">
+              <span className="text-sm font-bold text-brand-gold">
                 {prediction.predicted_wear_mm_rf} mm (RF) / {prediction.predicted_wear_mm_linear} mm (Linear)
               </span>
             </div>

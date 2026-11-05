@@ -132,38 +132,38 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex items-center gap-2 text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
           <Shield className="w-4 h-4" /> JK Tyre Enterprise Administration
         </div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Platform Governance &amp; Multi-Tenant Audit</h1>
-        <p className="text-xs text-[#5B6068] mt-0.5">
+        <h1 className="text-2xl font-black text-white tracking-tight">Platform Governance &amp; Multi-Tenant Audit</h1>
+        <p className="text-xs text-slate-300 mt-0.5">
           Authorized cross-fleet oversight, multi-tenant fleet isolation, and immutable audit logs.
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Registered Fleets</span>
-          <span className="text-2xl font-black text-slate-900">{stats?.total_fleets || 0}</span>
-          <span className="text-[11px] text-[#5B6068] block mt-1">Active transport operators</span>
+        <div className="black-glow-card p-5">
+          <span className="text-xs text-slate-300 block mb-1">Registered Fleets</span>
+          <span className="text-2xl font-black text-white">{stats?.total_fleets || 0}</span>
+          <span className="text-[11px] text-slate-400 block mt-1">Active transport operators</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Total Fleet Vehicles</span>
-          <span className="text-2xl font-black text-slate-900">{stats?.total_vehicles || 0}</span>
-          <span className="text-[11px] text-[#5B6068] block mt-1">Across all operators</span>
+        <div className="black-glow-card p-5">
+          <span className="text-xs text-slate-300 block mb-1">Total Fleet Vehicles</span>
+          <span className="text-2xl font-black text-white">{stats?.total_vehicles || 0}</span>
+          <span className="text-[11px] text-slate-400 block mt-1">Across all operators</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Tracked JK Tyres</span>
-          <span className="text-2xl font-black text-slate-900">{stats?.total_tyres || 0}</span>
-          <span className="text-[11px] text-[#5B6068] block mt-1">Permanent serial IDs</span>
+        <div className="black-glow-card p-5">
+          <span className="text-xs text-slate-300 block mb-1">Tracked JK Tyres</span>
+          <span className="text-2xl font-black text-white">{stats?.total_tyres || 0}</span>
+          <span className="text-[11px] text-slate-400 block mt-1">Permanent serial IDs</span>
         </div>
 
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-          <span className="text-xs text-[#5B6068] block mb-1">Active Cross-Fleet Alerts</span>
-          <span className={`text-2xl font-black ${(stats?.active_alerts || 0) > 0 ? 'text-[#E8770E]' : 'text-slate-900'}`}>
+        <div className="black-glow-card p-5">
+          <span className="text-xs text-slate-300 block mb-1">Active Cross-Fleet Alerts</span>
+          <span className={`text-2xl font-black ${(stats?.active_alerts || 0) > 0 ? 'text-amber-400' : 'text-white'}`}>
             {stats?.active_alerts || 0}
           </span>
-          <span className="text-[11px] text-[#5B6068] block mt-1">Pending depot attention</span>
+          <span className="text-[11px] text-slate-400 block mt-1">Pending depot attention</span>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('FLEETS')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'FLEETS' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
+              activeTab === 'FLEETS' ? 'bg-brand-gold text-black border border-gold-border' : 'text-slate-300 bg-cream hover:bg-[#FFF9E8]'
             }`}
           >
             <Building2 className="w-4 h-4" /> Transport Fleets ({fleets?.length || 0})
@@ -181,7 +181,7 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('USERS')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'USERS' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
+              activeTab === 'USERS' ? 'bg-brand-gold text-black border border-gold-border' : 'text-slate-300 bg-cream hover:bg-[#FFF9E8]'
             }`}
           >
             <Users className="w-4 h-4" /> Platform Users ({users?.length || 0})
@@ -189,7 +189,7 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('AUDIT')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'AUDIT' ? 'bg-[#14161A] text-white' : 'text-[#5B6068] hover:text-slate-900 hover:bg-slate-100'
+              activeTab === 'AUDIT' ? 'bg-brand-gold text-black border border-gold-border' : 'text-slate-300 bg-cream hover:bg-[#FFF9E8]'
             }`}
           >
             <ScrollText className="w-4 h-4" /> Security Audit Trail ({auditLogs?.length || 0})
@@ -202,7 +202,7 @@ export const AdminDashboardPage: React.FC = () => {
               resetAddForm();
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer self-start sm:self-auto shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer self-start sm:self-auto shrink-0"
           >
             <Plus className="w-4 h-4" /> Add Fleet
           </button>
@@ -211,10 +211,10 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Tab Panels */}
       {activeTab === 'FLEETS' && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="cream-glow-card overflow-hidden">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100">
                 <th className="py-3.5 px-6">Company Name</th>
                 <th className="py-3.5 px-4">Registration</th>
                 <th className="py-3.5 px-4">Primary Contact</th>
@@ -223,9 +223,9 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-gold-light text-slate-700">
               {fleets?.map((f: any) => (
-                <tr key={f.id} className="hover:bg-slate-50 transition">
+                <tr key={f.id} className="hover:bg-[#FFF9E8] transition">
                   <td className="py-4 px-6 font-bold text-slate-900 flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-[#5B6068]" />
                     {f.name}
@@ -247,10 +247,10 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'USERS' && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="cream-glow-card overflow-hidden">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100">
                 <th className="py-3.5 px-6">Full Name</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Assigned Role</th>
@@ -259,7 +259,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-gold-light text-slate-700">
               {users?.map((u: any) => (
                 <tr key={u.id} className="hover:bg-slate-50 transition">
                   <td className="py-4 px-6 font-bold text-slate-900">{u.full_name}</td>
@@ -280,10 +280,10 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'AUDIT' && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="cream-glow-card overflow-hidden">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[#5B6068] font-semibold bg-slate-50">
+              <tr className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100">
                 <th className="py-3.5 px-6">Timestamp</th>
                 <th className="py-3.5 px-4">Action</th>
                 <th className="py-3.5 px-4">Operator</th>
@@ -292,7 +292,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Audit Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-gold-light text-slate-700">
               {auditLogs?.map((log: any) => (
                 <tr key={log.id} className="hover:bg-slate-50 transition">
                   <td className="py-4 px-6 text-[#5B6068] font-mono">
@@ -370,7 +370,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={newFleetName}
                     onChange={(e) => setNewFleetName(e.target.value)}
                     placeholder="e.g. Bharat Freightlines Pvt Ltd"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                   />
                 </div>
                 <div>
@@ -396,7 +396,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <select
                     value={newCity}
                     onChange={(e) => setNewCity(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl font-medium text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                   >
                     <option value="New Delhi">New Delhi (National Capital Region)</option>
                     <option value="Gurugram">Gurugram (Haryana)</option>
@@ -420,7 +420,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-cream border border-gold-border rounded-xl font-medium text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                   >
                     <option value="ACTIVE">Active (Operational)</option>
                     <option value="PENDING">Pending (Onboarding)</option>
@@ -440,7 +440,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
                     placeholder="e.g. Sector 18, Transport Nagar Logistics Terminal"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-yellow-500 focus:bg-white"
+                    className="w-full pl-9 pr-3 py-2 bg-cream border border-gold-border rounded-xl text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                   />
                 </div>
               </div>
@@ -497,7 +497,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={createFleetMutation.isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] disabled:opacity-50 text-black font-bold rounded-xl shadow-sm transition cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold disabled:opacity-50 text-black font-bold rounded-xl shadow-sm transition cursor-pointer"
                 >
                   {createFleetMutation.isPending ? (
                     <>

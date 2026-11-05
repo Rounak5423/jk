@@ -49,28 +49,28 @@ type LifecycleType = 'NEW' | 'REUSE' | 'RETREAD' | 'SCRAP';
 function getLifecycleBadge(lt: LifecycleType | string) {
   switch (lt) {
     case 'NEW':
-      return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+      return 'bg-emerald-500 text-white';
     case 'REUSE':
-      return 'bg-blue-100 text-blue-700 border border-blue-200';
+      return 'bg-blue-500 text-white';
     case 'RETREAD':
-      return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
+      return 'bg-amber-500 text-white';
     case 'SCRAP':
-      return 'bg-red-100 text-red-700 border border-red-200';
+      return 'bg-red-500 text-white';
     default:
-      return 'bg-slate-100 text-slate-600 border border-slate-200';
+      return 'bg-slate-500 text-white';
   }
 }
 
 function getTHIBadge(status: string) {
   switch (status) {
     case 'HEALTHY':
-      return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+      return 'bg-emerald-500 text-white';
     case 'WARNING':
-      return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
+      return 'bg-amber-500 text-white';
     case 'CRITICAL':
-      return 'bg-red-100 text-red-700 border border-red-200';
+      return 'bg-red-500 text-white';
     default:
-      return 'bg-slate-100 text-slate-600 border border-slate-200';
+      return 'bg-slate-500 text-white';
   }
 }
 
@@ -376,8 +376,8 @@ export const FitmentPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tyre Fitment Management</h1>
-          <p className="text-xs text-[#5B6068] mt-0.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">Tyre Fitment Management</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
             Install, remove, rotate, and mount tyres across commercial vehicle wheel positions.
           </p>
         </div>
@@ -391,14 +391,14 @@ export const FitmentPage: React.FC = () => {
             }
             setShowAddTyreModal(true);
           }}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-sm transition self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold text-xs rounded-xl shadow-sm transition self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Add Tyre to Inventory
         </button>
       </div>
 
       {/* Vehicle Selector */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-cream border border-gold-border rounded-2xl p-5 shadow-sm">
         <label className="block text-xs font-semibold text-slate-700 mb-2">Select Fleet Vehicle</label>
         <select
           value={selectedVehicleId}
@@ -410,7 +410,7 @@ export const FitmentPage: React.FC = () => {
               setSearchParams({});
             }
           }}
-          className="w-full max-w-sm bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-yellow-500 font-semibold"
+          className="w-full max-w-sm bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-brand-gold font-semibold"
         >
           <option value="">Choose a vehicle to inspect &amp; fit tyres...</option>
           {vehicles?.map((v) => (
@@ -444,7 +444,7 @@ export const FitmentPage: React.FC = () => {
                 openFitModal(firstVacant.wheel_position, firstVacant.axle_number);
               }
             }}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" /> Fit Next ({positions.find((p) => p.tyre === null)?.wheel_position || 'Vacant'})
           </button>
@@ -454,24 +454,24 @@ export const FitmentPage: React.FC = () => {
       {/* Summary Bar */}
       {selectedVehicleId && vehicleData && (
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+          <div className="black-glow-card p-4 flex items-center gap-3">
             <Truck className="w-7 h-7 text-slate-400 shrink-0" />
             <div>
-              <div className="text-lg font-black text-slate-900">{positions.length}</div>
-              <div className="text-xs text-[#5B6068]">Total Wheel Positions</div>
+              <div className="text-lg font-black text-white">{positions.length}</div>
+              <div className="text-xs text-slate-300">Total Wheel Positions</div>
             </div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-            <CheckCircle2 className="w-7 h-7 text-emerald-500 shrink-0" />
+          <div className="black-glow-card p-4 flex items-center gap-3">
+            <CheckCircle2 className="w-7 h-7 text-emerald-400 shrink-0" />
             <div>
-              <div className="text-lg font-black text-slate-900">{fittedCount}</div>
-              <div className="text-xs text-emerald-600 font-semibold">Mounted Tyres</div>
+              <div className="text-lg font-black text-white">{fittedCount}</div>
+              <div className="text-xs text-emerald-400 font-semibold">Mounted Tyres</div>
             </div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+          <div className="black-glow-card p-4 flex items-center gap-3">
             <AlertTriangle className="w-7 h-7 text-[#E8770E] shrink-0" />
             <div>
-              <div className="text-lg font-black text-slate-900">{vacantCount}</div>
+              <div className="text-lg font-black text-white">{vacantCount}</div>
               <div className="text-xs text-[#E8770E] font-semibold">Vacant Positions</div>
             </div>
           </div>
@@ -484,7 +484,7 @@ export const FitmentPage: React.FC = () => {
       )}
 
       {selectedVehicleId && !vehicleLoading && vehicleData && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
+        <div className="cream-glow-card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Disc className="w-4 h-4 text-[#5B6068]" /> Wheel Positions — {selectedVehicle?.vehicle_number}
@@ -504,21 +504,21 @@ export const FitmentPage: React.FC = () => {
                   key={pos.fitment_id}
                   className={`border rounded-2xl p-4 flex flex-col gap-3 transition ${
                     isFitted
-                      ? 'bg-slate-50/60 border-slate-200'
+                      ? 'bg-cream-50 border-gold-light'
                       : 'bg-[#FFF4EB]/30 border-dashed border-[#FCD5B5]'
                   }`}
                 >
                   {/* Position Header */}
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-black text-slate-900 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
+                    <span className="font-mono text-xs font-black text-slate-900 px-2 py-0.5 rounded bg-cream-100 border border-gold-light">
                       {pos.wheel_position}
                     </span>
                     {isFitted ? (
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="text-[10px] font-semibold text-white bg-emerald-500 px-2 py-0.5 rounded-full">
                         Fitted
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-[#E8770E] bg-[#FFF4EB] px-2 py-0.5 rounded-full border border-[#FCD5B5]">
+                      <span className="text-[10px] font-semibold text-white bg-amber-500 px-2 py-0.5 rounded-full">
                         Vacant
                       </span>
                     )}
@@ -557,7 +557,7 @@ export const FitmentPage: React.FC = () => {
                       <span className="text-[11px] text-[#5B6068]">No tyre fitted</span>
                       <button
                         onClick={() => openFitModal(pos.wheel_position, pos.axle_number)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs transition shadow-sm cursor-pointer"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs transition shadow-sm cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" /> Add / Fit Tyre
                       </button>
@@ -571,15 +571,15 @@ export const FitmentPage: React.FC = () => {
       )}
 
       {!selectedVehicleId && (
-        <div className="py-16 text-center text-xs text-[#5B6068] bg-white border border-slate-200 rounded-2xl shadow-sm">
+        <div className="py-16 text-center text-xs text-[#5B6068] bg-cream border border-gold-border rounded-2xl shadow-sm">
           Select a commercial vehicle above to view its wheel positions and fit tyres.
         </div>
       )}
 
       {/* ── Fit / Add Tyre Modal ── */}
       {showFitModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-lg bg-cream border border-gold-border rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setShowFitModal(false)}
               className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-900 rounded-xl transition cursor-pointer"
@@ -601,14 +601,14 @@ export const FitmentPage: React.FC = () => {
             </p>
 
             {/* Mode Toggle Tabs */}
-            <div className="flex bg-slate-100 p-1 rounded-xl mb-4 text-xs font-semibold">
+            <div className="flex bg-cream-100 p-1 rounded-xl mb-4 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setFitMode('EXISTING')}
                 className={`flex-1 py-1.5 rounded-lg transition cursor-pointer ${
                   fitMode === 'EXISTING'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-[#5B6068] hover:text-slate-900'
+                    ? 'bg-brand-gold text-black border border-gold-border'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 Choose from Inventory ({availableTyres?.length || 0})
@@ -618,8 +618,8 @@ export const FitmentPage: React.FC = () => {
                 onClick={() => setFitMode('NEW')}
                 className={`flex-1 py-1.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
                   fitMode === 'NEW'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-[#5B6068] hover:text-slate-900'
+                    ? 'bg-brand-gold text-black border border-gold-border'
+                    : 'bg-cream text-slate-500 border border-transparent hover:text-slate-700'
                 }`}
               >
                 <Plus className="w-3.5 h-3.5 text-[#E8770E]" /> Register &amp; Mount New Tyre
@@ -648,7 +648,7 @@ export const FitmentPage: React.FC = () => {
                         if (t) setFitNsd(t.current_nsd.toString());
                       }}
                       required
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                      className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                     >
                       <option value="">Choose unmounted tyre from depot...</option>
                       {availableTyres?.map((t) => (
@@ -684,7 +684,7 @@ export const FitmentPage: React.FC = () => {
                         value={fitOdometer}
                         onChange={(e) => setFitOdometer(e.target.value)}
                         placeholder="e.g. 45200"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                     </div>
                     <div>
@@ -697,7 +697,7 @@ export const FitmentPage: React.FC = () => {
                         value={fitNsd}
                         onChange={(e) => setFitNsd(e.target.value)}
                         placeholder="e.g. 16.5"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                     </div>
                   </div>
@@ -709,14 +709,14 @@ export const FitmentPage: React.FC = () => {
                       value={fitRemarks}
                       onChange={(e) => setFitRemarks(e.target.value)}
                       placeholder="Optional notes or torque verification..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                      className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                     />
                   </div>
                 </>
               ) : (
                 /* ── Register & Fit New Tyre Tab ── */
                 <>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-[#5B6068]">
+                  <div className="p-3 bg-cream-50 border border-gold-light rounded-xl text-[11px] text-[#5B6068]">
                     <span className="font-semibold text-slate-900">New Tyre Registration:</span> This will instantly register the tyre into your fleet and mount it to wheel position <span className="font-mono font-bold text-slate-900">{fitPosition}</span>.
                   </div>
 
@@ -730,7 +730,7 @@ export const FitmentPage: React.FC = () => {
                         value={newSerial}
                         onChange={(e) => setNewSerial(e.target.value.toUpperCase())}
                         placeholder="e.g. JK-984210 (or auto)"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                       <span className="text-[10px] text-[#5B6068] mt-0.5 block">
                         Leave blank to auto-generate branded serial
@@ -743,7 +743,7 @@ export const FitmentPage: React.FC = () => {
                         type="text"
                         value={newBrand}
                         onChange={(e) => setNewBrand(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                       />
                     </div>
                   </div>
@@ -756,7 +756,7 @@ export const FitmentPage: React.FC = () => {
                         list="jk-models-list"
                         value={newModel}
                         onChange={(e) => setNewModel(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                       />
                       <datalist id="jk-models-list">
                         {COMMON_JK_MODELS.map((m) => (
@@ -772,7 +772,7 @@ export const FitmentPage: React.FC = () => {
                         list="jk-sizes-list"
                         value={newSize}
                         onChange={(e) => setNewSize(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                       <datalist id="jk-sizes-list">
                         {COMMON_SIZES.map((s) => (
@@ -790,7 +790,7 @@ export const FitmentPage: React.FC = () => {
                         step="0.1"
                         value={newBlueprintNsd}
                         onChange={(e) => setNewBlueprintNsd(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                     </div>
                     <div>
@@ -800,7 +800,7 @@ export const FitmentPage: React.FC = () => {
                         step="0.1"
                         value={newCurrentNsd}
                         onChange={(e) => setNewCurrentNsd(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                       />
                     </div>
                     <div>
@@ -808,7 +808,7 @@ export const FitmentPage: React.FC = () => {
                       <select
                         value={newLifecycle}
                         onChange={(e) => setNewLifecycle(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                        className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                       >
                         <option value="NEW">NEW</option>
                         <option value="REUSE">REUSE</option>
@@ -822,7 +822,7 @@ export const FitmentPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={fitMutation.isPending || registerAndFitMutation.isPending}
-                className="w-full py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs transition shadow-sm disabled:opacity-50 cursor-pointer"
+                className="w-full py-3 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs transition shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {fitMutation.isPending || registerAndFitMutation.isPending
                   ? 'Saving and Mounting Tyre...'
@@ -837,8 +837,8 @@ export const FitmentPage: React.FC = () => {
 
       {/* ── Global Add Tyre to Inventory Modal ── */}
       {showAddTyreModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-lg bg-cream border border-gold-border rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setShowAddTyreModal(false)}
               className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-900 rounded-xl transition cursor-pointer"
@@ -884,7 +884,7 @@ export const FitmentPage: React.FC = () => {
                     value={depotSerial}
                     onChange={(e) => setDepotSerial(e.target.value.toUpperCase())}
                     placeholder="e.g. JK-582910"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono font-bold"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono font-bold"
                   />
                   <span className="text-[10px] text-[#5B6068] mt-0.5 block">
                     Leave blank to auto-generate branded JK-XXXXXX
@@ -897,7 +897,7 @@ export const FitmentPage: React.FC = () => {
                     type="text"
                     value={depotBrand}
                     onChange={(e) => setDepotBrand(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                   />
                 </div>
               </div>
@@ -910,7 +910,7 @@ export const FitmentPage: React.FC = () => {
                     list="depot-models-list"
                     value={depotModel}
                     onChange={(e) => setDepotModel(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                   />
                   <datalist id="depot-models-list">
                     {COMMON_JK_MODELS.map((m) => (
@@ -926,7 +926,7 @@ export const FitmentPage: React.FC = () => {
                     list="depot-sizes-list"
                     value={depotSize}
                     onChange={(e) => setDepotSize(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                   />
                   <datalist id="depot-sizes-list">
                     {COMMON_SIZES.map((s) => (
@@ -944,7 +944,7 @@ export const FitmentPage: React.FC = () => {
                     step="0.1"
                     value={depotBlueprintNsd}
                     onChange={(e) => setDepotBlueprintNsd(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                   />
                 </div>
                 <div>
@@ -954,7 +954,7 @@ export const FitmentPage: React.FC = () => {
                     step="0.1"
                     value={depotCurrentNsd}
                     onChange={(e) => setDepotCurrentNsd(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold font-mono"
                   />
                 </div>
                 <div>
@@ -962,7 +962,7 @@ export const FitmentPage: React.FC = () => {
                   <select
                     value={depotLifecycle}
                     onChange={(e) => setDepotLifecycle(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                   >
                     <option value="NEW">NEW</option>
                     <option value="REUSE">REUSE</option>
@@ -972,7 +972,7 @@ export const FitmentPage: React.FC = () => {
               </div>
 
               {/* Optional immediate vehicle mounting */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <div className="p-3 bg-cream-50 border border-gold-light rounded-xl space-y-2">
                 <label className="block text-slate-700 font-semibold text-xs">
                   Immediate Mount (Optional)
                 </label>
@@ -980,7 +980,7 @@ export const FitmentPage: React.FC = () => {
                   <select
                     value={depotTargetVehicleId}
                     onChange={(e) => setDepotTargetVehicleId(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-yellow-500 text-xs"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold text-xs"
                   >
                     <option value="">Keep in Depot Inventory (Unmounted)</option>
                     {vehicles?.map((v) => (
@@ -996,7 +996,7 @@ export const FitmentPage: React.FC = () => {
                     onChange={(e) => setDepotTargetPosition(e.target.value.toUpperCase())}
                     placeholder="Wheel pos (e.g. A1-L)"
                     disabled={!depotTargetVehicleId}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-yellow-500 font-mono text-xs disabled:opacity-50"
+                    className="w-full bg-cream border border-gold-border rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-brand-gold font-mono text-xs disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -1005,14 +1005,14 @@ export const FitmentPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddTyreModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition cursor-pointer"
+                  className="px-4 py-2 bg-cream border border-gold-light text-[#344054] hover:bg-cream-100 rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createDepotTyreMutation.isPending}
-                  className="px-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {createDepotTyreMutation.isPending ? 'Registering...' : 'Register Tyre'}
                 </button>
@@ -1024,8 +1024,8 @@ export const FitmentPage: React.FC = () => {
 
       {/* ── Remove Tyre Modal ── */}
       {showRemoveModal && removePosition && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-cream border border-gold-border rounded-3xl p-6 shadow-2xl relative">
             <button
               onClick={() => setShowRemoveModal(false)}
               className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-900 rounded-xl transition cursor-pointer"
@@ -1056,7 +1056,7 @@ export const FitmentPage: React.FC = () => {
                 <select
                   value={removalReason}
                   onChange={(e) => setRemovalReason(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-yellow-500"
+                  className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold"
                 >
                   <option value="DEPOT_REMOVAL">Depot Removal</option>
                   <option value="ROTATION">Rotation</option>
@@ -1071,7 +1071,7 @@ export const FitmentPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowRemoveModal(false)}
-                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl font-semibold text-xs transition bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                  className="flex-1 py-2.5 bg-cream border border-gold-light text-[#344054] hover:bg-cream-100 rounded-xl font-semibold text-xs transition cursor-pointer"
                 >
                   Cancel
                 </button>

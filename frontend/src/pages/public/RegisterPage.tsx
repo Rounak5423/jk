@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jkLogo from '../../assets/jk-logo.png';
+import regBg from '../../assets/registration bg image.png';
 
 /* ── animation helper ── */
 const up = (delay = 0) => ({
@@ -161,10 +162,18 @@ export const RegisterPage: React.FC = () => {
 
   /* shared input class */
   const inp = (hasIcon = true) =>
-    `w-full bg-slate-50 border border-slate-200 rounded-xl ${hasIcon ? 'pl-9' : 'px-4'} pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition`;
+    `w-full bg-black/30 border border-yellow-400/30 rounded-xl ${hasIcon ? 'pl-9' : 'px-4'} pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition`;
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex">
+    <div
+      className="relative min-h-screen w-full"
+      style={{
+        backgroundImage: `url(${regBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
 
       {/* ══ SUCCESS MODAL ═══════════════════════════════════════════════ */}
       {registeredData && (
@@ -178,7 +187,7 @@ export const RegisterPage: React.FC = () => {
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h2 className="text-xl font-black text-slate-900">Registration Successful!</h2>
-            <p className="text-xs text-[#5B6068] mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               {registeredData.role === 'DRIVER'
                 ? 'Your Commercial Driver account is now active.'
                 : 'Your Transport Fleet account is now registered.'}
@@ -195,7 +204,7 @@ export const RegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCopyId}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#FFC800] hover:bg-[#e6b400] text-black text-xs font-bold transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-gold hover:bg-brand-warm-gold text-black text-xs font-bold transition cursor-pointer"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-900" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied!' : 'Copy Login ID'}
@@ -216,7 +225,7 @@ export const RegisterPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleProceed}
-                className="w-full py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                className="w-full py-3 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 {registeredData.role === 'DRIVER' ? 'Proceed to Driver Console' : 'Proceed to Fleet Dashboard'}{' '}
                 <ArrowRight className="w-4 h-4" />
@@ -233,74 +242,79 @@ export const RegisterPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ LEFT PANEL — dark navy + video ══════════════════════════════ */}
-      <div
-        className="hidden lg:flex flex-col w-[48%] h-full relative overflow-hidden"
-        style={{ background: '#000000' }}
+      {/* JK Logo — top-left overlay */}
+      <motion.div
+        className="absolute top-8 left-12 z-10 pointer-events-none"
+        initial={{opacity: 0}}
+        animate={{opacity: 1}}
       >
-        {/* Tyre video section — bottom of left panel */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2" style={{ width: '110%', height: '62%' }}>
-          <video
-            src="https://tmaas.in/assets/images/treelVideo.mp4"
-            autoPlay muted loop playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center bottom' }}
-          />
-        </div>
+        {/* JK Tyre Logo - Larger */}
+        <motion.div
+          initial={{y: -40, opacity: 0}}
+          animate={{y: 0, opacity: 1}}
+          transition={{delay: 0.1, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
+        >
+          <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '80px' }} />
+        </motion.div>
+      </motion.div>
 
-        {/* Full-panel gradient overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
+      {/* Animated text with strong gradient shade — top-right overlay, lower position */}
+      <motion.div
+        className="absolute top-32 right-16 z-10 pointer-events-none text-right"
+        initial={{opacity: 0}}
+        animate={{opacity: 1}}
+      >
+        {/* Stronger radial gradient shade - more coverage */}
+        <div 
+          className="absolute -z-10"
           style={{
-            zIndex: 1,
-            background: 'linear-gradient(to bottom, #071426 0%, #071426 30%, rgba(7,20,38,0.96) 45%, rgba(7,20,38,0.80) 55%, rgba(4,10,20,0.55) 65%, rgba(2,5,12,0.25) 75%, rgba(0,0,0,0.05) 85%, transparent 100%)',
+            top: '50%',
+            right: '0',
+            transform: 'translate(15%, -50%)',
+            width: '650px',
+            height: '400px',
+            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.35) 70%, transparent 100%)',
+            filter: 'blur(25px)',
           }}
         />
+        
+        <motion.h2
+          className="text-5xl font-black text-white leading-tight mb-2"
+          style={{textShadow: '0 6px 40px rgba(0,0,0,1), 0 2px 20px rgba(0,0,0,0.9)'}}
+          initial={{y: -60, opacity: 0}}
+          animate={{y: 0, opacity: 1}}
+          transition={{delay: 0.2, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
+        >
+          Smarter Tyres.
+        </motion.h2>
+        <motion.h2
+          className="text-5xl font-black text-yellow-400 leading-tight mb-4"
+          style={{textShadow: '0 6px 35px rgba(234,179,8,0.8), 0 2px 20px rgba(0,0,0,0.95)'}}
+          initial={{y: -60, opacity: 0}}
+          animate={{y: 0, opacity: 1}}
+          transition={{delay: 0.4, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
+        >
+          Safer Journeys.
+        </motion.h2>
+        <motion.p
+          className="text-sm text-white leading-relaxed max-w-xs ml-auto"
+          style={{textShadow: '0 4px 24px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.95)'}}
+          initial={{y: -60, opacity: 0}}
+          animate={{y: 0, opacity: 1}}
+          transition={{delay: 0.6, duration: 0.6, ease: [0.34, 1.2, 0.64, 1]}}
+        >
+          Real-time tyre health intelligence, predictive alerts, and fleet analytics — engineered for commercial mobility.
+        </motion.p>
+      </motion.div>
 
-        {/* Content */}
-        <div className="relative flex flex-col h-full px-10 py-8" style={{ zIndex: 2 }}>
-          {/* Logo */}
-          <motion.div {...up(0.1)} className="flex items-center gap-3">
-            <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '72px' }} />
-            <div>
-              <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-[0.22em]">TYRE HEALTH INDEX</span>
-            </div>
-          </motion.div>
-
-          {/* Tagline */}
-          <div className="mt-16 mb-auto">
-            <motion.h2
-              className="text-5xl font-black text-white leading-tight mb-2"
-              style={{ textShadow: '0 2px 24px rgba(0,0,0,0.9)' }}
-              {...up(0.35)}
-            >
-              Smarter Tyres.
-            </motion.h2>
-            <motion.h2
-              className="text-5xl font-black text-yellow-400 leading-tight mb-6"
-              style={{ textShadow: '0 2px 20px rgba(234,179,8,0.5)' }}
-              {...up(0.5)}
-            >
-              Safer Journeys.
-            </motion.h2>
-
-            <motion.div className="w-16 h-1 rounded-full bg-yellow-400 mb-5" {...up(0.6)} />
-
-            <motion.p className="text-sm text-slate-300 leading-relaxed max-w-xs" {...up(0.7)}>
-              Real-time tyre health intelligence, predictive alerts, and fleet analytics — engineered for commercial mobility.
-            </motion.p>
-          </div>
-        </div>
-      </div>
-
-      {/* ══ RIGHT PANEL — neutral #F4F3EF canvas with white card ══════════════════ */}
-      <div className="flex flex-col flex-1 h-full overflow-y-auto px-6 py-6 bg-[#F4F3EF]" style={{ scrollbarWidth: 'none' }}>
-
-        <div className="max-w-[540px] mx-auto w-full flex flex-col bg-white border border-slate-200 p-8 rounded-3xl shadow-sm my-auto">
+      {/* Left-aligned black-glow card */}
+      <div className="flex items-center justify-start min-h-screen p-8 pl-16">
+        <div className="black-glow-card max-w-3xl w-full p-8 rounded-2xl overflow-y-auto" style={{maxHeight: '95vh'}}>
 
           {/* Back */}
           <motion.div {...up(0.05)} className="mb-3">
             <Link to="/"
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#5B6068] hover:text-slate-900 transition group w-fit">
+              className="flex items-center gap-1.5 text-xs font-semibold text-yellow-400 hover:text-yellow-300 transition group w-fit">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               Back to Home
             </Link>
@@ -309,16 +323,14 @@ export const RegisterPage: React.FC = () => {
           {/* Header */}
           <motion.div className="mb-4" {...up(0.12)}>
             <div className="flex items-center gap-3 mb-2">
-              <img src={jkLogo} alt="JK Tyre" className="w-auto object-contain" style={{ height: '48px' }} />
-              <div className="h-5 w-px bg-slate-200" />
-              <span className="text-[10px] font-bold text-[#5B6068] uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest">
                 {role === 'DRIVER' ? 'DRIVER ENROLMENT' : 'FLEET ENROLMENT'}
               </span>
             </div>
-            <h1 className="text-[1.65rem] font-black text-slate-900 tracking-tight">
+            <h1 className="text-[1.65rem] font-black text-white tracking-tight">
               {role === 'DRIVER' ? 'Commercial Driver Registration' : 'Fleet Registration'}
             </h1>
-            <p className="text-xs text-[#5B6068] mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               {role === 'DRIVER'
                 ? 'Sign up as a commercial driver. A unique Driver Login ID (JK-DRV-XXXXX) will be generated.'
                 : 'Register your transport fleet. A unique Fleet Login ID (JK-FLT-XXXXX) will be generated.'}
@@ -326,14 +338,14 @@ export const RegisterPage: React.FC = () => {
           </motion.div>
 
           {/* Role Switcher Tabs */}
-          <motion.div className="mb-4 p-1 bg-slate-100 rounded-xl flex items-center gap-1" {...up(0.15)}>
+          <motion.div className="mb-4 p-1 bg-black/40 rounded-xl flex items-center gap-1" {...up(0.15)}>
             <button
               type="button"
               onClick={() => { setRole('FLEET_MANAGER'); setError(null); }}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                 role === 'FLEET_MANAGER'
-                  ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                  : 'text-[#5B6068] hover:text-slate-900'
+                  ? 'bg-brand-gold text-black shadow-sm border border-gold-border'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
@@ -347,8 +359,8 @@ export const RegisterPage: React.FC = () => {
               onClick={() => { setRole('DRIVER'); setError(null); }}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                 role === 'DRIVER'
-                  ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                  : 'text-[#5B6068] hover:text-slate-900'
+                  ? 'bg-brand-gold text-black shadow-sm border border-gold-border'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
@@ -374,27 +386,27 @@ export const RegisterPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {/* Company Name */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Company Name *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Company Name *</label>
                   <div className="relative">
-                    <Building2 className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Building2 className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
-                      placeholder="Apex Trans Logistics" required className={inp()} />
+                      placeholder="Apex Trans Logistics" required className="w-full bg-black/30 border border-yellow-400/30 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition pl-9" />
                   </div>
                 </div>
 
                 {/* Registration No */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Registration No.</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Registration No.</label>
                   <input type="text" value={registrationNo} onChange={e => setRegistrationNo(e.target.value)}
                     placeholder="DL-TRANS-2024-889"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition" />
+                    className="w-full bg-black/30 border border-yellow-400/30 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition" />
                 </div>
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Contact Person Name *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Contact Person Name *</label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <User className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="text" value={contactName} onChange={e => setContactName(e.target.value)}
                       placeholder="Rajesh Sharma" required className={inp()} />
                   </div>
@@ -402,9 +414,9 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Contact Phone */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Contact Phone</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Contact Phone</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)}
                       placeholder="+91 98100 00000" className={inp()} />
                   </div>
@@ -412,9 +424,9 @@ export const RegisterPage: React.FC = () => {
 
                 {/* City */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Depot City</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Depot City</label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <MapPin className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="text" value={city} onChange={e => setCity(e.target.value)}
                       placeholder="New Delhi" className={inp()} />
                   </div>
@@ -422,14 +434,14 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Password *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Password *</label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                       placeholder="Min 6 characters" required minLength={6}
                       className={`${inp()} pr-9`} />
                     <button type="button" onClick={() => setShowPassword(p => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer">
                       {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
@@ -437,9 +449,9 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Operating Depot/Address — full width */}
                 <div className="col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Operating Depot / Address</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Operating Depot / Address</label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <MapPin className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="text" value={address} onChange={e => setAddress(e.target.value)}
                       placeholder="Logistics Park / Depot address"
                       className={inp()} />
@@ -451,9 +463,9 @@ export const RegisterPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {/* Driver Full Name */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Driver Full Name *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Driver Full Name *</label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <User className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="text" value={driverName} onChange={e => setDriverName(e.target.value)}
                       placeholder="e.g. Ramesh Kumar" required className={inp()} />
                   </div>
@@ -461,17 +473,17 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Driving License No */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Commercial Driving License *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Commercial Driving License *</label>
                   <input type="text" value={driverLicenseNo} onChange={e => setDriverLicenseNo(e.target.value)}
                     placeholder="DL-042019000101" required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition" />
+                    className="w-full bg-black/30 border border-yellow-400/30 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition" />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Contact Phone</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Contact Phone</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type="tel" value={driverPhone} onChange={e => setDriverPhone(e.target.value)}
                       placeholder="+91 98111 00000" className={inp()} />
                   </div>
@@ -479,14 +491,14 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Password *</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Password *</label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                       placeholder="Min 6 characters" required minLength={6}
                       className={`${inp()} pr-9`} />
                     <button type="button" onClick={() => setShowPassword(p => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer">
                       {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
@@ -494,13 +506,13 @@ export const RegisterPage: React.FC = () => {
 
                 {/* Assigned Transport Fleet */}
                 <div className="col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Assigned Transport Fleet</label>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 uppercase tracking-wider">Assigned Transport Fleet</label>
                   <div className="relative">
-                    <Building2 className="w-4 h-4 text-[#5B6068] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Building2 className="w-4 h-4 text-yellow-400/60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <select
                       value={selectedFleetId}
                       onChange={e => setSelectedFleetId(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition"
+                      className="w-full bg-black/30 border border-yellow-400/30 text-white rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-yellow-400 transition"
                     >
                       {publicFleets.map(f => (
                         <option key={f.id} value={f.id}>
@@ -522,7 +534,7 @@ export const RegisterPage: React.FC = () => {
               disabled={loading}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full mt-5 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-black rounded-xl text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
+              className="w-full mt-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-black rounded-xl text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
             >
               {loading
                 ? 'Registering & Generating Login ID…'
@@ -535,12 +547,12 @@ export const RegisterPage: React.FC = () => {
 
           {/* Sign in link */}
           <motion.p
-            className="mt-4 text-center text-xs text-[#5B6068]"
+            className="mt-4 text-center text-xs text-gray-400"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ delay: 0.65, duration: 0.45 }}
           >
             Already have an assigned Login ID?{' '}
-            <Link to="/login" className="text-slate-900 underline font-bold transition">
+            <Link to="/login" className="text-yellow-400 underline font-bold transition">
               Sign In
             </Link>
           </motion.p>

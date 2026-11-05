@@ -49,17 +49,17 @@ export const TyresPage: React.FC = () => {
   function getHealthFilterButtonClasses(value: string): string {
     const isActive = healthFilter === value;
     if (!isActive) {
-      return 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-blue-50';
+      return 'bg-cream text-slate-500 border border-gold-light';
     }
     switch (value) {
       case 'HEALTHY':
-        return 'bg-emerald-100 text-emerald-700 border border-emerald-300';
+        return 'bg-emerald-500 text-white';
       case 'WARNING':
-        return 'bg-[#FFF4EB] text-[#E8770E] border border-[#FCD5B5]';
+        return 'bg-amber-500 text-white';
       case 'CRITICAL':
-        return 'bg-red-100 text-red-700 border border-red-300';
+        return 'bg-red-500 text-white';
       default:
-        return 'bg-blue-600 text-white border border-blue-700';
+        return 'bg-brand-gold text-black border border-gold-border';
     }
   }
 
@@ -68,35 +68,35 @@ export const TyresPage: React.FC = () => {
 
       {/* 1. Page header */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tyre Lifecycle Management</h1>
-        <p className="text-xs text-[#5B6068] mt-0.5">Visual condition overview</p>
+        <h1 className="text-2xl font-black text-white tracking-tight">Tyre Lifecycle Management</h1>
+        <p className="text-xs text-slate-300 mt-0.5">Visual condition overview</p>
       </div>
 
       {/* 2. Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         {/* Healthy */}
-        <div className="bg-white border border-slate-200 border-t-2 border-t-emerald-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <ShieldCheck className="w-8 h-8 text-[#5B6068] shrink-0" />
+        <div className="black-glow-card border-t-2 border-t-emerald-400 p-4 flex items-center gap-3">
+          <ShieldCheck className="w-8 h-8 text-emerald-400 shrink-0" />
           <div>
-            <div className="text-2xl font-black text-slate-900 leading-tight">{healthyCount}</div>
-            <div className="text-xs text-emerald-600 font-semibold">Healthy</div>
+            <div className="text-2xl font-black text-white leading-tight">{healthyCount}</div>
+            <div className="text-xs text-emerald-400 font-semibold">Healthy</div>
           </div>
         </div>
 
         {/* Warning */}
-        <div className="bg-white border border-slate-200 border-t-2 border-t-[#E8770E] rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <AlertTriangle className={`w-8 h-8 shrink-0 ${warningCount > 0 ? 'text-[#E8770E]' : 'text-[#5B6068]'}`} />
+        <div className="black-glow-card border-t-2 border-t-[#E8770E] p-4 flex items-center gap-3">
+          <AlertTriangle className={`w-8 h-8 shrink-0 ${warningCount > 0 ? 'text-[#E8770E]' : 'text-slate-400'}`} />
           <div>
-            <div className="text-2xl font-black text-slate-900 leading-tight">{warningCount}</div>
+            <div className="text-2xl font-black text-white leading-tight">{warningCount}</div>
             <div className="text-xs text-[#E8770E] font-semibold">Warning</div>
           </div>
         </div>
 
         {/* Critical */}
-        <div className="bg-white border border-slate-200 border-t-2 border-t-red-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <AlertCircle className={`w-8 h-8 shrink-0 ${criticalCount > 0 ? 'text-red-500' : 'text-[#5B6068]'}`} />
+        <div className="black-glow-card border-t-2 border-t-red-400 p-4 flex items-center gap-3">
+          <AlertCircle className={`w-8 h-8 shrink-0 ${criticalCount > 0 ? 'text-red-500' : 'text-slate-400'}`} />
           <div>
-            <div className="text-2xl font-black text-slate-900 leading-tight">{criticalCount}</div>
+            <div className="text-2xl font-black text-white leading-tight">{criticalCount}</div>
             <div className="text-xs text-red-500 font-semibold">Critical</div>
           </div>
         </div>
@@ -110,9 +110,7 @@ export const TyresPage: React.FC = () => {
           placeholder="Search by serial number or model…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2
-                     text-xs text-slate-900 placeholder-slate-400
-                     focus:outline-none focus:border-blue-500"
+          className="flex-1 bg-cream border border-gold-border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-gold"
         />
 
         {/* Health filter pill buttons */}
@@ -132,8 +130,7 @@ export const TyresPage: React.FC = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-white border border-slate-200 rounded-xl px-3 py-2
-                     text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+          className="bg-cream border border-gold-border rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-gold"
         >
           <option value="">All Statuses</option>
           <option value="FITTED">Fitted</option>

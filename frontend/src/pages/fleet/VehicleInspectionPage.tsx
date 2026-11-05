@@ -333,7 +333,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
   if (error || !data) {
     return (
-      <div className="p-8 max-w-7xl mx-auto text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm">
+      <div className="p-8 max-w-7xl mx-auto text-center py-16 cream-glow-card">
         <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
         <h3 className="text-base font-bold text-slate-900">Unable to Load Vehicle Inspections</h3>
         <p className="text-xs text-[#5B6068] mt-1 max-w-md mx-auto">
@@ -381,7 +381,7 @@ export const VehicleInspectionPage: React.FC = () => {
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <Link
             to={`/vehicles/${vehicle.id}`}
-            className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-semibold shadow-sm transition"
+            className="px-3.5 py-2 cream-glow-card text-slate-700 hover:text-slate-900 rounded-xl text-xs font-semibold transition"
           >
             Vehicle Details
           </Link>
@@ -438,7 +438,7 @@ export const VehicleInspectionPage: React.FC = () => {
       )}
 
       {/* ── Real-Time Inspection Progress Bar & 100% Confirmation ── */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
+      <div className="cream-glow-card p-5 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div
@@ -556,7 +556,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
       {/* ── Active Selected Tyre Inspection & Removal/Replacement Panel ── */}
       {selectedPos && selectedPos.tyre ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5 animate-in fade-in duration-200">
+        <div className="cream-glow-card p-6 space-y-5 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#14161A] text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">
@@ -761,7 +761,7 @@ export const VehicleInspectionPage: React.FC = () => {
           </form>
         </div>
       ) : (
-        <div className="p-8 text-center bg-white border border-slate-200 rounded-3xl shadow-sm">
+        <div className="p-8 text-center cream-glow-card">
           <Disc className="w-10 h-10 text-slate-300 mx-auto mb-2" />
           <h3 className="text-sm font-bold text-slate-900">Select a wheel position to begin inspection</h3>
           <p className="text-xs text-[#5B6068] mt-0.5">

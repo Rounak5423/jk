@@ -209,7 +209,7 @@ export const DriverPortalPage: React.FC = () => {
           </div>
           <button
             onClick={handleFlushQueue}
-            className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-sm"
+            className="px-3 py-1.5 bg-cream hover:bg-[#FFF9E8] text-slate-900 border border-gold-light rounded-lg text-xs font-semibold transition shadow-sm"
           >
             Sync Now
           </button>
@@ -217,7 +217,7 @@ export const DriverPortalPage: React.FC = () => {
       )}
 
       {/* Assigned Vehicle Card */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="black-glow-card p-6">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold uppercase tracking-wider text-[#5B6068] flex items-center gap-1.5">
             <Truck className="w-4 h-4 text-[#5B6068]" /> Assigned Commercial Vehicle
@@ -257,7 +257,7 @@ export const DriverPortalPage: React.FC = () => {
       {/* Active Trip or Start Trip Form */}
       {activeTrip ? (
         // Active Trip in progress
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+        <div className="cream-glow-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#5B6068] flex items-center gap-1.5">
               <Route className="w-4 h-4 text-[#5B6068]" /> Trip Currently In Progress
@@ -289,13 +289,13 @@ export const DriverPortalPage: React.FC = () => {
                 onChange={(e) => setEndOdo(e.target.value)}
                 placeholder={`Must be > ${activeTrip.start_odometer}`}
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-400"
+                className="w-full bg-cream border border-gold-border rounded-xl px-4 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2"
             >
               <Square className="w-4 h-4" /> Complete Journey &amp; Submit Trip
             </button>
@@ -303,7 +303,7 @@ export const DriverPortalPage: React.FC = () => {
         </div>
       ) : (
         // Start Trip Form
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+        <div className="cream-glow-card p-6 space-y-4">
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <Play className="w-4 h-4 text-[#5B6068]" /> Start New Journey
           </h3>
@@ -318,7 +318,7 @@ export const DriverPortalPage: React.FC = () => {
                   onChange={(e) => setOrigin(e.target.value)}
                   placeholder="e.g. Delhi Depot"
                   required
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-slate-400"
+                  className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -330,7 +330,7 @@ export const DriverPortalPage: React.FC = () => {
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="e.g. Jaipur Freight Yard"
                   required
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-slate-400"
+                  className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
             </div>
@@ -352,7 +352,7 @@ export const DriverPortalPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4" /> Start Journey
             </button>
@@ -361,7 +361,7 @@ export const DriverPortalPage: React.FC = () => {
       )}
 
       {/* Driver Tyre Alerts */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+      <div className="bg-cream border border-gold-border p-6 rounded-2xl shadow-sm">
         <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-[#E8770E]" /> Active Vehicle Tyre Alerts
         </h3>
