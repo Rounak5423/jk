@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, send_from_directory
 from sqlalchemy import inspect as sa_inspect
 from app.config import Config
 from app.extensions import db, cors
@@ -39,7 +40,7 @@ def create_app(config_class=Config):
     app.register_blueprint(treel_bp, url_prefix="/api/v1/treel")
     app.register_blueprint(export_bp, url_prefix="/api/v1/export")
 
-    # Auto-run schema migrations if needed
+    # Auto-run schema migrations and seed on empty database
     with app.app_context():
         try:
             db.create_all()
@@ -52,8 +53,15 @@ def create_app(config_class=Config):
             # Ensure silent OEM Fleet Vault baseline sync for JK Tyre
             from app.services.oem_vault_service import OEMDataSyncService
             OEMDataSyncService.ensure_baseline_sync()
+
+            # Check if this is a fresh cloud database (0 users registered)
+            from app.models.user import User
+            if User.query.first() is None:
+                app.logger.info("Fresh database detected on cloud deploy. Auto-seeding starter fleet data...")
+                from synthetic.generator import generate_fleet_data
+                generate_fleet_data(num_vehicles=20, seed=42, weeks_history=3)
         except Exception as exc:
-            app.logger.warning(f"Migration or OEM Vault baseline check failed: {exc}")
+            app.logger.warning(f"Migration, OEM sync, or auto-seed notice: {exc}")
 
     # Global Health Check & Info
     @app.route("/api/v1/health", methods=["GET"])
@@ -63,6 +71,27 @@ def create_app(config_class=Config):
             "service": "JK Tyre Fleet Intelligence API",
             "demo_mode": app.config.get("DEMO_MODE", True),
             "rule_version": app.config.get("RULE_ENGINE_VERSION", "v1.0.0-demo-provisional"),
+        }), 200
+
+    # Production Static Files (Serve Vite React SPA from frontend/dist)
+    dist_dir = os.path.abspath(os.path.join(app.root_path, "..", "..", "frontend", "dist"))
+    if not os.path.isdir(dist_dir):
+        dist_dir = os.path.abspath(os.path.join(os.getcwd(), "frontend", "dist"))
+
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_frontend(path):
+        if path.startswith("api/"):
+            return jsonify({"error": "Endpoint not found"}), 404
+        if path and os.path.isfile(os.path.join(dist_dir, path)):
+            return send_from_directory(dist_dir, path)
+        index_file = os.path.join(dist_dir, "index.html")
+        if os.path.isfile(index_file):
+            return send_from_directory(dist_dir, "index.html")
+        return jsonify({
+            "service": "JK Tyre Fleet Intelligence Platform",
+            "status": "online",
+            "message": "Frontend build not detected. Please run 'npm run build' inside frontend/"
         }), 200
 
     # Error Handlers

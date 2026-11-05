@@ -18,7 +18,10 @@ class Config:
 
     # Database
     default_db_path = (INSTANCE_DIR / "jktyre.db").as_posix()
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", f"sqlite:///{default_db_path}")
+    _raw_db_url = os.getenv("DATABASE_URL")
+    if _raw_db_url and _raw_db_url.startswith("postgres://"):
+        _raw_db_url = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = _raw_db_url or f"sqlite:///{default_db_path}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Uploads
