@@ -1,6 +1,17 @@
 # JK Tyre THI Fleet Intelligence Platform
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rounak5423/jk)
+
 A full-stack, enterprise-grade commercial vehicle tyre management, telematics, and health monitoring platform. Engineered with Python Flask, SQLAlchemy, SQLite/PostgreSQL, React, TypeScript, Tailwind CSS, TanStack Query, and Three.js (React Three Fiber).
+
+---
+
+## 🚀 Instant Cloud Deployment (Render)
+Click the button above or visit:
+**[https://render.com/deploy?repo=https://github.com/Rounak5423/jk](https://render.com/deploy?repo=https://github.com/Rounak5423/jk)**
+
+Render will automatically detect 
+ender.yaml, compile the Vite React frontend, install backend requirements, configure Gunicorn, and launch the single unified service with an instantly shareable URL (e.g. https://jk-tyre-fleet-intelligence.onrender.com).
 
 ---
 
