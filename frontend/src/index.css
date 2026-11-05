@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --brand-gold: #F7C928;
+  --brand-yellow: #FFD52A;
+  --brand-warm-gold: #D99B16;
+  --brand-dark-gold: #B8860B;
+  --dark-primary: #101114;
+  --dark-sidebar: #101010;
+  --dark-surface: #1C1D20;
+  --dark-panel: #17191D;
+  --dark-card: #292318;
+  --cream: #FFFDF5;
+  --cream-200: #FFF3D5;
+  --gold-border: #E9D9A5;
+  --gold-light: #E9E0CE;
+  --gold-subtle: #FFF0B8;
+}
+
+html {
+  font-size: 15.5px;
+  background: linear-gradient(125deg, #101114 0%, #292318 45%, #72510D 100%);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(247, 201, 40, 0.10), transparent 42%),
+    radial-gradient(circle at 82% 82%, rgba(217, 155, 22, 0.08), transparent 40%),
+    linear-gradient(125deg, #101114 0%, #292318 45%, #72510D 100%);
+  background-attachment: fixed;
+  color: #E5E5E5;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Hide scrollbar on register / login panels while keeping scroll functional */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 2D Inspection Road Paving & Vehicle Launch Keyframes */
+@keyframes highwayDash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -120px; }
+}
+.animate-highway-fast {
+  animation: highwayDash 0.35s linear infinite;
+}
+.animate-highway-cruising {
+  animation: highwayDash 0.65s linear infinite;
+}
+
+@keyframes paverBeamGlow {
+  0%, 100% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 1));
+  }
+}
+.animate-paver-beam {
+  animation: paverBeamGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes engineRumble {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-0.7px) rotate(-0.08deg); }
+  75% { transform: translateY(0.7px) rotate(0.08deg); }
+}
+.animate-engine-rumble {
+  animation: engineRumble 0.09s ease-in-out infinite;
+}
+
+@keyframes nitroFlamePuff {
+  0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.85; }
+  50% { transform: scaleX(1.4) scaleY(0.85); opacity: 1; }
+}
+.animate-nitro-flame {
+  transform-origin: 90px 178px;
+  animation: nitroFlamePuff 0.08s ease-in-out infinite;
+}
+
+@keyframes smokePuffMove {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(-120px, -8px) scale(2.2); opacity: 0; }
+}
+.animate-smoke-puff {
+  animation: smokePuffMove 0.8s ease-out infinite;
+}
+
+@keyframes headlightAura {
+  0%, 100% { opacity: 0.88; }
+  50% { opacity: 1; }
+}
+.animate-headlight-aura {
+  animation: headlightAura 0.3s ease-in-out infinite;
+}
+
+
+/* Black card with golden glow - for KPIs and important metrics */
+.black-glow-card {
+  background: linear-gradient(145deg, #29200E 0%, #171717 55%, #201808 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 213, 74, 0.9);
+  border-radius: 14px;
+  box-shadow:
+    0 0 5px rgba(255, 196, 0, 0.75),
+    0 0 12px rgba(255, 196, 0, 0.55),
+    0 0 24px rgba(255, 176, 0, 0.30),
+    0 0 40px rgba(255, 176, 0, 0.15),
+    inset 0 0 8px rgba(255, 196, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.black-glow-card:hover {
+  border-color: #FFD54A;
+  box-shadow:
+    0 0 8px rgba(255, 196, 0, 0.8),
+    0 0 20px rgba(255, 176, 0, 0.5),
+    inset 0 0 10px rgba(255, 196, 0, 0.15);
+}
+
+/* Cream card with subtle golden glow - for tables and detailed content */
+.cream-glow-card {
+  background: linear-gradient(145deg, #FFF2CF 0%, #F4E5B9 55%, #EBD69F 100%);
+  color: #29200E;
+  border: 1px solid rgba(218, 169, 40, 0.85);
+  border-radius: 14px;
+  box-shadow:
+    0 0 4px rgba(218, 169, 40, 0.45),
+    0 0 10px rgba(218, 169, 40, 0.30),
+    0 0 20px rgba(255, 196, 0, 0.15),
+    inset 0 0 6px rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease;
+}
+
+.cream-glow-card:hover {
+  border-color: #C99416;
+  box-shadow:
+    0 0 7px rgba(218, 169, 40, 0.55),
+    0 0 16px rgba(255, 196, 0, 0.30),
+    inset 0 0 8px rgba(255, 255, 255, 0.4);
+}

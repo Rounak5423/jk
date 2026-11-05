@@ -1,0 +1,94 @@
+{
+  "best_model_name": "Random Forest Regressor",
+  "metrics": {
+    "R2": 0.8472,
+    "MAE": 0.126,
+    "RMSE": 0.1593
+  },
+  "all_model_results": {
+    "Gradient Boosting Regressor": {
+      "R2": 0.8446,
+      "MAE": 0.1287,
+      "RMSE": 0.1607
+    },
+    "Random Forest Regressor": {
+      "R2": 0.8472,
+      "MAE": 0.126,
+      "RMSE": 0.1593
+    },
+    "Extra Trees Regressor": {
+      "R2": 0.8334,
+      "MAE": 0.1339,
+      "RMSE": 0.1664
+    },
+    "Ridge Linear Regressor": {
+      "R2": 0.6798,
+      "MAE": 0.1899,
+      "RMSE": 0.2307
+    }
+  },
+  "feature_importances": {
+    "accel_std": 0.7335,
+    "rapid_accel_events": 0.0447,
+    "rapid_brake_events": 0.0443,
+    "mean_abs_accel": 0.0396,
+    "mean_abs_jerk": 0.0175,
+    "pressure_std": 0.0173,
+    "harsh_accel_events": 0.0145,
+    "harsh_brake_events": 0.0112,
+    "mean_pressure": 0.0112,
+    "cruising_ratio": 0.0102,
+    "speed_std": 0.0094,
+    "mean_temperature": 0.0082,
+    "total_distance_km": 0.0081,
+    "temp_range": 0.008,
+    "mean_speed": 0.0072,
+    "max_temperature": 0.0065,
+    "max_decel": 0.0045,
+    "max_accel": 0.004,
+    "max_speed": 0.0,
+    "overspeed_ratio": 0.0,
+    "idle_ratio": 0.0,
+    "max_pressure_dev": 0.0
+  },
+  "fleet_baselines": {
+    "v_mean": 37.53752525252525,
+    "v_std": 26.489993459259,
+    "a_mean": 0.8889818322109989,
+    "a_std": 0.8612501830034308,
+    "p_dev_mean": 0.5271442550505046,
+    "p_dev_std": 0.35040471613714685,
+    "t_mean": 34.371394570707054,
+    "t_std": 5.311189901407113
+  },
+  "cluster_profiles": {
+    "Defensive & Smooth": {
+      "cluster_id": 0,
+      "avg_trip_score": 96.53,
+      "avg_abs_accel": 0.8518,
+      "avg_max_decel": 2.96,
+      "trip_count": 2,
+      "percentage": 0.5
+    },
+    "Balanced Commercial": {
+      "cluster_id": 1,
+      "avg_trip_score": 95.72,
+      "avg_abs_accel": 0.8812,
+      "avg_max_decel": 3.52,
+      "trip_count": 94,
+      "percentage": 23.8
+    },
+    "Aggressive / High Wear": {
+      "cluster_id": 2,
+      "avg_trip_score": 95.6,
+      "avg_abs_accel": 0.89,
+      "avg_max_decel": 3.67,
+      "trip_count": 299,
+      "percentage": 75.7
+    }
+  },
+  "version": "v2.0.0-adaptive-relative-ml",
+  "trained_at": "2026-11-02T21:57:01.354242",
+  "total_trips_trained": 395,
+  "total_sensor_records": 158400
+}

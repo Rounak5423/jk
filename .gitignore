@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+*.sqlite3
+*.db
+backend/instance/
+backend/uploads/
+scratch/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.npm
+*.log
+.vite/
+frontend/.vite/
+
+# Environment variables & secrets
+.env
+*.local
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
