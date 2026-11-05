@@ -2,25 +2,15 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { FleetStats, Alert, Trip, Vehicle } from '../../types';
+import { FleetStats, Alert, Trip } from '../../types';
 import {
   Truck,
   Disc,
   Route,
   AlertTriangle,
   ShieldCheck,
-  AlertCircle,
-  HelpCircle,
-  ArrowRight,
   Activity,
   ChevronRight,
-  ClipboardCheck,
-  CheckCircle2,
-  Calendar,
-  Gauge,
-  Eye,
-  ArrowUpRight,
-  Sparkles,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuthStore } from '../../store/authStore';
@@ -51,27 +41,6 @@ export const DashboardPage: React.FC = () => {
       return res.data;
     },
   });
-
-  const { data: vehicles } = useQuery<Vehicle[]>({
-    queryKey: ['fleet-vehicles', activeFleetId],
-    queryFn: async () => {
-      const res = await api.get('/vehicles');
-      return res.data;
-    },
-  });
-
-  const firstVehicle = vehicles && vehicles.length > 0 ? vehicles[0] : null;
-
-  const { data: inspectionSummary } = useQuery({
-    queryKey: ['vehicle-inspection-summary', firstVehicle?.id, activeFleetId],
-    queryFn: async () => {
-      if (!firstVehicle?.id) return null;
-      const res = await api.get(`/inspections/vehicle/${firstVehicle.id}`);
-      return res.data;
-    },
-    enabled: !!firstVehicle?.id,
-  });
-
   const pieData = stats
     ? [
         { name: 'Healthy', value: stats.health_distribution.healthy, color: '#10b981' },
@@ -151,167 +120,6 @@ export const DashboardPage: React.FC = () => {
           <div className="text-[11px] text-slate-400 mt-1">Requiring depot action</div>
         </div>
       </div>
-
-      {/* 1st Vehicle Fitment & Inspection Report (Initial Baseline Audit) */}
-      {firstVehicle && (
-        <div className="cream-glow-card p-6 space-y-6">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-cream-100 border border-gold-light flex items-center justify-center text-[#344054] shrink-0">
-                <ClipboardCheck className="w-6 h-6 text-[#344054]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg font-black text-[#344054] tracking-tight">
-                    1st Vehicle Fitment &amp; Physical Inspection Report
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-brand-gold text-black border border-gold-border">
-                    Depot Baseline Audit
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cream-100 text-[#344054] border border-gold-light">
-                    07 October 2025
-                  </span>
-                </div>
-                <p className="text-xs text-[#5B6068] mt-1">
-                  Primary vehicle baseline fitment and physical tread inspection for 1st Registered Fleet:{' '}
-                  <span className="font-semibold text-slate-700">Apex Trans Logistics Pvt Ltd</span>.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link
-                to={`/vehicles/${firstVehicle.id}`}
-                className="px-3 py-2 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
-              >
-                <Eye className="w-3.5 h-3.5" /> 3D Digital Twin
-              </Link>
-              <Link
-                to={`/vehicles/${firstVehicle.id}/inspections`}
-                className="px-3.5 py-2 bg-dark-surface hover:bg-dark-card text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
-              >
-                <ClipboardCheck className="w-3.5 h-3.5 text-brand-gold" /> Full Inspection View
-              </Link>
-            </div>
-          </div>
-
-          {/* Quick Specifications Banner */}
-          <div className="bg-[#17191D] rounded-2xl p-5 text-white grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 shadow-sm border border-gold-border/30">
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Vehicle Reg</div>
-              <div className="text-sm font-black text-white font-mono mt-0.5">{firstVehicle.vehicle_number}</div>
-              <div className="text-[10px] text-slate-400 truncate">{firstVehicle.make} {firstVehicle.model}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Configuration</div>
-              <div className="text-sm font-bold text-white mt-0.5">{firstVehicle.wheel_config}</div>
-              <div className="text-[10px] text-slate-400">4 Axles • 12 Wheels</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">GVW Rating</div>
-              <div className="text-sm font-black text-white mt-0.5">35 M.Tons</div>
-              <div className="text-[10px] text-emerald-400">Commercial Standard</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Inflation Standard</div>
-              <div className="text-sm font-black text-white font-mono mt-0.5">{firstVehicle.baseline_pressure} PSI</div>
-              <div className="text-[10px] text-slate-400">Cold Depot Target</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Verified Odometer</div>
-              <div className="text-sm font-black text-white font-mono mt-0.5">{firstVehicle.current_odometer} km</div>
-              <div className="text-[10px] text-slate-400">Pre-Dispatch Audit</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Hardness &amp; Steer</div>
-              <div className="text-sm font-bold text-emerald-400 mt-0.5">65 Shore A</div>
-              <div className="text-[10px] text-[#E8770E] font-semibold">1R Alignment Done</div>
-            </div>
-          </div>
-
-          {/* Fitted Wheel Positions & Physical Measurements Table */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#344054] text-xs flex items-center gap-2">
-                <Disc className="w-4 h-4 text-blue-500" /> All 13 Fitted &amp; Inspected Tyres (Sheet Registry)
-              </h3>
-              <span className="text-[11px] text-slate-500">
-                12 Mounted Wheels + 1 Spare Tyre • All 100% Verified
-              </span>
-            </div>
-
-            <div className="overflow-x-auto cream-glow-card">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-gold-light text-[#344054] font-semibold bg-cream-200">
-                    <th className="py-2.5 px-3">SL</th>
-                    <th className="py-2.5 px-3">Whl. Posn</th>
-                    <th className="py-2.5 px-4">Brand &amp; Model</th>
-                    <th className="py-2.5 px-4">Serial No.</th>
-                    <th className="py-2.5 px-3">Pressure</th>
-                    <th className="py-2.5 px-3">Hardness</th>
-                    <th className="py-2.5 px-3">NSD (Min)</th>
-                    <th className="py-2.5 px-3">Odometer</th>
-                    <th className="py-2.5 px-4">Remarks</th>
-                    <th className="py-2.5 px-3 text-right">Result</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gold-light text-[#344054]">
-                  {inspectionSummary?.positions?.map((pos: any, idx: number) => {
-                    const tyre = pos.tyre;
-                    const insp = pos.latest_inspection;
-                    const isAlignment = pos.wheel_position === '1R' || (insp?.notes && insp.notes.includes('Alignment done'));
-                    return (
-                      <tr key={pos.fitment_id || idx} className="hover:bg-[#FFF9E8] transition">
-                        <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-[#344054]">
-                          <span className="px-2 py-0.5 rounded bg-cream-100 border border-gold-light">
-                            {pos.wheel_position}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-4 font-medium text-slate-800">
-                          JUH5 - REG
-                          <span className="text-[10px] text-slate-400 block font-normal">295/80R22.5</span>
-                        </td>
-                        <td className="py-2.5 px-4 font-mono font-bold text-blue-700">
-                          {tyre?.serial_number || '—'}
-                        </td>
-                        <td className="py-2.5 px-3 font-mono font-semibold text-[#344054]">
-                          {insp?.measured_pressure || 130} PSI
-                        </td>
-                        <td className="py-2.5 px-3 font-mono text-slate-700">65</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-[#344054]">
-                          {insp?.measured_nsd || 16.5} mm
-                        </td>
-                        <td className="py-2.5 px-3 font-mono text-[#5B6068]">
-                          {insp?.odometer_at_inspection || 626} km
-                        </td>
-                        <td className="py-2.5 px-4">
-                          {isAlignment ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 shadow-sm">
-                              Alignment done
-                            </span>
-                          ) : (
-                            <span className="text-[#5B6068] text-[11px]">
-                              {pos.wheel_position === 'Spare' ? 'Spare In Inventory' : 'Depot Verified'}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3 h-3" /> PASS
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Grid: Health Distribution & Recent Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

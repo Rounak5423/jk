@@ -76,10 +76,12 @@ export const AppLayout: React.FC = () => {
       }}
     >
       <Navbar />
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
-          <Outlet />
+        <main className="flex-1 p-4 sm:p-6 lg:p-7 overflow-y-auto w-full transition-all duration-300">
+          <div className="w-full max-w-[1880px] mx-auto space-y-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

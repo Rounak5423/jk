@@ -185,7 +185,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
   return (
     <div
       className={`relative w-full ${
-        fullscreen ? 'h-[calc(100vh-140px)] min-h-[620px]' : 'h-[660px]'
+        fullscreen ? 'h-[calc(100vh-140px)] min-h-[700px]' : 'h-[740px]'
       } rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col bg-[#0a0d14]`}
     >
       {/* Top Controls Overlay */}
@@ -392,3 +392,4 @@ export const VehicleViewer3D: React.FC<Props> = ({
 };
 
 export default VehicleViewer3D;
+

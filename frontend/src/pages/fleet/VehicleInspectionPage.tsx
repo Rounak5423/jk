@@ -324,7 +324,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-8 max-w-7xl mx-auto space-y-4">
+      <div className="p-8 max-w-[1850px] mx-auto space-y-4">
         <div className="h-8 bg-slate-200 rounded-xl w-64 animate-pulse" />
         <div className="h-72 bg-slate-100 rounded-3xl animate-pulse" />
       </div>
@@ -333,7 +333,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
   if (error || !data) {
     return (
-      <div className="p-8 max-w-7xl mx-auto text-center py-16 cream-glow-card">
+      <div className="p-8 max-w-[1850px] mx-auto text-center py-16 cream-glow-card">
         <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
         <h3 className="text-base font-bold text-slate-900">Unable to Load Vehicle Inspections</h3>
         <p className="text-xs text-[#5B6068] mt-1 max-w-md mx-auto">
@@ -352,7 +352,7 @@ export const VehicleInspectionPage: React.FC = () => {
   const token = localStorage.getItem('jk_token') || '';
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-8 max-w-[1850px] mx-auto space-y-6">
       {/* ── Top Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -1583,3 +1583,4 @@ export const VehicleInspectionPage: React.FC = () => {
     </div>
   );
 };
+

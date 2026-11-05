@@ -3,8 +3,8 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
 import {
-  Lock, User, Mail, AlertCircle, ArrowRight, ArrowLeft,
-  Activity, ShieldCheck, TrendingUp, Navigation, KeyRound, Eye, EyeOff, Truck, Building2,
+  Lock, User, AlertCircle, ArrowRight, ArrowLeft,
+  Activity, ShieldCheck, TrendingUp, Navigation, Eye, EyeOff,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jkLogo  from '../../assets/jk-logo.png';
@@ -190,42 +190,6 @@ export const LoginPage: React.FC = () => {
             <p className="text-sm text-slate-700 font-medium">
               Sign in with your assigned Login ID.
             </p>
-          </motion.div>
-
-          {/* Quick Demo Pills */}
-          <motion.div 
-            className="mb-5 p-3 bg-amber-50 border border-yellow-400/40 rounded-2xl"
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            transition={{delay: 0.6}}
-          >
-            <span className="text-[11px] uppercase font-bold text-slate-700 tracking-wider mb-2 block">Quick Demo:</span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => { setIdentifier('apex_manager'); setPassword('Password123!'); setError(null); }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                Fleet
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIdentifier('driver1'); setPassword('Password123!'); setError(null); }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                <Truck className="w-3.5 h-3.5" />
-                Driver
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIdentifier('jkadmin'); setPassword('Password123!'); setError(null); }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Admin
-              </button>
-            </div>
           </motion.div>
 
           {/* Error banner */}
