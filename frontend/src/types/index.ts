@@ -225,11 +225,27 @@ export interface Trip {
   score_breakdown?: {
     trip_score: number;
     status: string;
-    components: {
-      pressure_compliance: number;
-      thermal_stability: number;
-      speed_compliance: number;
-      fuel_efficiency: number;
+    components?: {
+      speed_compliance?: number;
+      driving_smoothness?: number;
+      tyre_safety?: number;
+      pressure_compliance?: number;
+      thermal_stability?: number;
+      fuel_efficiency?: number;
+    };
+    risk_burdens?: {
+      r_speed?: number;
+      r_smoothness?: number;
+      r_pressure?: number;
+      r_temperature?: number;
+    };
+    driving_pattern?: {
+      profile: string;
+      description: string;
+      badge_color?: string;
+      mean_abs_accel?: number;
+      max_decel_ms2?: number;
+      overspeed_ratio?: number;
     };
     explanation: string;
   } | null;

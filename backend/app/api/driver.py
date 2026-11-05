@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
-from app.models import User, Vehicle, Trip, TripStatus, Alert, AlertStatus
+from app.models import User, Vehicle, Trip, TripStatus, Alert, AlertStatus, TelemetryRecord
 from app.services.trip_score_engine import TripScoreEngine
 from app.utils.security import roles_required, jwt_required
 from app.utils.audit import record_audit
@@ -126,10 +126,19 @@ def end_trip():
     trip.distance_km = round(distance, 1)
     trip.status = TripStatus.COMPLETED
 
-    # Calculate explainable trip score
+    # Fetch high-frequency telematics samples for this vehicle during trip if available
+    telemetry = TelemetryRecord.query.filter(
+        TelemetryRecord.vehicle_id == vehicle.id,
+        TelemetryRecord.timestamp >= trip.start_time,
+        TelemetryRecord.timestamp <= trip.end_time,
+    ).order_by(TelemetryRecord.timestamp.asc()).all()
+    samples = [t.to_dict() for t in telemetry] if telemetry else []
+
+    # Calculate explainable trip score using Adaptive & Relative Formula
     score_res = TripScoreEngine.calculate_trip_score(
-        telemetry_samples=[],
-        baseline_pressure=vehicle.baseline_pressure,
+        telemetry_samples=samples,
+        baseline_pressure=vehicle.baseline_pressure or 130.0,
+        speed_limit=80.0,
         baseline_mileage=vehicle.baseline_mileage,
     )
     trip.trip_score = score_res["trip_score"]

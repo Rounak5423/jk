@@ -315,33 +315,61 @@ export const TripsPage: React.FC = () => {
 
             {selectedTrip.score_breakdown && (
               <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Gauge className="w-4 h-4 text-cyan-400" />
-                    <span className="text-slate-700">Pressure Compliance</span>
+                {selectedTrip.score_breakdown.driving_pattern && (
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                        Learned Driving Pattern Persona
+                      </span>
+                      <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5 mt-0.5">
+                        <Activity className="w-3.5 h-3.5 text-blue-600" />
+                        {selectedTrip.score_breakdown.driving_pattern.profile}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {selectedTrip.score_breakdown.driving_pattern.description}
+                      </p>
+                    </div>
                   </div>
-                  <span className="font-bold text-slate-900">
-                    {selectedTrip.score_breakdown.components?.pressure_compliance ?? 100}%
-                  </span>
-                </div>
+                )}
 
                 <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Thermometer className="w-4 h-4 text-amber-400" />
-                    <span className="text-slate-700">Thermal Stability</span>
+                    <Zap className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <span className="text-slate-800 font-semibold block">Speed Compliance (Sv)</span>
+                      <span className="text-[10px] text-slate-500">Weight: 50% • Absolute limit &amp; relative pattern</span>
+                    </div>
                   </div>
-                  <span className="font-bold text-slate-900">
-                    {selectedTrip.score_breakdown.components?.thermal_stability ?? 100}%
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-emerald-400" />
-                    <span className="text-slate-700">Speed / Driving Smoothness</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
+                  <span className="font-bold text-slate-900 font-mono text-sm">
                     {selectedTrip.score_breakdown.components?.speed_compliance ?? 100}%
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <span className="text-slate-800 font-semibold block">Driving Smoothness (Sd)</span>
+                      <span className="text-[10px] text-slate-500">Weight: 30% • Acceleration &amp; braking dynamics</span>
+                    </div>
+                  </div>
+                  <span className="font-bold text-slate-900 font-mono text-sm">
+                    {selectedTrip.score_breakdown.components?.driving_smoothness ?? 100}%
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gauge className="w-4 h-4 text-amber-600" />
+                    <div>
+                      <span className="text-slate-800 font-semibold block">Tyre Safety Composite (St)</span>
+                      <span className="text-[10px] text-slate-500">
+                        Weight: 20% • Pres ({selectedTrip.score_breakdown.components?.pressure_compliance ?? 100}%) + Temp ({selectedTrip.score_breakdown.components?.thermal_stability ?? 100}%)
+                      </span>
+                    </div>
+                  </div>
+                  <span className="font-bold text-slate-900 font-mono text-sm">
+                    {selectedTrip.score_breakdown.components?.tyre_safety ?? selectedTrip.score_breakdown.components?.pressure_compliance ?? 100}%
                   </span>
                 </div>
 

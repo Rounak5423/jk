@@ -190,3 +190,48 @@ def ml_model_info():
 
     status = TyreWearMLService.get_model_status()
     return jsonify(status), 200
+
+
+@analytics_bp.route("/trip-model", methods=["GET", "POST"])
+@jwt_required
+def trip_model_info():
+    """
+    Returns Adaptive & Relative Trip Score ML model status, learned baselines,
+    driving pattern clusters, or triggers self-learning incremental retrain.
+    """
+    from app.services.trip_score_engine import TripScoreEngine
+
+    if request.method == "POST":
+        # Trigger self-learning retrain loop
+        from app.services.train_trip_model import run_training_pipeline
+        run_training_pipeline()
+        return jsonify({
+            "message": "Self-learning pipeline triggered and models updated successfully.",
+            "status": TripScoreEngine.get_model_status()
+        }), 200
+
+    return jsonify(TripScoreEngine.get_model_status()), 200
+
+
+@analytics_bp.route("/trip-score/simulate", methods=["POST"])
+@jwt_required
+def simulate_trip_score():
+    """
+    Simulates trip scoring from input telemetry samples using the Adaptive & Relative formula.
+    """
+    from app.services.trip_score_engine import TripScoreEngine
+    data = request.get_json() or {}
+    samples = data.get("samples", [])
+    baseline_pressure = float(data.get("baseline_pressure", 130.0))
+    speed_limit = float(data.get("speed_limit", 80.0))
+    warning_temp = float(data.get("warning_temp", 45.0))
+    critical_temp = float(data.get("critical_temp", 55.0))
+
+    result = TripScoreEngine.calculate_trip_score(
+        telemetry_samples=samples,
+        baseline_pressure=baseline_pressure,
+        speed_limit=speed_limit,
+        warning_temp=warning_temp,
+        critical_temp=critical_temp,
+    )
+    return jsonify(result), 200
