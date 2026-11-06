@@ -190,10 +190,9 @@ def generate_fleet_data(num_vehicles=30, seed=42, weeks_history=4):
     start_date = datetime.now(timezone.utc) - timedelta(weeks=weeks_history)
     configs = [
         (WheelConfig.TEN_WHEELER, VehicleType.HEAVY_TRUCK, 110.0, 4.5),
-        (WheelConfig.SIX_WHEELER, VehicleType.HEAVY_TRUCK, 110.0, 5.0),
-        (WheelConfig.SIX_WHEELER, VehicleType.BUS, 105.0, 5.5),
-        (WheelConfig.TWELVE_WHEELER, VehicleType.HEAVY_TRUCK, 115.0, 3.8),
-        (WheelConfig.FOUR_WHEELER, VehicleType.LIGHT_TRUCK, 65.0, 7.5),
+        (WheelConfig.TWELVE_WHEELER, VehicleType.HEAVY_TRUCK, 125.0, 3.8),
+        (WheelConfig.FOURTEEN_WHEELER, VehicleType.HEAVY_TRUCK, 130.0, 3.5),
+        (WheelConfig.SIXTEEN_WHEELER, VehicleType.HEAVY_TRUCK, 135.0, 3.2),
     ]
 
     all_vehicles = []
@@ -235,7 +234,7 @@ def generate_fleet_data(num_vehicles=30, seed=42, weeks_history=4):
                 axle_count=layout_dict["axle_count"],
                 layout_json=None,
                 make="Tata Motors" if v_idx % 2 == 0 else "Ashok Leyland",
-                model="Signa 2823.K" if wheel_cfg == WheelConfig.TEN_WHEELER else "Ecomet 1215",
+                model="Signa 2823.K" if wheel_cfg == WheelConfig.TEN_WHEELER else ("Signa 3525.K" if wheel_cfg == WheelConfig.TWELVE_WHEELER else ("Signa 4225.T" if wheel_cfg == WheelConfig.FOURTEEN_WHEELER else "Signa 4825.TK")),
                 year=2022 + (v_idx % 3),
                 baseline_pressure=base_p,
                 baseline_mileage=base_mpg,
@@ -436,10 +435,10 @@ def generate_fleet_data(num_vehicles=30, seed=42, weeks_history=4):
                     calculated_at=telem.timestamp,
                     score=thi_res["score"],
                     status=thi_res["status"],
-                    pressure_score=thi_res["components"]["pressure_score"],
-                    temp_score=thi_res["components"]["temp_score"],
-                    wear_score=thi_res["components"]["wear_score"],
-                    rrc_score=thi_res["components"]["rrc_score"],
+                    pressure_score=thi_res["components"].get("pressure_score", 100.0),
+                    temp_score=thi_res["components"].get("temp_score", 100.0),
+                    wear_score=thi_res["components"].get("wear_score", 100.0),
+                    rrc_score=thi_res["components"].get("rrc_score", thi_res["components"].get("inv_severity_score", 100.0)),
                     explanation=thi_res["explanation"],
                     inputs_json=None,
                     rule_version=thi_res["rule_version"],

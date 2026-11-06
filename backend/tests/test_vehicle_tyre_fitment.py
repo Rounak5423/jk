@@ -17,13 +17,17 @@ def test_wheel_configurations_layout():
     assert layout10["total_wheels"] == 10
     assert layout10["axle_count"] == 3
 
-    layout6 = get_default_layout(WheelConfig.SIX_WHEELER)
-    assert layout6["total_wheels"] == 6
-    assert layout6["axle_count"] == 2
-
     layout12 = get_default_layout(WheelConfig.TWELVE_WHEELER)
     assert layout12["total_wheels"] == 12
     assert layout12["axle_count"] == 4
+
+    layout14 = get_default_layout(WheelConfig.FOURTEEN_WHEELER)
+    assert layout14["total_wheels"] == 14
+    assert layout14["axle_count"] == 5
+
+    layout16 = get_default_layout(WheelConfig.SIXTEEN_WHEELER)
+    assert layout16["total_wheels"] == 16
+    assert layout16["axle_count"] == 5
 
 
 def test_permanent_tyre_identity_preservation(app_ctx):

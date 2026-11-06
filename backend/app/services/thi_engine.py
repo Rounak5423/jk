@@ -79,6 +79,40 @@ class THIEngine:
     # 1. INDIVIDUAL TYRE HEALTH INDEX (Configuration-Agnostic Core)
     # -------------------------------------------------------------------------
     @classmethod
+    def calculate_thi(
+        cls,
+        pressure_psi: Optional[float] = None,
+        temperature_c: Optional[float] = None,
+        current_nsd_mm: Optional[float] = None,
+        min_nsd_mm: Optional[float] = None,
+        km_per_mm_wear: Optional[float] = None,
+        speed_kmh: Optional[float] = 0.0,
+        recommended_psi: Optional[float] = None,
+        blueprint_nsd_mm: float = 16.5,
+        wheel_position: str = "1R",
+        axle_type: str = "STEER",
+        vehicle_type: Optional[str] = None,
+        is_stale: bool = False,
+        is_faulty: bool = False,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Backward-compatible wrapper for legacy test suites and callers."""
+        nsd = min_nsd_mm if min_nsd_mm is not None else current_nsd_mm
+        return cls.calculate_tyre_thi(
+            pressure_psi=pressure_psi,
+            temperature_c=temperature_c,
+            min_nsd_mm=nsd,
+            km_per_mm_wear=km_per_mm_wear,
+            speed_kmh=speed_kmh,
+            recommended_psi=recommended_psi,
+            blueprint_nsd_mm=blueprint_nsd_mm,
+            wheel_position=wheel_position,
+            axle_type=axle_type,
+            is_stale=is_stale,
+            is_faulty=is_faulty,
+        )
+
+    @classmethod
     def calculate_tyre_thi(
         cls,
         pressure_psi: Optional[float],
