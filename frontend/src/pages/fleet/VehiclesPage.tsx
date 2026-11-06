@@ -53,6 +53,8 @@ export const VehiclesPage: React.FC = () => {
 
   // Delete Vehicle State
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [showHeaderRemoveModal, setShowHeaderRemoveModal] = useState(false);
+  const [selectedVehicleIdToRemove, setSelectedVehicleIdToRemove] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
@@ -205,7 +207,7 @@ export const VehiclesPage: React.FC = () => {
             Commercial multi-axle vehicle registry with configuration-driven wheel arrangements.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Link
             to="/my-fleets"
             className="flex items-center gap-1.5 px-3.5 py-2.5 bg-cream border border-gold-light hover:bg-cream-100 text-[#344054] font-semibold rounded-xl text-xs transition cursor-pointer"
@@ -213,6 +215,17 @@ export const VehiclesPage: React.FC = () => {
           >
             <Building2 className="w-4 h-4 text-[#5B6068]" /> Manage / Add Fleet
           </Link>
+          <button
+            onClick={() => {
+              setDeleteError(null);
+              setSelectedVehicleIdToRemove(vehicles && vehicles.length > 0 ? vehicles[0].id : '');
+              setShowHeaderRemoveModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+            title="Remove a vehicle from this fleet"
+          >
+            <Trash2 className="w-4 h-4" /> Remove Vehicle
+          </button>
           <button
             onClick={() => {
               resetAddForm();
@@ -641,10 +654,10 @@ export const VehiclesPage: React.FC = () => {
                               setDeleteError(null);
                               setVehicleToDelete(v);
                             }}
-                            className="px-2.5 py-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm cursor-pointer"
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
                             title="Remove Vehicle from Fleet"
                           >
-                            <Trash2 className="w-3 h-3 text-red-500" /> Remove
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
                           </button>
                         </div>
                       </td>
@@ -925,6 +938,124 @@ export const VehiclesPage: React.FC = () => {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Header Remove Vehicle Modal (Quick Remove by Dropdown) ── */}
+      {showHeaderRemoveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-[#17191D] border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-500 shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Remove Vehicle from Fleet</h3>
+                  <p className="text-xs text-slate-400">Select a commercial vehicle to decommission</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowHeaderRemoveModal(false);
+                  setDeleteError(null);
+                }}
+                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Select Vehicle Registration Number
+              </label>
+              <select
+                value={selectedVehicleIdToRemove}
+                onChange={(e) => setSelectedVehicleIdToRemove(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition"
+              >
+                <option value="">-- Choose a Vehicle --</option>
+                {vehicles?.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.vehicle_number} — {v.wheel_config} ({v.fitted_tyre_count}/{v.expected_tyre_count} tyres mounted)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedVehicleIdToRemove && (() => {
+              const targetV = vehicles?.find((v) => v.id === selectedVehicleIdToRemove);
+              if (!targetV) return null;
+              return (
+                <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Vehicle:</span>
+                    <span className="font-mono font-bold text-white">{targetV.vehicle_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Configuration:</span>
+                    <span className="font-medium text-slate-200">{targetV.wheel_config} ({targetV.axle_count} Axles)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Mounted Tyres:</span>
+                    <span className="font-medium text-emerald-400">{targetV.fitted_tyre_count} / {targetV.expected_tyre_count} Tyres</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Vehicle THI:</span>
+                    <span className="font-bold text-slate-100">{targetV.thi.toFixed(1)} / 100</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Removing a vehicle will safely release all mounted tyres back to your depot spare tyre inventory. Associated telemetry and fitment records will be permanently archived.
+            </p>
+
+            {deleteError && (
+              <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                  setShowHeaderRemoveModal(false);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!selectedVehicleIdToRemove || deleteMutation.isPending}
+                onClick={() => {
+                  if (selectedVehicleIdToRemove) {
+                    deleteMutation.mutate(selectedVehicleIdToRemove, {
+                      onSuccess: () => setShowHeaderRemoveModal(false),
+                    });
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Confirm Remove Vehicle
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

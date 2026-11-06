@@ -87,7 +87,11 @@ def create_app(config_class=Config):
             return send_from_directory(dist_dir, path)
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.isfile(index_file):
-            return send_from_directory(dist_dir, "index.html")
+            resp = send_from_directory(dist_dir, "index.html")
+            resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+            return resp
         return jsonify({
             "service": "JK Tyre Fleet Intelligence Platform",
             "status": "online",
