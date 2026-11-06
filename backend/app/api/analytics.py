@@ -167,6 +167,7 @@ def get_vehicle_comparison():
             "wheel_config": v.wheel_config,
             "current_odometer": v.current_odometer,
             "fitted_wheels": len(fits),
+            "total_wheels": v.layout.get("total_wheels", 10),
             "average_thi": avg_v_thi,
             "ideal_thi": 95.0,
             "alert_count": len([a for a in v.alerts if a.status == "ACTIVE"]),

@@ -54,20 +54,23 @@ export const VehicleViewer3D: React.FC<Props> = ({
   const baselinePressure = twinData?.baseline_pressure ?? vehicle?.baseline_pressure ?? 110.0;
   const axleCount = twinData?.axle_count ?? vehicle?.axle_count ?? 3;
 
-  // Derive wheel count
+  // Derive wheel count (strictly commercial heavy multi-axle trucks: 10, 12, 14, 16)
   const wheelCount = useMemo(() => {
-    if (twinData?.wheels && twinData.wheels.length > 0) {
+    if (twinData?.wheels && twinData.wheels.length >= 10) {
       return twinData.wheels.length;
     }
-    if ((vehicle as any)?.wheel_count) {
+    if ((vehicle as any)?.wheel_count && Number((vehicle as any).wheel_count) >= 10) {
       return Number((vehicle as any).wheel_count);
     }
-    if (vehicle?.expected_tyre_count) {
+    if (vehicle?.expected_tyre_count && vehicle.expected_tyre_count >= 10) {
       return vehicle.expected_tyre_count;
     }
+    if (vehicle?.layout?.total_wheels && vehicle.layout.total_wheels >= 10) {
+      return vehicle.layout.total_wheels;
+    }
+    if (wheelConfig.includes('16')) return 16;
+    if (wheelConfig.includes('14')) return 14;
     if (wheelConfig.includes('12')) return 12;
-    if (wheelConfig.includes('6')) return 6;
-    if (wheelConfig.includes('4')) return 4;
     return 10;
   }, [twinData, vehicle, wheelConfig]);
 

@@ -225,7 +225,7 @@ export const ComparisonPage: React.FC = () => {
                     <th className="py-3.5 px-6">Vehicle Number</th>
                     <th className="py-3.5 px-4">Type &amp; Wheel Config</th>
                     <th className="py-3.5 px-4">Current Odometer</th>
-                    <th className="py-3.5 px-4">Fitted Wheels</th>
+                    <th className="py-3.5 px-4">Fitted Tyres</th>
                     <th className="py-3.5 px-4">Average THI</th>
                     <th className="py-3.5 px-4">Active Alerts</th>
                     <th className="py-3.5 px-6 text-right">Action</th>
@@ -245,7 +245,9 @@ export const ComparisonPage: React.FC = () => {
                       <td className="py-4 px-4 font-mono font-medium text-slate-900">
                         {c.current_odometer.toLocaleString()} km
                       </td>
-                      <td className="py-4 px-4 font-semibold text-emerald-600">{c.fitted_wheels} wheels</td>
+                      <td className="py-4 px-4 font-semibold text-emerald-600">
+                        {c.fitted_wheels} / {c.total_wheels || (c.wheel_config?.includes('16') ? 16 : c.wheel_config?.includes('14') ? 14 : c.wheel_config?.includes('12') ? 12 : 10)} fitted
+                      </td>
                       <td className="py-4 px-4 font-bold text-slate-900">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs ${

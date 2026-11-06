@@ -15,17 +15,14 @@ export type WheelPlacement = {
 };
 
 export function isValidWheelConfiguration(axleCount: number, wheelCount: number): boolean {
-  if (!Number.isInteger(axleCount) || !Number.isInteger(wheelCount) || axleCount < 1 || wheelCount < 1) {
+  // Fleet exclusively uses heavy multi-axle commercial vehicles (minimum 10 wheels)
+  if (!Number.isInteger(axleCount) || !Number.isInteger(wheelCount) || axleCount < 3 || wheelCount < 10) {
     return false;
   }
   // Standard dual rear axles formula: (wheelCount - 2 * axleCount) / 2
   const rearAxles = (wheelCount - 2 * axleCount) / 2;
   const frontAxles = axleCount - rearAxles;
   if (Number.isInteger(rearAxles) && rearAxles >= 1 && frontAxles >= 1) {
-    return true;
-  }
-  // Also valid for 4-wheeler (2 axles, 4 wheels with single tyres on both axles)
-  if (axleCount === 2 && wheelCount === 4) {
     return true;
   }
   return false;
@@ -39,17 +36,7 @@ export function buildWheelLayout(
 ): WheelPlacement[] {
   const valid = isValidWheelConfiguration(axleCount, wheelCount);
   const axles = valid ? axleCount : 3;
-  const wheels = valid ? wheelCount : 10;
-
-  // Handle 4-wheeler (single tyres front and back)
-  if (axles === 2 && wheels === 4) {
-    return [
-      { id: 'F1_L', axleIndex: 0, side: 'L', dual: 'single', x: -108, y: 615.6, z: -53.6, positionName: 'F1_L' },
-      { id: 'F1_R', axleIndex: 0, side: 'R', dual: 'single', x: 108, y: 615.6, z: -53.6, positionName: 'F1_R' },
-      { id: 'R1_LO', axleIndex: 1, side: 'L', dual: 'single', x: -108, y: containerRearY + 180.0, z: -53.6, positionName: 'R1_LO' },
-      { id: 'R1_RO', axleIndex: 1, side: 'R', dual: 'single', x: 108, y: containerRearY + 180.0, z: -53.6, positionName: 'R1_RO' }
-    ];
-  }
+  const wheels = valid ? Math.max(10, wheelCount) : 10;
 
   const rearAxles = Math.max(1, Math.round((wheels - 2 * axles) / 2));
   const frontAxles = Math.max(1, axles - rearAxles);

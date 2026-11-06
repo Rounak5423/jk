@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Building2,
   Wrench,
+  Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -49,6 +50,30 @@ export const VehiclesPage: React.FC = () => {
   const [locationName, setLocationName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+
+  // Delete Vehicle State
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/vehicles/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles-comparison-picker'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicle-comparison'] });
+      setVehicleToDelete(null);
+      setDeleteSuccess(data?.message || 'Vehicle successfully removed from fleet.');
+      setDeleteError(null);
+      setTimeout(() => setDeleteSuccess(null), 5000);
+    },
+    onError: (err: any) => {
+      setDeleteError(err.response?.data?.error || 'Failed to remove vehicle from fleet.');
+    },
+  });
 
   const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
     queryKey: ['fleet-vehicles', activeFleetId],
@@ -199,6 +224,18 @@ export const VehiclesPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {deleteSuccess && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between text-xs text-emerald-400">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <span className="font-semibold">{deleteSuccess}</span>
+          </div>
+          <button onClick={() => setDeleteSuccess(null)} className="text-emerald-400 hover:text-white cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* ══ VEHICLE THI INTELLIGENCE SECTION ══════════════════════════════ */}
       {(!isLoading && vehicles && vehicles.length > 0) && (
@@ -597,6 +634,18 @@ export const VehiclesPage: React.FC = () => {
                           >
                             <Route className="w-3 h-3 text-blue-500" /> Trips
                           </Link>
+
+                          {/* Remove Vehicle */}
+                          <button
+                            onClick={() => {
+                              setDeleteError(null);
+                              setVehicleToDelete(v);
+                            }}
+                            className="px-2.5 py-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 shadow-sm cursor-pointer"
+                            title="Remove Vehicle from Fleet"
+                          >
+                            <Trash2 className="w-3 h-3 text-red-500" /> Remove
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -876,6 +925,80 @@ export const VehiclesPage: React.FC = () => {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Remove Vehicle Confirmation Modal ── */}
+      {vehicleToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-[#17191D] border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-500 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Remove Vehicle</h3>
+                <p className="text-xs text-slate-400">Permanent fleet registry deletion</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Registration Number:</span>
+                <span className="font-mono font-bold text-white">{vehicleToDelete.vehicle_number}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Configuration:</span>
+                <span className="font-medium text-slate-200">{vehicleToDelete.wheel_config} ({vehicleToDelete.axle_count} Axles)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Mounted Tyres:</span>
+                <span className="font-medium text-emerald-400">{vehicleToDelete.fitted_tyre_count} / {vehicleToDelete.expected_tyre_count} Tyres</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to remove <strong className="text-white font-mono">{vehicleToDelete.vehicle_number}</strong>?
+              Any fitted tyres will be automatically returned to your depot spare tyre inventory.
+            </p>
+
+            {deleteError && (
+              <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                  setVehicleToDelete(null);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(vehicleToDelete.id)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Confirm Remove
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

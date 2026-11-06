@@ -69,27 +69,7 @@ def get_default_layout(wheel_config: str):
                 {"index": 5, "type": "DRIVE_REAR", "dual": True, "positions": ["R3_LO", "R3_LI", "R3_RI", "R3_RO"], "x_offset": -3.2},
             ],
         }
-    elif wheel_config == WheelConfig.SIX_WHEELER:
-        return {
-            "layout_type": WheelConfig.SIX_WHEELER,
-            "axle_count": 2,
-            "total_wheels": 6,
-            "axles": [
-                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 2.2},
-                {"index": 2, "type": "DRIVE", "dual": True, "positions": ["R1_LO", "R1_LI", "R1_RI", "R1_RO"], "x_offset": -2.0},
-            ],
-        }
-    elif wheel_config == WheelConfig.FOUR_WHEELER:
-        return {
-            "layout_type": WheelConfig.FOUR_WHEELER,
-            "axle_count": 2,
-            "total_wheels": 4,
-            "axles": [
-                {"index": 1, "type": "STEER", "dual": False, "positions": ["FL", "FR"], "x_offset": 1.6},
-                {"index": 2, "type": "DRIVE", "dual": False, "positions": ["RL", "RR"], "x_offset": -1.6},
-            ],
-        }
-    else:  # Default to TEN_WHEELER (standard 3-axle heavy hauler)
+    else:  # Default to TEN_WHEELER (standard 3-axle heavy hauler, fleet minimum is 10 wheels)
         return {
             "layout_type": WheelConfig.TEN_WHEELER,
             "axle_count": 3,

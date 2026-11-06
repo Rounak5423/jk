@@ -8,6 +8,7 @@ from app.models import (
     WheelConfig,
     Tyre,
     TyreFitment,
+    TyreStatus,
     get_default_layout,
     UserRole,
 )
@@ -151,6 +152,46 @@ def get_vehicle_detail(vehicle_id):
         return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
 
     return jsonify(vehicle.to_dict(include_fitments=True)), 200
+
+@vehicles_bp.route("/<vehicle_id>", methods=["DELETE"])
+@jwt_required
+def delete_vehicle(vehicle_id):
+    """
+    Permanently removes a vehicle from the fleet registry.
+    Any active mounted tyres are safely returned to depot inventory.
+    Associated records (fitments, inspections, alerts, telemetry) cascade-delete.
+    """
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    if not enforce_fleet_access(vehicle.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
+
+    fleet_id = vehicle.fleet_id
+    vehicle_number = vehicle.vehicle_number
+
+    # Release any active fitted tyres back to depot inventory
+    for fitment in vehicle.fitments:
+        if fitment.tyre:
+            fitment.tyre.status = TyreStatus.IN_INVENTORY
+
+    db.session.delete(vehicle)
+    db.session.commit()
+
+    record_audit(
+        action="REMOVE_VEHICLE",
+        resource_type="VEHICLE",
+        resource_id=vehicle_id,
+        fleet_id=fleet_id,
+        details={"vehicle_number": vehicle_number},
+    )
+
+    return jsonify({
+        "message": f"Vehicle {vehicle_number} successfully removed from fleet registry",
+        "vehicle_id": vehicle_id,
+    }), 200
+
 
 
 @vehicles_bp.route("/<vehicle_id>/3d-twin", methods=["GET"])

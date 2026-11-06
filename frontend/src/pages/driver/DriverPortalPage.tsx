@@ -244,7 +244,7 @@ export const DriverPortalPage: React.FC = () => {
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span className="text-[#5B6068] block mb-0.5">Fitted Tyres:</span>
                 <span className="font-bold text-slate-900 text-base">
-                  {vehicle.fitted_tyre_count} / {vehicle.expected_tyre_count} wheels
+                  {vehicle.fitted_tyre_count} / {vehicle.expected_tyre_count} tyres fitted
                 </span>
               </div>
             </div>

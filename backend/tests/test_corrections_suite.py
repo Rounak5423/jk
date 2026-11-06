@@ -243,3 +243,39 @@ def test_health_trends_plots_both_observed_and_ideal_baseline(client):
         assert "avg_thi" in first_pt
         assert "ideal_baseline" in first_pt
         assert first_pt["ideal_baseline"] == 95.0
+
+
+def test_delete_vehicle_endpoint(client):
+    """
+    Test DELETE /api/v1/vehicles/<vehicle_id>:
+    - Creates a vehicle
+    - Verifies deletion returns 200
+    - Verifies vehicle is removed from database
+    """
+    login_res = client.post("/api/v1/auth/login", json={
+        "email": "fleet.manager@translogistics.com",
+        "password": "Fleet@12345",
+    })
+    token = login_res.get_json()["token"]
+
+    # 1. Register temporary test vehicle
+    create_res = client.post("/api/v1/vehicles", headers={"Authorization": f"Bearer {token}"}, json={
+        "vehicle_number": "TEST-DEL-9999",
+        "wheel_config": "10-Wheeler",
+        "make": "Tata Motors",
+        "model": "Signa 2823.K",
+        "year": 2024,
+        "baseline_pressure": 110.0,
+    })
+    assert create_res.status_code == 201
+    veh_id = create_res.get_json()["id"]
+
+    # 2. Delete vehicle
+    del_res = client.delete(f"/api/v1/vehicles/{veh_id}", headers={"Authorization": f"Bearer {token}"})
+    assert del_res.status_code == 200
+    del_data = del_res.get_json()
+    assert "successfully removed" in del_data["message"]
+
+    # 3. Verify 404 on get
+    get_res = client.get(f"/api/v1/vehicles/{veh_id}", headers={"Authorization": f"Bearer {token}"})
+    assert get_res.status_code == 404

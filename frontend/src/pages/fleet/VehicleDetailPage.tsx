@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Vehicle, Vehicle3DTwin } from '../../types';
 import { VehicleViewer3D } from '../../components/3d/VehicleViewer3D';
@@ -19,6 +19,9 @@ import {
   Camera,
   Wrench,
   Plus,
+  Trash2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 import { computeVehicleTHI } from '../../utils/thiUtils';
@@ -26,6 +29,26 @@ import { computeVehicleTHI } from '../../utils/thiUtils';
 export const VehicleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [show3DModal, setShow3DModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/vehicles/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles-comparison-picker'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicle-comparison'] });
+      navigate('/vehicles');
+    },
+    onError: (err: any) => {
+      setDeleteError(err.response?.data?.error || 'Failed to remove vehicle.');
+    },
+  });
 
   const { data: vehicle, isLoading } = useQuery<Vehicle>({
     queryKey: ['vehicle-detail', id],
@@ -111,6 +134,16 @@ export const VehicleDetailPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 bg-[#14161A] hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition self-start sm:self-auto cursor-pointer"
           >
             <Eye className="w-4 h-4 text-slate-300" /> Open 3D Inspector
+          </button>
+          <button
+            onClick={() => {
+              setDeleteError(null);
+              setShowDeleteModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-xs font-semibold shadow-sm transition self-start sm:self-auto cursor-pointer"
+            title="Remove Vehicle from Fleet"
+          >
+            <Trash2 className="w-4 h-4 text-red-500" /> Remove Vehicle
           </button>
         </div>
       </div>
@@ -310,6 +343,80 @@ export const VehicleDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* ── Remove Vehicle Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-[#17191D] border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-500 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Remove Vehicle</h3>
+                <p className="text-xs text-slate-400">Permanent fleet registry deletion</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Registration Number:</span>
+                <span className="font-mono font-bold text-white">{vehicle.vehicle_number}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Configuration:</span>
+                <span className="font-medium text-slate-200">{vehicle.wheel_config} ({vehicle.axle_count} Axles)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Fitted Tyres:</span>
+                <span className="font-medium text-emerald-400">{vehicle.fitted_tyre_count} / {vehicle.expected_tyre_count} Tyres</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to remove <strong className="text-white font-mono">{vehicle.vehicle_number}</strong>?
+              Mounted tyres will be safely detached and returned to the depot spare tyre inventory.
+            </p>
+
+            {deleteError && (
+              <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate()}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Confirm Remove
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
