@@ -54,10 +54,22 @@ def create_app(config_class=Config):
             from app.services.oem_vault_service import OEMDataSyncService
             OEMDataSyncService.ensure_baseline_sync()
 
-            # Check if this is a fresh cloud database (0 users registered)
+            # Automatic compliance cleanup: Purge any legacy vehicles below 10 wheels
+            from app.models.vehicle import Vehicle
+            dirty = False
+            for v in Vehicle.query.all():
+                total_w = v.layout.get("total_wheels", 10) if isinstance(v.layout, dict) else 10
+                if total_w < 10 or v.wheel_config in ["4-Wheeler", "6-Wheeler", "Four-Wheeler", "Six-Wheeler"] or v.vehicle_number in ["DL-01-AF-3525", "TN04 BF5918", "MH-12-JK-8888"]:
+                    app.logger.info(f"Purging legacy vehicle on startup: {v.vehicle_number} ({v.wheel_config})")
+                    db.session.delete(v)
+                    dirty = True
+            if dirty:
+                db.session.commit()
+
+            # Check if this is a fresh cloud database (0 users registered) or 0 vehicles
             from app.models.user import User
-            if User.query.first() is None:
-                app.logger.info("Fresh database detected on cloud deploy. Auto-seeding starter fleet data...")
+            if User.query.first() is None or Vehicle.query.first() is None:
+                app.logger.info("Fresh database or empty fleet detected. Auto-seeding commercial multi-axle fleet...")
                 from synthetic.generator import generate_fleet_data
                 generate_fleet_data(num_vehicles=20, seed=42, weeks_history=3)
         except Exception as exc:
@@ -73,10 +85,14 @@ def create_app(config_class=Config):
             "rule_version": app.config.get("RULE_ENGINE_VERSION", "v1.0.0-demo-provisional"),
         }), 200
 
-    # Production Static Files (Serve Vite React SPA from frontend/dist)
-    dist_dir = os.path.abspath(os.path.join(app.root_path, "..", "..", "frontend", "dist"))
-    if not os.path.isdir(dist_dir):
-        dist_dir = os.path.abspath(os.path.join(os.getcwd(), "frontend", "dist"))
+    # Production Static Files (Serve Vite React SPA)
+    possible_dist_dirs = [
+        os.path.abspath(os.path.join(app.root_path, "..", "..", "frontend", "dist")),
+        os.path.abspath(os.path.join(app.root_path, "..", "dist")),
+        os.path.abspath(os.path.join(os.getcwd(), "frontend", "dist")),
+        os.path.abspath(os.path.join(os.getcwd(), "dist")),
+    ]
+    dist_dir = next((d for d in possible_dist_dirs if os.path.isdir(d) and os.path.isfile(os.path.join(d, "index.html"))), possible_dist_dirs[0])
 
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
