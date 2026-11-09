@@ -62,16 +62,43 @@ body {
   scrollbar-width: none;
 }
 
-/* 2D Inspection Road Paving & Vehicle Launch Keyframes */
-@keyframes highwayDash {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -120px; }
+/* 2D Inspection Road & Vehicle Forward Cruising Keyframes */
+@keyframes truckCruisingForward {
+  0% {
+    transform: translateX(-950px);
+  }
+  100% {
+    transform: translateX(1150px);
+  }
 }
-.animate-highway-fast {
-  animation: highwayDash 0.35s linear infinite;
+.animate-truck-cruising {
+  animation: truckCruisingForward 5.5s linear infinite;
 }
-.animate-highway-cruising {
-  animation: highwayDash 0.65s linear infinite;
+
+@keyframes windStreakStream {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+  100% {
+    stroke-dashoffset: 60px;
+    opacity: 0.15;
+  }
+}
+.animate-wind-streak {
+  animation: windStreakStream 0.3s linear infinite;
+}
+
+@keyframes tyreTreadRoll {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 28px;
+  }
+}
+.animate-tread-rolling {
+  animation: tyreTreadRoll 0.25s linear infinite;
 }
 
 @keyframes paverBeamGlow {
