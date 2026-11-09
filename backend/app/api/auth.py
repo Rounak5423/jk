@@ -179,26 +179,14 @@ def login():
     if not identifier or not password:
         return jsonify({"error": "Login ID and password are required"}), 400
 
-    # 1. Primary lookup: Match by Login ID (username) or exact user ID
+    # Match by Login ID (username), Email address, or exact User ID
     user = User.query.filter(
         db.or_(
             func.lower(User.username) == identifier.lower(),
+            func.lower(User.email) == identifier.lower(),
             User.id == identifier,
         )
     ).first()
-
-    # 2. Secondary lookup: If identifier contains '@', allow email authentication for Super Admin only
-    if not user and "@" in identifier:
-        user_by_email = User.query.filter(func.lower(User.email) == identifier.lower()).first()
-        if user_by_email:
-            from flask import current_app
-            if user_by_email.role != UserRole.SUPER_ADMIN and not current_app.config.get("TESTING"):
-                return jsonify({
-                    "error": f"Email login is reserved for Super Admin only. Please sign in using your assigned Login ID ({user_by_email.username}).",
-                    "code": "USE_LOGIN_ID_REQUIRED",
-                    "login_id": user_by_email.username
-                }), 400
-            user = user_by_email
 
     if not user or not user.check_password(password):
         return jsonify({"error": "Invalid Login ID or password. Please verify your credentials.", "code": "AUTH_FAILED"}), 401

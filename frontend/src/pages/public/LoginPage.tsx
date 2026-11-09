@@ -222,10 +222,10 @@ export const LoginPage: React.FC = () => {
             animate={{opacity: 1}}
             transition={{delay: 0.65}}
           >
-            {/* Login ID */}
+            {/* Login ID or Email */}
             <div>
               <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider mb-2">
-                Login ID
+                Login ID or Email
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -233,14 +233,14 @@ export const LoginPage: React.FC = () => {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="fleet.manager@translogistics.com"
+                  placeholder="fleet.manager@translogistics.com or apex_manager"
                   required
                   autoComplete="username"
                   className="w-full bg-white border-2 border-yellow-400/50 rounded-xl pl-10 pr-4 py-2.5 text-sm text-black placeholder-slate-500 focus:outline-none focus:border-yellow-400 transition font-medium"
                 />
               </div>
               <p className="text-[11px] text-slate-600 mt-1.5 leading-snug">
-                Fleet Managers and Drivers: Sign in with your assigned Login ID. Only Super Admin uses email.
+                Sign in with your registered email (e.g. fleet.manager@translogistics.com) or Login ID (e.g. apex_manager).
               </p>
             </div>
 
@@ -265,6 +265,48 @@ export const LoginPage: React.FC = () => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-black cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Demo Credentials Fill Buttons */}
+            <div className="pt-1 pb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block mb-1.5">
+                Quick Demo Fill:
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentifier('fleet.manager@translogistics.com');
+                    setPassword('Fleet@12345');
+                    setError(null);
+                  }}
+                  className="px-2.5 py-1 bg-yellow-400/25 hover:bg-yellow-400/50 border border-yellow-500/50 rounded-lg text-[11px] font-bold text-slate-900 transition cursor-pointer"
+                >
+                  Fleet Manager
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentifier('admin@jktyre.com');
+                    setPassword('Admin@12345');
+                    setError(null);
+                  }}
+                  className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 border border-slate-300 rounded-lg text-[11px] font-bold text-slate-900 transition cursor-pointer"
+                >
+                  Super Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentifier('driver1@translogistics.com');
+                    setPassword('Driver@12345');
+                    setError(null);
+                  }}
+                  className="px-2.5 py-1 bg-blue-100 hover:bg-blue-200 border border-blue-200 rounded-lg text-[11px] font-bold text-blue-900 transition cursor-pointer"
+                >
+                  Driver
                 </button>
               </div>
             </div>
