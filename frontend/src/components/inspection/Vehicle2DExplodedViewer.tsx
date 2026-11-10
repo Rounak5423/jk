@@ -368,23 +368,45 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
           if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '2RO' || code === 'R1R')) return true;
         }
       } else if (axleNum === 3) {
-        if (is12Wheeler) {
+        if (is14Wheeler) {
+          if (side === 'TOP_SINGLE' && (code === 'FL3' || code === '3L' || code === 'A3L')) return true;
+          if (side === 'BOTTOM_SINGLE' && (code === 'FR3' || code === '3R' || code === 'A3R')) return true;
+        } else if (is12Wheeler || is16Wheeler) {
           if (side === 'TOP_OUTER' && (code === 'R1LO' || code === '3LO' || code === 'R1L')) return true;
           if (side === 'TOP_INNER' && (code === 'R1LI' || code === '3LI')) return true;
           if (side === 'BOTTOM_INNER' && (code === 'R1RI' || code === '3RI')) return true;
           if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '3RO' || code === 'R1R')) return true;
-        } else if (!is14Wheeler && !is16Wheeler) {
+        } else {
           // 10-wheeler axle 3 is drive R2
           if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '3LO' || code === 'R2L')) return true;
           if (side === 'TOP_INNER' && (code === 'R2LI' || code === '3LI')) return true;
           if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '3RI')) return true;
           if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '3RO' || code === 'R2R')) return true;
         }
-      } else if (axleNum === 4 && is12Wheeler) {
-        if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '4LO' || code === 'R2L')) return true;
-        if (side === 'TOP_INNER' && (code === 'R2LI' || code === '4LI')) return true;
-        if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '4RI')) return true;
-        if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '4RO' || code === 'R2R')) return true;
+      } else if (axleNum === 4) {
+        if (is14Wheeler) {
+          if (side === 'TOP_OUTER' && (code === 'R1LO' || code === '4LO' || code === 'R1L')) return true;
+          if (side === 'TOP_INNER' && (code === 'R1LI' || code === '4LI')) return true;
+          if (side === 'BOTTOM_INNER' && (code === 'R1RI' || code === '4RI')) return true;
+          if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '4RO' || code === 'R1R')) return true;
+        } else if (is12Wheeler || is16Wheeler) {
+          if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '4LO' || code === 'R2L')) return true;
+          if (side === 'TOP_INNER' && (code === 'R2LI' || code === '4LI')) return true;
+          if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '4RI')) return true;
+          if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '4RO' || code === 'R2R')) return true;
+        }
+      } else if (axleNum === 5) {
+        if (is14Wheeler) {
+          if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '5LO' || code === 'R2L')) return true;
+          if (side === 'TOP_INNER' && (code === 'R2LI' || code === '5LI')) return true;
+          if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '5RI')) return true;
+          if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '5RO' || code === 'R2R')) return true;
+        } else if (is16Wheeler) {
+          if (side === 'TOP_OUTER' && (code === 'R3LO' || code === '5LO' || code === 'R3L')) return true;
+          if (side === 'TOP_INNER' && (code === 'R3LI' || code === '5LI')) return true;
+          if (side === 'BOTTOM_INNER' && (code === 'R3RI' || code === '5RI')) return true;
+          if (side === 'BOTTOM_OUTER' && (code === 'R3RO' || code === '5RO' || code === 'R3R')) return true;
+        }
       }
       return false;
     });
@@ -1083,10 +1105,12 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                 <g
                   className="cursor-pointer transition-all duration-150"
                   onClick={() => {
-                    if (sparePos) {
+                    if (hasSpare && sparePos) {
                       onSelectPosition(sparePos);
                     } else if (onQuickFit) {
-                      onQuickFit('Spare', 0);
+                      onQuickFit(sparePos?.wheel_position || 'Spare', 0);
+                    } else if (sparePos) {
+                      onSelectPosition(sparePos);
                     }
                   }}
                   onMouseEnter={() => {
@@ -1227,10 +1251,12 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                     key={`wheel-${slot.defaultCode}`}
                     className="cursor-pointer transition-all duration-150"
                     onClick={() => {
-                      if (posData) {
+                      if (hasTyre && posData) {
                         onSelectPosition(posData);
                       } else if (onQuickFit) {
-                        onQuickFit(slot.defaultCode, axle.axleNum);
+                        onQuickFit(posData?.wheel_position || slot.defaultCode, posData?.axle_number || axle.axleNum);
+                      } else if (posData) {
+                        onSelectPosition(posData);
                       }
                     }}
                     onMouseEnter={() => {
@@ -1244,6 +1270,11 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                       setTooltipPos(null);
                     }}
                   >
+                    <title>
+                      {hasTyre
+                        ? `${displayPosCode}: ${tyre?.serial_number || 'Mounted'}`
+                        : `${displayPosCode}: Vacant — Click to fit tyre`}
+                    </title>
                     {/* Selected Highlight Ring */}
                     {isSelected && (
                       <rect
@@ -1285,6 +1316,7 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                       stroke={strokeColor}
                       strokeWidth={strokeWidth}
                       strokeDasharray={!hasTyre ? '3 3' : undefined}
+                      pointerEvents="all"
                       className="hover:opacity-90 transition"
                     />
 
@@ -1362,6 +1394,7 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                         fill="#E8770E"
                         fontSize="9"
                         fontWeight="bold"
+                        pointerEvents="none"
                       >
                         + Fit
                       </text>

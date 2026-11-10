@@ -101,6 +101,20 @@ def get_vehicle_inspections_summary(vehicle_id):
         if insp.tyre_id not in latest_by_tyre:
             latest_by_tyre[insp.tyre_id] = insp.to_dict()
 
+    def _norm_code(code):
+        return "".join(ch for ch in (code or "").upper() if ch.isalnum())
+
+    def _slot_side(code):
+        c = _norm_code(code)
+        for tag in ("LO", "LI", "RI", "RO"):
+            if c.endswith(tag):
+                return tag
+        if "L" in c and "R" not in c:
+            return "L"
+        if "R" in c and "L" not in c:
+            return "R"
+        return c
+
     positions_data = []
     for fit in active_fitments:
         tyre = fit.tyre
@@ -130,6 +144,34 @@ def get_vehicle_inspections_summary(vehicle_id):
             "latest_inspection": latest_insp,
             "has_inspection_data": latest_insp is not None,
         })
+
+    # Include any vacant wheel positions defined in vehicle layout so Fitment & 2D Inspection allow direct fitting
+    layout_axles = (vehicle.layout or {}).get("axles", [])
+    for axle in layout_axles:
+        axle_idx = axle.get("index", 1)
+        is_dual_axle = bool(axle.get("dual", False))
+        for pos_code in axle.get("positions", []):
+            norm_target = _norm_code(pos_code)
+            side_target = _slot_side(pos_code)
+            occupied = any(
+                _norm_code(fit.wheel_position) == norm_target
+                or (fit.axle_number == axle_idx and _slot_side(fit.wheel_position) == side_target)
+                for fit in active_fitments
+            )
+            if not occupied:
+                positions_data.append({
+                    "fitment_id": f"vacant-{pos_code}",
+                    "wheel_position": pos_code,
+                    "axle_number": axle_idx,
+                    "is_dual": is_dual_axle,
+                    "is_inner": ("LI" in pos_code.upper() or "RI" in pos_code.upper()),
+                    "fitted_at": None,
+                    "fitted_odometer": vehicle.current_odometer,
+                    "fitted_nsd": 16.5,
+                    "tyre": None,
+                    "latest_inspection": None,
+                    "has_inspection_data": False,
+                })
 
     # Saved closed inspection reports
     saved_reports = VehicleInspectionReport.query.filter_by(

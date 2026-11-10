@@ -359,3 +359,70 @@ def test_delete_fitted_tyre_endpoint(client):
     assert client.get(f"/api/v1/tyres/{t_id}", headers=headers).status_code == 404
 
     client.delete(f"/api/v1/vehicles/{v_id}", headers=headers)
+
+
+def test_vacant_positions_and_quick_fit(client):
+    """
+    Test GET /api/v1/inspections/vehicle/<id> vacant layout positions + quick fitting
+    both from unused inventory and as a newly registered tyre.
+    """
+    login_res = client.post("/api/v1/auth/login", json={
+        "email": "fleet.manager@translogistics.com",
+        "password": "Fleet@12345",
+    })
+    token = login_res.get_json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    v_res = client.post("/api/v1/vehicles", headers=headers, json={
+        "vehicle_number": "TEST-QF-001",
+        "wheel_config": "10-Wheeler",
+        "make": "Tata Motors",
+        "model": "Signa 2823.K",
+        "year": 2024,
+        "baseline_pressure": 110.0,
+    })
+    assert v_res.status_code == 201
+    v_id = v_res.get_json()["id"]
+
+    # 1. Verify all 10 vacant positions are exposed for 2D inspection & fitment
+    insp_res = client.get(f"/api/v1/inspections/vehicle/{v_id}", headers=headers)
+    assert insp_res.status_code == 200
+    positions = insp_res.get_json()["positions"]
+    assert len(positions) == 10
+    assert all(p["tyre"] is None for p in positions)
+
+    # 2. Create unused inventory tyre, verify /tyres/available lists it, then fit to FL
+    inv_res = client.post("/api/v1/tyres", headers=headers, json={"serial_number": "QF-INV-001"})
+    assert inv_res.status_code == 201
+    inv_id = inv_res.get_json()["tyre"]["id"]
+
+    avail = client.get("/api/v1/tyres/available", headers=headers).get_json()
+    assert any(t["id"] == inv_id for t in avail)
+
+    fit1 = client.post(f"/api/v1/tyres/{inv_id}/fit", headers=headers, json={
+        "vehicle_id": v_id,
+        "wheel_position": "FL",
+        "axle_number": 1,
+    })
+    assert fit1.status_code == 200
+
+    # 3. Register & mount a brand new tyre directly to FR
+    fit2 = client.post("/api/v1/tyres", headers=headers, json={
+        "serial_number": "QF-NEW-002",
+        "vehicle_id": v_id,
+        "wheel_position": "FR",
+        "axle_number": 1,
+    })
+    assert fit2.status_code == 201
+    new_id = fit2.get_json()["tyre"]["id"]
+
+    # 4. Re-check inspection summary: 2 fitted, 8 vacant
+    insp2 = client.get(f"/api/v1/inspections/vehicle/{v_id}", headers=headers).get_json()["positions"]
+    assert len(insp2) == 10
+    fitted_slots = [p for p in insp2 if p["tyre"] is not None]
+    assert len(fitted_slots) == 2
+
+    # Clean up temporary test tyres & vehicle cleanly
+    client.delete(f"/api/v1/tyres/{inv_id}", headers=headers)
+    client.delete(f"/api/v1/tyres/{new_id}", headers=headers)
+    client.delete(f"/api/v1/vehicles/{v_id}", headers=headers)

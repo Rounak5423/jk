@@ -92,6 +92,11 @@ export const VehicleInspectionPage: React.FC = () => {
 
   // Quick Fit Modal for vacant position
   const [quickFitModal, setQuickFitModal] = useState<{ posCode: string; axle: number } | null>(null);
+  const [quickFitMode, setQuickFitMode] = useState<'EXISTING' | 'NEW'>('EXISTING');
+  const [quickFitTyreId, setQuickFitTyreId] = useState('');
+  const [quickFitOdometer, setQuickFitOdometer] = useState('');
+  const [quickFitRemarks, setQuickFitRemarks] = useState('');
+  const [quickFitError, setQuickFitError] = useState<string | null>(null);
 
   // 100% Confirmation Modal State
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -116,14 +121,14 @@ export const VehicleInspectionPage: React.FC = () => {
     enabled: !!id,
   });
 
-  // Fetch Available Tyres for Replacement Fitment
+  // Fetch Available Unused Tyres (Inventory / Retread) for Fitment & Replacement
   const { data: availableTyres } = useQuery<Tyre[]>({
     queryKey: ['available-tyres', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/tyres/available');
       return res.data;
     },
-    enabled: showRemoveFitModal || !!quickFitModal,
+    enabled: !!id,
   });
 
   const positions: PositionData[] = data?.positions ?? [];
@@ -278,7 +283,10 @@ export const VehicleInspectionPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicle-inspection-summary', id] });
       queryClient.invalidateQueries({ queryKey: ['available-tyres'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-tyres-count'] });
       queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicle-fitment-summary'] });
       setShowRemoveFitModal(false);
       setRemoveFitError(null);
       setReplacementTyreId('');
@@ -286,6 +294,69 @@ export const VehicleInspectionPage: React.FC = () => {
     },
     onError: (err: any) => {
       setRemoveFitError(err.response?.data?.error || err.message || 'Failed to remove and replace tyre.');
+    },
+  });
+
+  const openQuickFitModal = (posCode: string, axle: number) => {
+    setQuickFitError(null);
+    setQuickFitTyreId('');
+    setQuickFitRemarks('');
+    setNewSerial('');
+    setNewModel('Jetway JUH5');
+    setNewSize('295/80R22.5');
+    setNewNsd('16.5');
+    setNewLifecycle('NEW');
+    setQuickFitOdometer(vehicle?.current_odometer != null ? String(vehicle.current_odometer) : '0');
+    setQuickFitMode(availableTyres && availableTyres.length > 0 ? 'EXISTING' : 'NEW');
+    setQuickFitModal({ posCode, axle });
+  };
+
+  // Quick Fit Tyre Mutation (either from unused Depot Inventory or as Brand New Tyre)
+  const quickFitMutation = useMutation({
+    mutationFn: async () => {
+      if (!quickFitModal || !id) throw new Error('Target position is missing.');
+
+      if (quickFitMode === 'EXISTING') {
+        if (!quickFitTyreId) throw new Error('Select an unused tyre from depot inventory.');
+        const res = await api.post(`/tyres/${quickFitTyreId}/fit`, {
+          vehicle_id: id,
+          wheel_position: quickFitModal.posCode,
+          axle_number: quickFitModal.axle,
+          fitted_odometer: quickFitOdometer ? parseFloat(quickFitOdometer) : vehicle?.current_odometer,
+          fitted_nsd: newNsd ? parseFloat(newNsd) : undefined,
+          remarks: quickFitRemarks.trim(),
+        });
+        return res.data;
+      } else {
+        const res = await api.post('/tyres', {
+          serial_number: newSerial.trim().toUpperCase() || undefined,
+          brand: 'JK Tyre',
+          model: newModel.trim() || 'Jetway JUH5',
+          size: newSize.trim() || '295/80R22.5',
+          blueprint_nsd: parseFloat(newNsd) || 16.5,
+          current_nsd: parseFloat(newNsd) || 16.5,
+          lifecycle_type: newLifecycle,
+          vehicle_id: id,
+          wheel_position: quickFitModal.posCode,
+          axle_number: quickFitModal.axle,
+        });
+        return res.data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicle-inspection-summary', id] });
+      queryClient.invalidateQueries({ queryKey: ['available-tyres'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-tyres-count'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicle-fitment-summary'] });
+      setQuickFitModal(null);
+      setQuickFitError(null);
+      setQuickFitTyreId('');
+      setNewSerial('');
+    },
+    onError: (err: any) => {
+      setQuickFitError(err.response?.data?.error || err.message || 'Failed to fit tyre.');
     },
   });
 
@@ -542,7 +613,7 @@ export const VehicleInspectionPage: React.FC = () => {
           inspectedTyreIds={inspectedTyreIds}
           selectedPosition={selectedPos}
           onSelectPosition={(pos) => selectPositionForInspection(pos)}
-          onQuickFit={(posCode, axle) => setQuickFitModal({ posCode, axle })}
+          onQuickFit={(posCode, axle) => openQuickFitModal(posCode, axle)}
           isComplete={isComplete}
           onLaunchCompleted={() => {
             setTimeout(() => {
@@ -761,12 +832,34 @@ export const VehicleInspectionPage: React.FC = () => {
           </form>
         </div>
       ) : (
-        <div className="p-8 text-center cream-glow-card">
-          <Disc className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-slate-900">Select a wheel position to begin inspection</h3>
-          <p className="text-xs text-[#5B6068] mt-0.5">
-            Click on any tyre in the 2D exploded axle diagram above to record tread depth, check pressure, or replace a damaged tyre.
-          </p>
+        <div className="p-8 text-center cream-glow-card space-y-3">
+          <Disc className="w-10 h-10 text-slate-300 mx-auto" />
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">
+              {selectedPos && !selectedPos.tyre
+                ? `Wheel Position ${selectedPos.wheel_position} Is Currently Vacant`
+                : 'Select a wheel position to begin inspection'}
+            </h3>
+            <p className="text-xs text-[#5B6068] mt-0.5">
+              Click on any mounted tyre in the 2D exploded axle diagram above to inspect it, or click any vacant <strong className="text-[#E8770E]">+ Fit</strong> slot to mount a new or unused inventory tyre.
+            </p>
+          </div>
+          {(() => {
+            const vacantPos =
+              selectedPos && !selectedPos.tyre
+                ? selectedPos
+                : positions.find((p) => p.tyre === null);
+            if (!vacantPos) return null;
+            return (
+              <button
+                type="button"
+                onClick={() => openQuickFitModal(vacantPos.wheel_position, vacantPos.axle_number)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Fit Tyre to {vacantPos.wheel_position}
+              </button>
+            );
+          })()}
         </div>
       )}
 
@@ -939,6 +1032,238 @@ export const VehicleInspectionPage: React.FC = () => {
                 className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50"
               >
                 {removeAndReplaceMutation.isPending ? 'Processing Removal & Fitment...' : 'Confirm Removal & Mount Replacement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick Fit Vacant Position Modal (+ Fit on 2D Diagram) ── */}
+      {quickFitModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto space-y-4">
+            <button
+              type="button"
+              onClick={() => setQuickFitModal(null)}
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-[#FFC800] text-black flex items-center justify-center font-bold">
+                <Wrench className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Fit Tyre — Position <span className="font-mono text-blue-600">{quickFitModal.posCode}</span>
+                </h3>
+                <p className="text-xs text-[#5B6068]">
+                  Vehicle: <span className="font-mono font-bold text-slate-900">{vehicle.vehicle_number}</span> ({vehicle.wheel_config} • {quickFitModal.axle === 0 ? 'Spare Mount' : `Axle ${quickFitModal.axle}`})
+                </p>
+              </div>
+            </div>
+
+            {quickFitError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{quickFitError}</span>
+              </div>
+            )}
+
+            {/* Mode Toggle Tabs: Unused Inventory vs Register New */}
+            <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setQuickFitMode('EXISTING')}
+                className={`flex-1 py-2 rounded-lg transition cursor-pointer ${
+                  quickFitMode === 'EXISTING' ? 'bg-white text-slate-900 shadow-sm' : 'text-[#5B6068] hover:text-slate-900'
+                }`}
+              >
+                From Inventory ({availableTyres?.length || 0} Unused)
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickFitMode('NEW')}
+                className={`flex-1 py-2 rounded-lg transition cursor-pointer ${
+                  quickFitMode === 'NEW' ? 'bg-white text-slate-900 shadow-sm' : 'text-[#5B6068] hover:text-slate-900'
+                }`}
+              >
+                Register &amp; Fit New Tyre
+              </button>
+            </div>
+
+            {quickFitMode === 'EXISTING' ? (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Select Unused Inventory Tyre <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={quickFitTyreId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setQuickFitTyreId(val);
+                      const chosen = availableTyres?.find((t) => t.id === val);
+                      if (chosen && chosen.current_nsd != null) {
+                        setNewNsd(String(chosen.current_nsd));
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-yellow-500"
+                  >
+                    <option value="">Choose unmounted tyre not in use...</option>
+                    {availableTyres?.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.serial_number} — {t.model} ({t.size}) [{t.lifecycle_type}] • {t.current_nsd} mm NSD • THI {t.current_thi?.toFixed(0)}
+                      </option>
+                    ))}
+                  </select>
+                  {(!availableTyres || availableTyres.length === 0) && (
+                    <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center justify-between gap-2">
+                      <span>No unused tyres currently in depot inventory.</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuickFitMode('NEW')}
+                        className="font-bold text-amber-900 underline cursor-pointer shrink-0"
+                      >
+                        Fit Brand New →
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Fitted Odometer (km)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={quickFitOdometer}
+                      onChange={(e) => setQuickFitOdometer(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Measured NSD (mm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={newNsd}
+                      onChange={(e) => setNewNsd(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Fitment Remarks (Optional)</label>
+                  <input
+                    type="text"
+                    value={quickFitRemarks}
+                    onChange={(e) => setQuickFitRemarks(e.target.value)}
+                    placeholder="e.g., Mounted from depot shelf during inspection"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Serial Number</label>
+                    <input
+                      type="text"
+                      value={newSerial}
+                      onChange={(e) => setNewSerial(e.target.value.toUpperCase())}
+                      placeholder="Leave blank to auto-generate"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tyre Condition / Type</label>
+                    <select
+                      value={newLifecycle}
+                      onChange={(e) => setNewLifecycle(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-yellow-500"
+                    >
+                      <option value="NEW">NEW (Virgin JK Tyre)</option>
+                      <option value="REUSE">REUSE (Inspected Used)</option>
+                      <option value="RETREAD">RETREAD (Casing Re-treaded)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">JK Tyre Model</label>
+                    <input
+                      type="text"
+                      value={newModel}
+                      onChange={(e) => setNewModel(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tyre Size</label>
+                    <input
+                      type="text"
+                      value={newSize}
+                      onChange={(e) => setNewSize(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Initial Tread NSD (mm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="2"
+                      max="25"
+                      value={newNsd}
+                      onChange={(e) => setNewNsd(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Target Wheel Slot</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={quickFitModal.posCode}
+                      className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-mono font-bold text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setQuickFitModal(null)}
+                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => quickFitMutation.mutate()}
+                disabled={
+                  quickFitMutation.isPending ||
+                  (quickFitMode === 'EXISTING' && !quickFitTyreId)
+                }
+                className="px-5 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {quickFitMutation.isPending
+                  ? 'Mounting Tyre...'
+                  : quickFitMode === 'EXISTING'
+                  ? 'Mount Inventory Tyre'
+                  : 'Register & Mount Tyre'}
               </button>
             </div>
           </div>
