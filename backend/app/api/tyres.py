@@ -205,7 +205,8 @@ def clear_inventory_tyres():
 @jwt_required
 def delete_tyre(tyre_id):
     """
-    Permanently deletes an unmounted/inventory tyre from the fleet registry.
+    Permanently deletes a tyre from the fleet registry.
+    If currently mounted on a vehicle, its active fitment is also deleted, vacating that wheel position.
     """
     tyre = Tyre.query.get(tyre_id)
     if not tyre:
@@ -214,17 +215,23 @@ def delete_tyre(tyre_id):
     if not enforce_fleet_access(tyre.fleet_id):
         return jsonify({"error": "Forbidden: unauthorized tyre access"}), 403
 
-    if tyre.status == TyreStatus.FITTED or tyre.active_fitment is not None:
-        return jsonify({"error": "Cannot delete a currently fitted tyre. Dismount it from the vehicle first."}), 400
-
     fleet_id = tyre.fleet_id
     serial = tyre.serial_number
+    was_fitted = tyre.active_fitment is not None
+    prev_position = tyre.active_fitment.wheel_position if tyre.active_fitment else None
+
     _delete_tyres_safely([tyre])
     db.session.commit()
 
-    record_audit("TYRE_DELETED", "TYRE", tyre_id, {"serial": serial}, fleet_id)
+    record_audit(
+        "TYRE_DELETED",
+        "TYRE",
+        tyre_id,
+        {"serial": serial, "was_fitted": was_fitted, "position": prev_position},
+        fleet_id,
+    )
     return jsonify({
-        "message": f"Tyre {serial} removed from inventory.",
+        "message": f"Tyre {serial} permanently removed from fleet.",
         "tyre_id": tyre_id,
     }), 200
 

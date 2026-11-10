@@ -317,3 +317,45 @@ def test_delete_inventory_tyres_endpoints(client):
     inv_list = client.get("/api/v1/tyres?status=IN_INVENTORY", headers=headers)
     assert inv_list.status_code == 200
     assert len(inv_list.get_json()) == 0
+
+
+def test_delete_fitted_tyre_endpoint(client):
+    """
+    Test DELETE /api/v1/tyres/<tyre_id> on a FITTED tyre:
+    - Creates a temporary vehicle and mounts a test tyre on 1L
+    - Permanently deletes the fitted tyre via DELETE /api/v1/tyres/<id>
+    - Verifies the tyre is gone (404) and cleans up the temp vehicle
+    """
+    login_res = client.post("/api/v1/auth/login", json={
+        "email": "fleet.manager@translogistics.com",
+        "password": "Fleet@12345",
+    })
+    token = login_res.get_json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    v_res = client.post("/api/v1/vehicles", headers=headers, json={
+        "vehicle_number": "TEST-FIT-DEL-01",
+        "wheel_config": "10-Wheeler",
+        "make": "Tata Motors",
+        "model": "Signa 2823.K",
+        "year": 2024,
+        "baseline_pressure": 110.0,
+    })
+    assert v_res.status_code == 201
+    v_id = v_res.get_json()["id"]
+
+    t_res = client.post("/api/v1/tyres", headers=headers, json={
+        "serial_number": "FIT-DEL-999",
+        "vehicle_id": v_id,
+        "wheel_position": "1L",
+        "axle_number": 1,
+    })
+    assert t_res.status_code == 201
+    t_id = t_res.get_json()["tyre"]["id"]
+    assert t_res.get_json()["tyre"]["status"] == "FITTED"
+
+    del_res = client.delete(f"/api/v1/tyres/{t_id}", headers=headers)
+    assert del_res.status_code == 200
+    assert client.get(f"/api/v1/tyres/{t_id}", headers=headers).status_code == 404
+
+    client.delete(f"/api/v1/vehicles/{v_id}", headers=headers)

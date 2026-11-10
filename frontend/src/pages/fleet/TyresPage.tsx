@@ -13,6 +13,8 @@ export const TyresPage: React.FC = () => {
   const [healthFilter, setHealthFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showRemovePickerModal, setShowRemovePickerModal] = useState(false);
+  const [selectedRemoveTyreId, setSelectedRemoveTyreId] = useState('');
   const [tyreToRemove, setTyreToRemove] = useState<Tyre | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -42,6 +44,9 @@ export const TyresPage: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
     queryClient.invalidateQueries({ queryKey: ['inventory-tyres-count'] });
     queryClient.invalidateQueries({ queryKey: ['available-tyres'] });
+    queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicle-fitment-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicle-inspection-summary'] });
   };
 
   const clearInventoryMutation = useMutation({
@@ -69,12 +74,35 @@ export const TyresPage: React.FC = () => {
     onSuccess: (data) => {
       invalidateTyreQueries();
       setTyreToRemove(null);
+      setShowRemovePickerModal(false);
+      setSelectedRemoveTyreId('');
       setActionError(null);
-      setActionSuccess(data.message || 'Tyre removed from inventory.');
+      setActionSuccess(data.message || 'Tyre permanently removed.');
     },
     onError: (err: any) => {
       setTyreToRemove(null);
       setActionError(err.response?.data?.error || 'Failed to remove tyre.');
+    },
+  });
+
+  const dismountTyreMutation = useMutation({
+    mutationFn: async (tyreId: string) => {
+      const res = await api.post(`/tyres/${tyreId}/remove`, {
+        removal_reason: 'DISMOUNTED_FROM_REGISTRY',
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      invalidateTyreQueries();
+      setTyreToRemove(null);
+      setShowRemovePickerModal(false);
+      setSelectedRemoveTyreId('');
+      setActionError(null);
+      setActionSuccess(data.message || 'Tyre dismounted and moved to depot inventory.');
+    },
+    onError: (err: any) => {
+      setTyreToRemove(null);
+      setActionError(err.response?.data?.error || 'Failed to dismount tyre.');
     },
   });
 
@@ -130,19 +158,38 @@ export const TyresPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowClearModal(true)}
-          disabled={inventoryCount === 0 || clearInventoryMutation.isPending}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
-            inventoryCount > 0
-              ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 cursor-pointer active:scale-95'
-              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
-          }`}
-        >
-          <Trash2 className="w-4 h-4" />
-          Clear Inventory ({inventoryCount})
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRemoveTyreId((tyres ?? [])[0]?.id || '');
+              setShowRemovePickerModal(true);
+            }}
+            disabled={!tyres || tyres.length === 0}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+              tyres && tyres.length > 0
+                ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 cursor-pointer active:scale-95'
+                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            Remove Tyre
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowClearModal(true)}
+            disabled={inventoryCount === 0 || clearInventoryMutation.isPending}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+              inventoryCount > 0
+                ? 'bg-red-900/90 hover:bg-red-700 text-white border border-red-500/40 cursor-pointer active:scale-95'
+                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear Inventory ({inventoryCount})
+          </button>
+        </div>
       </div>
 
       {/* Feedback banners */}
@@ -307,7 +354,74 @@ export const TyresPage: React.FC = () => {
         </div>
       )}
 
-      {/* Confirm Single Tyre Removal Modal */}
+      {/* Top-Header Quick Remove Tyre Picker Modal */}
+      {showRemovePickerModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Remove Tyre</h3>
+                <p className="text-xs text-slate-500">Select a tyre to dismount or permanently remove</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">Select Tyre</label>
+              <select
+                value={selectedRemoveTyreId}
+                onChange={(e) => setSelectedRemoveTyreId(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-red-500"
+              >
+                {(tyres ?? []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.serial_number} — {t.model} ({t.status === 'FITTED' ? `Fitted ${t.active_fitment?.wheel_position || ''}` : t.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {(() => {
+              const target = (tyres ?? []).find((t) => t.id === selectedRemoveTyreId);
+              if (!target) return null;
+              return (
+                <div className="flex flex-wrap justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowRemovePickerModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                  {target.status === 'FITTED' && (
+                    <button
+                      type="button"
+                      onClick={() => dismountTyreMutation.mutate(target.id)}
+                      disabled={dismountTyreMutation.isPending || removeTyreMutation.isPending}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-400 hover:bg-amber-300 transition"
+                    >
+                      {dismountTyreMutation.isPending ? 'Dismounting…' : 'Dismount to Inventory'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeTyreMutation.mutate(target.id)}
+                    disabled={removeTyreMutation.isPending || dismountTyreMutation.isPending}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition inline-flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {removeTyreMutation.isPending ? 'Removing…' : 'Delete Permanently'}
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Single Tyre Removal Modal (triggered from TyreCard) */}
       {tyreToRemove && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
@@ -316,16 +430,24 @@ export const TyresPage: React.FC = () => {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900">Remove Tyre from Inventory?</h3>
+                <h3 className="text-base font-black text-slate-900">Remove Tyre?</h3>
                 <p className="text-xs font-mono text-slate-500">{tyreToRemove.serial_number}</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-700">
-              Permanently delete <strong>{tyreToRemove.brand} {tyreToRemove.model}</strong> ({tyreToRemove.size}) from depot inventory?
-            </p>
+            {tyreToRemove.status === 'FITTED' ? (
+              <p className="text-xs text-slate-700 leading-relaxed">
+                <strong>{tyreToRemove.brand} {tyreToRemove.model}</strong> is currently fitted at position{' '}
+                <strong className="font-mono">{tyreToRemove.active_fitment?.wheel_position || 'mounted'}</strong>.
+                You can either dismount it back to depot inventory or permanently delete it from the fleet.
+              </p>
+            ) : (
+              <p className="text-xs text-slate-700">
+                Permanently delete <strong>{tyreToRemove.brand} {tyreToRemove.model}</strong> ({tyreToRemove.size}) from the fleet registry?
+              </p>
+            )}
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-wrap justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setTyreToRemove(null)}
@@ -333,14 +455,24 @@ export const TyresPage: React.FC = () => {
               >
                 Cancel
               </button>
+              {tyreToRemove.status === 'FITTED' && (
+                <button
+                  type="button"
+                  onClick={() => dismountTyreMutation.mutate(tyreToRemove.id)}
+                  disabled={dismountTyreMutation.isPending || removeTyreMutation.isPending}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-400 hover:bg-amber-300 transition"
+                >
+                  {dismountTyreMutation.isPending ? 'Dismounting…' : 'Dismount to Inventory'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => removeTyreMutation.mutate(tyreToRemove.id)}
-                disabled={removeTyreMutation.isPending}
+                disabled={removeTyreMutation.isPending || dismountTyreMutation.isPending}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition inline-flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                {removeTyreMutation.isPending ? 'Removing…' : 'Remove Tyre'}
+                {removeTyreMutation.isPending ? 'Removing…' : 'Delete Permanently'}
               </button>
             </div>
           </div>

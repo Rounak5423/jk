@@ -1,10 +1,10 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Tyre, TyreLifecycleHistory } from '../../types';
 import {
-  ArrowLeft, Activity, RotateCcw, History,
+  ArrowLeft, Activity, RotateCcw, History, Trash2,
 } from 'lucide-react';
 import { TyreHealthy } from '../../components/tyre/TyreHealthy';
 import { TyreWarning } from '../../components/tyre/TyreWarning';
@@ -27,6 +27,9 @@ function getLifecycleBadgeClasses(lt: string) {
 
 export const TyreDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
 
   const { data: tyre, isLoading } = useQuery<Tyre>({
     queryKey: ['tyre-detail', id],
@@ -35,6 +38,38 @@ export const TyreDetailPage: React.FC = () => {
       return res.data;
     },
     enabled: !!id,
+  });
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
+    queryClient.invalidateQueries({ queryKey: ['inventory-tyres-count'] });
+    queryClient.invalidateQueries({ queryKey: ['available-tyres'] });
+    queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['tyre-detail', id] });
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/tyres/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      invalidateAll();
+      navigate('/tyres');
+    },
+  });
+
+  const dismountMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post(`/tyres/${id}/remove`, {
+        removal_reason: 'DISMOUNTED_FROM_DETAIL',
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      invalidateAll();
+      setShowRemoveModal(false);
+    },
   });
 
   const { data: lifecycleHistory } = useQuery<TyreLifecycleHistory[]>({
@@ -109,12 +144,22 @@ export const TyreDetailPage: React.FC = () => {
                 {tyre.brand} {tyre.model} • Size: {tyre.size} • Retread Count: {tyre.retread_count}
               </p>
             </div>
-            <div className="text-left sm:text-right">
-              <span className="text-xs text-slate-500 block mb-0.5">Tyre Health Index</span>
-              <div className="text-3xl font-black text-slate-900 flex items-baseline sm:justify-end gap-1">
-                {tyre.current_thi !== null && tyre.current_thi !== undefined ? tyre.current_thi.toFixed(1) : 'N/A'}
-                <span className="text-xs text-slate-400 font-normal">/ 100</span>
+            <div className="text-left sm:text-right flex flex-col sm:items-end gap-2">
+              <div>
+                <span className="text-xs text-slate-500 block mb-0.5">Tyre Health Index</span>
+                <div className="text-3xl font-black text-slate-900 flex items-baseline sm:justify-end gap-1">
+                  {tyre.current_thi !== null && tyre.current_thi !== undefined ? tyre.current_thi.toFixed(1) : 'N/A'}
+                  <span className="text-xs text-slate-400 font-normal">/ 100</span>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowRemoveModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Remove Tyre
+              </button>
             </div>
           </div>
         </div>
@@ -261,6 +306,63 @@ export const TyreDetailPage: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      {/* Remove Tyre Confirmation Modal */}
+      {showRemoveModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Remove Tyre?</h3>
+                <p className="text-xs font-mono text-slate-500">{tyre.serial_number}</p>
+              </div>
+            </div>
+
+            {tyre.status === 'FITTED' ? (
+              <p className="text-xs text-slate-700 leading-relaxed">
+                This tyre is currently fitted at position{' '}
+                <strong className="font-mono">{tyre.active_fitment?.wheel_position || 'mounted'}</strong>.
+                You can dismount it back to depot inventory or permanently delete it from the fleet registry.
+              </p>
+            ) : (
+              <p className="text-xs text-slate-700">
+                Permanently remove <strong>{tyre.brand} {tyre.model}</strong> ({tyre.size}) from the fleet registry?
+              </p>
+            )}
+
+            <div className="flex flex-wrap justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRemoveModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              {tyre.status === 'FITTED' && (
+                <button
+                  type="button"
+                  onClick={() => dismountMutation.mutate()}
+                  disabled={dismountMutation.isPending || deleteMutation.isPending}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-400 hover:bg-amber-300 transition"
+                >
+                  {dismountMutation.isPending ? 'Dismounting…' : 'Dismount to Inventory'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending || dismountMutation.isPending}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {deleteMutation.isPending ? 'Deleting…' : 'Delete Permanently'}
+              </button>
+            </div>
           </div>
         </div>
       )}

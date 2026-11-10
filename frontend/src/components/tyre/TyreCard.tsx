@@ -139,11 +139,11 @@ export const TyreCard: React.FC<TyreCardProps> = ({ tyre, onRemove }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {onRemove && tyre.status !== 'FITTED' && (
+          {onRemove && (
             <button
               type="button"
               onClick={() => onRemove(tyre)}
-              title="Remove tyre from depot inventory"
+              title={tyre.status === 'FITTED' ? 'Dismount or delete tyre' : 'Remove tyre from inventory'}
               className="px-2.5 py-1.5 bg-red-600/15 hover:bg-red-600 text-red-600 hover:text-white border border-red-500/30 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" /> Remove
