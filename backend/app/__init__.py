@@ -56,14 +56,22 @@ def create_app(config_class=Config):
 
             # Automatic compliance cleanup: Purge any legacy vehicles below 10 wheels
             from app.models.vehicle import Vehicle
+            from app.api.tyres import _delete_tyres_safely
             dirty = False
+            tyres_to_purge = []
             for v in Vehicle.query.all():
                 total_w = v.layout.get("total_wheels", 10) if isinstance(v.layout, dict) else 10
                 if total_w < 10 or v.wheel_config in ["4-Wheeler", "6-Wheeler", "Four-Wheeler", "Six-Wheeler"] or v.vehicle_number in ["DL-01-AF-3525", "TN04 BF5918", "MH-12-JK-8888"]:
                     app.logger.info(f"Purging legacy vehicle on startup: {v.vehicle_number} ({v.wheel_config})")
+                    for fit in v.fitments:
+                        if fit.tyre and fit.tyre not in tyres_to_purge:
+                            tyres_to_purge.append(fit.tyre)
                     db.session.delete(v)
                     dirty = True
             if dirty:
+                db.session.flush()
+                if tyres_to_purge:
+                    _delete_tyres_safely(tyres_to_purge)
                 db.session.commit()
 
             # Check if this is a fresh cloud database (0 users registered) or 0 vehicles

@@ -279,3 +279,41 @@ def test_delete_vehicle_endpoint(client):
     # 3. Verify 404 on get
     get_res = client.get(f"/api/v1/vehicles/{veh_id}", headers={"Authorization": f"Bearer {token}"})
     assert get_res.status_code == 404
+
+
+def test_delete_inventory_tyres_endpoints(client):
+    """
+    Test DELETE /api/v1/tyres/<tyre_id> and DELETE /api/v1/tyres/inventory:
+    - Registers two unmounted IN_INVENTORY tyres
+    - Deletes one via DELETE /api/v1/tyres/<id>
+    - Clears all remaining IN_INVENTORY tyres via DELETE /api/v1/tyres/inventory
+    - Verifies 0 IN_INVENTORY tyres remain
+    """
+    login_res = client.post("/api/v1/auth/login", json={
+        "email": "fleet.manager@translogistics.com",
+        "password": "Fleet@12345",
+    })
+    token = login_res.get_json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. Create two test inventory tyres
+    t1_res = client.post("/api/v1/tyres", headers=headers, json={"serial_number": "INV-DEL-001"})
+    t2_res = client.post("/api/v1/tyres", headers=headers, json={"serial_number": "INV-DEL-002"})
+    assert t1_res.status_code == 201
+    assert t2_res.status_code == 201
+    t1_id = t1_res.get_json()["tyre"]["id"]
+
+    # 2. Delete single tyre
+    del1 = client.delete(f"/api/v1/tyres/{t1_id}", headers=headers)
+    assert del1.status_code == 200
+    assert client.get(f"/api/v1/tyres/{t1_id}", headers=headers).status_code == 404
+
+    # 3. Clear all remaining inventory tyres
+    clr = client.delete("/api/v1/tyres/inventory", headers=headers)
+    assert clr.status_code == 200
+    assert clr.get_json()["deleted_count"] >= 1
+
+    # 4. Verify 0 IN_INVENTORY tyres remain in this fleet
+    inv_list = client.get("/api/v1/tyres?status=IN_INVENTORY", headers=headers)
+    assert inv_list.status_code == 200
+    assert len(inv_list.get_json()) == 0

@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Tyre } from '../../types';
-import { ShieldCheck, AlertTriangle, AlertCircle, Activity } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, AlertCircle, Activity, Trash2, CheckCircle2, X } from 'lucide-react';
 import { TyreCard } from '../../components/tyre/TyreCard';
 import { useAuthStore } from '../../store/authStore';
 
 export const TyresPage: React.FC = () => {
   const { activeFleetId } = useAuthStore();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [healthFilter, setHealthFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [tyreToRemove, setTyreToRemove] = useState<Tyre | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: tyres, isLoading } = useQuery<Tyre[]>({
     queryKey: ['fleet-tyres', activeFleetId, statusFilter, healthFilter],
@@ -20,6 +25,56 @@ export const TyresPage: React.FC = () => {
       if (healthFilter) url += `health=${healthFilter}&`;
       const res = await api.get(url);
       return res.data;
+    },
+  });
+
+  const { data: inventoryTyres } = useQuery<Tyre[]>({
+    queryKey: ['inventory-tyres-count', activeFleetId],
+    queryFn: async () => {
+      const res = await api.get('/tyres?status=IN_INVENTORY');
+      return res.data;
+    },
+  });
+
+  const inventoryCount = inventoryTyres?.length ?? 0;
+
+  const invalidateTyreQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
+    queryClient.invalidateQueries({ queryKey: ['inventory-tyres-count'] });
+    queryClient.invalidateQueries({ queryKey: ['available-tyres'] });
+  };
+
+  const clearInventoryMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete('/tyres/inventory');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      invalidateTyreQueries();
+      setShowClearModal(false);
+      setActionError(null);
+      setActionSuccess(data.message || 'Cleared all tyres from depot inventory.');
+    },
+    onError: (err: any) => {
+      setShowClearModal(false);
+      setActionError(err.response?.data?.error || 'Failed to clear depot inventory.');
+    },
+  });
+
+  const removeTyreMutation = useMutation({
+    mutationFn: async (tyreId: string) => {
+      const res = await api.delete(`/tyres/${tyreId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      invalidateTyreQueries();
+      setTyreToRemove(null);
+      setActionError(null);
+      setActionSuccess(data.message || 'Tyre removed from inventory.');
+    },
+    onError: (err: any) => {
+      setTyreToRemove(null);
+      setActionError(err.response?.data?.error || 'Failed to remove tyre.');
     },
   });
 
@@ -67,10 +122,52 @@ export const TyresPage: React.FC = () => {
     <div className="space-y-6">
 
       {/* 1. Page header */}
-      <div>
-        <h1 className="text-2xl font-black text-white tracking-tight">Tyre Lifecycle Management</h1>
-        <p className="text-xs text-slate-300 mt-0.5">Visual condition overview</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-white tracking-tight">Tyre Lifecycle Management</h1>
+          <p className="text-xs text-slate-300 mt-0.5">
+            Visual condition overview • Depot Inventory: <span className="font-bold text-brand-gold">{inventoryCount}</span> unmounted tyre(s)
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowClearModal(true)}
+          disabled={inventoryCount === 0 || clearInventoryMutation.isPending}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+            inventoryCount > 0
+              ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 cursor-pointer active:scale-95'
+              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+          }`}
+        >
+          <Trash2 className="w-4 h-4" />
+          Clear Inventory ({inventoryCount})
+        </button>
       </div>
+
+      {/* Feedback banners */}
+      {actionSuccess && (
+        <div className="p-3 bg-emerald-950/70 border border-emerald-500/40 rounded-xl flex items-center justify-between text-xs text-emerald-300">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{actionSuccess}</span>
+          </div>
+          <button type="button" onClick={() => setActionSuccess(null)} className="text-emerald-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {actionError && (
+        <div className="p-3 bg-red-950/70 border border-red-500/40 rounded-xl flex items-center justify-between text-xs text-red-300">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{actionError}</span>
+          </div>
+          <button type="button" onClick={() => setActionError(null)} className="text-red-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* 2. Summary cards */}
       <div className="grid grid-cols-3 gap-4">
@@ -156,7 +253,7 @@ export const TyresPage: React.FC = () => {
       )}
       {!isLoading && (tyres ?? []).length === 0 && (
         <div className="py-20 text-center text-xs text-slate-400">
-          No tyres found for this fleet.
+          No tyres found for this filter.
         </div>
       )}
 
@@ -164,8 +261,89 @@ export const TyresPage: React.FC = () => {
       {!isLoading && filteredTyres.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTyres.map((t) => (
-            <TyreCard key={t.id} tyre={t} />
+            <TyreCard key={t.id} tyre={t} onRemove={(tyre) => setTyreToRemove(tyre)} />
           ))}
+        </div>
+      )}
+
+      {/* Confirm Clear All Inventory Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Clear Depot Inventory?</h3>
+                <p className="text-xs text-slate-500">This permanently removes all unmounted inventory tyres.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-700 leading-relaxed">
+              You are about to remove all <strong className="text-red-600">{inventoryCount} tyre(s)</strong> currently in{' '}
+              <span className="font-mono font-semibold">IN_INVENTORY</span> status. Tyres actively mounted on vehicles will not be affected.
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => clearInventoryMutation.mutate()}
+                disabled={clearInventoryMutation.isPending}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {clearInventoryMutation.isPending ? 'Removing…' : `Remove All ${inventoryCount} Tyres`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Single Tyre Removal Modal */}
+      {tyreToRemove && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Remove Tyre from Inventory?</h3>
+                <p className="text-xs font-mono text-slate-500">{tyreToRemove.serial_number}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-700">
+              Permanently delete <strong>{tyreToRemove.brand} {tyreToRemove.model}</strong> ({tyreToRemove.size}) from depot inventory?
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setTyreToRemove(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => removeTyreMutation.mutate(tyreToRemove.id)}
+                disabled={removeTyreMutation.isPending}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {removeTyreMutation.isPending ? 'Removing…' : 'Remove Tyre'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

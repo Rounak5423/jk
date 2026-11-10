@@ -5,13 +5,26 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy import not_
 from app.extensions import db
-from app.models import Tyre, TyreFitment, Vehicle, Alert, THIRecord, TyreLifecycleHistory
+from app.models import Tyre, TyreFitment, Vehicle, Alert, THIRecord, TyreLifecycleHistory, TelemetryRecord
 from app.models.tyre import TyreStatus, LifecycleType, HealthStatus
 from app.services.wear_engine import WearEngine
 from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
 
 tyres_bp = Blueprint("tyres", __name__)
+
+
+def _delete_tyres_safely(tyres):
+    """Detaches telemetry FKs and removes given Tyre ORM objects cleanly."""
+    if not tyres:
+        return 0
+    tyre_ids = [t.id for t in tyres]
+    TelemetryRecord.query.filter(TelemetryRecord.tyre_id.in_(tyre_ids)).update(
+        {"tyre_id": None}, synchronize_session=False
+    )
+    for t in tyres:
+        db.session.delete(t)
+    return len(tyres)
 
 
 @tyres_bp.route("", methods=["GET"])
@@ -157,6 +170,63 @@ def list_available_tyres():
         .all()
     )
     return jsonify([t.to_dict(include_history=False) for t in tyres]), 200
+
+
+@tyres_bp.route("/inventory", methods=["DELETE"])
+@jwt_required
+def clear_inventory_tyres():
+    """
+    Permanently removes all unmounted tyres in IN_INVENTORY status for the authorized fleet.
+    Mounted (FITTED) tyres on vehicles remain untouched.
+    """
+    fleet_id = get_effective_fleet_id()
+    if not fleet_id or not enforce_fleet_access(fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized fleet access"}), 403
+
+    inv_tyres = Tyre.query.filter_by(fleet_id=fleet_id, status=TyreStatus.IN_INVENTORY).all()
+    deleted_count = _delete_tyres_safely(inv_tyres)
+    if deleted_count > 0:
+        db.session.commit()
+        record_audit(
+            "INVENTORY_CLEARED",
+            "TYRE",
+            fleet_id,
+            {"deleted_count": deleted_count},
+            fleet_id,
+        )
+
+    return jsonify({
+        "message": f"Removed {deleted_count} tyre(s) from depot inventory.",
+        "deleted_count": deleted_count,
+    }), 200
+
+
+@tyres_bp.route("/<tyre_id>", methods=["DELETE"])
+@jwt_required
+def delete_tyre(tyre_id):
+    """
+    Permanently deletes an unmounted/inventory tyre from the fleet registry.
+    """
+    tyre = Tyre.query.get(tyre_id)
+    if not tyre:
+        return jsonify({"error": "Tyre not found"}), 404
+
+    if not enforce_fleet_access(tyre.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized tyre access"}), 403
+
+    if tyre.status == TyreStatus.FITTED or tyre.active_fitment is not None:
+        return jsonify({"error": "Cannot delete a currently fitted tyre. Dismount it from the vehicle first."}), 400
+
+    fleet_id = tyre.fleet_id
+    serial = tyre.serial_number
+    _delete_tyres_safely([tyre])
+    db.session.commit()
+
+    record_audit("TYRE_DELETED", "TYRE", tyre_id, {"serial": serial}, fleet_id)
+    return jsonify({
+        "message": f"Tyre {serial} removed from inventory.",
+        "tyre_id": tyre_id,
+    }), 200
 
 
 @tyres_bp.route("/<tyre_id>/remove", methods=["POST"])

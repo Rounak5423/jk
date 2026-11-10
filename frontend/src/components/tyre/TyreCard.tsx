@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Trash2 } from 'lucide-react';
 import { Tyre } from '../../types';
 import { TyreHealthy } from './TyreHealthy';
 import { TyreWarning } from './TyreWarning';
@@ -8,6 +8,7 @@ import { TyreCritical } from './TyreCritical';
 
 interface TyreCardProps {
   tyre: Tyre;
+  onRemove?: (tyre: Tyre) => void;
 }
 
 function getTyreImage(status: Tyre['thi_status']) {
@@ -85,7 +86,7 @@ function formatStatusLabel(status: Tyre['thi_status']): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
-export const TyreCard: React.FC<TyreCardProps> = ({ tyre }) => {
+export const TyreCard: React.FC<TyreCardProps> = ({ tyre, onRemove }) => {
   const TyreImage = getTyreImage(tyre.thi_status);
 
   return (
@@ -137,12 +138,24 @@ export const TyreCard: React.FC<TyreCardProps> = ({ tyre }) => {
           </span>
         </div>
 
-        <Link
-          to={`/tyres/${tyre.id}`}
-          className="px-4 py-1.5 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
-        >
-          View <ArrowUpRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          {onRemove && tyre.status !== 'FITTED' && (
+            <button
+              type="button"
+              onClick={() => onRemove(tyre)}
+              title="Remove tyre from depot inventory"
+              className="px-2.5 py-1.5 bg-red-600/15 hover:bg-red-600 text-red-600 hover:text-white border border-red-500/30 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Remove
+            </button>
+          )}
+          <Link
+            to={`/tyres/${tyre.id}`}
+            className="px-4 py-1.5 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
+          >
+            View <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );
