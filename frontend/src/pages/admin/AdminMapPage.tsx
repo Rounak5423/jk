@@ -476,6 +476,22 @@ export const AdminMapPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={fetchMapData}
+            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-white rounded-lg text-xs font-semibold border border-red-500/40 transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Aggregate Platform Metrics */}
       {data && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
