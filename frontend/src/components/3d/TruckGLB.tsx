@@ -258,6 +258,7 @@ export interface TruckGLBProps {
   selectedPosition?: string | null;
   onTyreClick: (data: any) => void;
   showGeneratedTyres?: boolean;
+  hasExpiredTyres?: boolean;
 }
 
 export function TruckGLB({
@@ -267,7 +268,8 @@ export function TruckGLB({
   wheelCount,
   selectedPosition,
   onTyreClick,
-  showGeneratedTyres = true
+  showGeneratedTyres = true,
+  hasExpiredTyres = false
 }: TruckGLBProps) {
   const TRUCK_MODEL_URL = '/models/truck_clean_no_tyres.glb';
   const { scene } = useGLTF(TRUCK_MODEL_URL);
@@ -458,6 +460,38 @@ export function TruckGLB({
       genGroup.visible = showGeneratedTyres;
     }
   }, [model, showGeneratedTyres]);
+
+  // Color container mesh green if truck has expired/critical tyres
+  useEffect(() => {
+    const containerMesh = model.getObjectByName('Container') as THREE.Mesh | undefined;
+    if (containerMesh && containerMesh.material) {
+      const mats = Array.isArray(containerMesh.material)
+        ? containerMesh.material
+        : [containerMesh.material];
+
+      mats.forEach((mat) => {
+        if ('color' in mat) {
+          const m = mat as THREE.MeshStandardMaterial;
+          if (hasExpiredTyres) {
+            // Distinct emerald green container for trucks with expired/critical tyres
+            m.color.setHex(0x10b981);
+            if ('emissive' in m) {
+              m.emissive.setHex(0x059669);
+              m.emissiveIntensity = 0.25;
+            }
+          } else {
+            // Default original factory color
+            m.color.setHex(0xffffff);
+            if ('emissive' in m) {
+              m.emissive.setHex(0x000000);
+              m.emissiveIntensity = 0;
+            }
+          }
+          m.needsUpdate = true;
+        }
+      });
+    }
+  }, [model, hasExpiredTyres]);
 
   useEffect(() => {
     const tyresByPosition = new Map<string, any>();

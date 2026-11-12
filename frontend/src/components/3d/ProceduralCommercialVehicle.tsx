@@ -7,6 +7,7 @@ interface VehicleProps {
   selectedPosition: string | null;
   onSelectWheel: (wheel: WheelPositionConfig) => void;
   vehicleType: string;
+  hasExpiredTyres?: boolean;
 }
 
 export const ProceduralCommercialVehicle: React.FC<VehicleProps> = ({
@@ -14,8 +15,12 @@ export const ProceduralCommercialVehicle: React.FC<VehicleProps> = ({
   selectedPosition,
   onSelectWheel,
   vehicleType,
+  hasExpiredTyres = false,
 }) => {
   const isBus = vehicleType === 'BUS';
+
+  // If truck has expired/critical tyres, render container as green (#10b981)
+  const cargoContainerColor = hasExpiredTyres ? '#10b981' : '#1e293b';
 
   return (
     <group position={[0, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
@@ -103,7 +108,13 @@ export const ProceduralCommercialVehicle: React.FC<VehicleProps> = ({
         <group position={[-1.3, 2.2, 0]}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[5.2, 2.3, 2.4]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.2} roughness={0.7} />
+            <meshStandardMaterial
+              color={cargoContainerColor}
+              metalness={hasExpiredTyres ? 0.3 : 0.2}
+              roughness={hasExpiredTyres ? 0.4 : 0.7}
+              emissive={hasExpiredTyres ? '#059669' : '#000000'}
+              emissiveIntensity={hasExpiredTyres ? 0.2 : 0}
+            />
           </mesh>
           {/* JK Tyre Logo Accent Banner on Cargo side */}
           <mesh position={[0, 0, 1.22]}>

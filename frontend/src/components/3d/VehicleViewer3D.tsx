@@ -112,6 +112,39 @@ export const VehicleViewer3D: React.FC<Props> = ({
     return null;
   }, [twinData, vehicle]);
 
+  // Check if truck has any expired/critical tyres (THI < 60 or thi_status === 'CRITICAL' / 'EXP')
+  const hasExpiredTyres = useMemo(() => {
+    // 1. Check vehicle overall status if provided
+    if ((vehicle as any)?.worst_thi_status === 'CRITICAL') return true;
+
+    // 2. Check tyresData (twinData.wheels, tyres prop, or vehicle.fitments)
+    return tyresData.some((item: any) => {
+      const tyreObj = item?.tyre ?? item;
+      if (!tyreObj) return false;
+
+      // Check status string (CRITICAL, EXP, EXPIRED, SCRAP)
+      const st = (tyreObj.thi_status || tyreObj.status || item.status || '')
+        .toString()
+        .toUpperCase();
+      if (st === 'CRITICAL' || st === 'EXP' || st === 'EXPIRED' || st === 'SCRAP' || st === 'SCRAPPED') {
+        return true;
+      }
+
+      // Check numerical THI (< 60 is Critical/Expired)
+      const thiVal =
+        tyreObj.thi != null
+          ? Number(tyreObj.thi)
+          : tyreObj.current_thi != null
+          ? Number(tyreObj.current_thi)
+          : null;
+      if (thiVal != null && thiVal > 0 && thiVal < 60) {
+        return true;
+      }
+
+      return false;
+    });
+  }, [vehicle, tyresData]);
+
   // Set initial selected tyre - prioritize the first wheel that actually has a fitted tyre
   React.useEffect(() => {
     if (!selectedWheel && twinData?.wheels && twinData.wheels.length > 0) {
@@ -322,6 +355,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
                 selectedPosition={selectedPosition}
                 onSelectWheel={(w) => handleTyreClick(w)}
                 vehicleType={twinData?.vehicle_type || 'HEAVY_TRUCK'}
+                hasExpiredTyres={hasExpiredTyres}
               />
             }
           >
@@ -334,6 +368,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
                 selectedPosition={selectedPosition}
                 onTyreClick={handleTyreClick}
                 showGeneratedTyres={showTyres}
+                hasExpiredTyres={hasExpiredTyres}
               />
             ) : (
               <ProceduralCommercialVehicle
@@ -341,6 +376,7 @@ export const VehicleViewer3D: React.FC<Props> = ({
                 selectedPosition={selectedPosition}
                 onSelectWheel={(w) => handleTyreClick(w)}
                 vehicleType={twinData?.vehicle_type || 'HEAVY_TRUCK'}
+                hasExpiredTyres={hasExpiredTyres}
               />
             )}
           </Suspense>
