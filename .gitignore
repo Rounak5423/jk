@@ -17,10 +17,18 @@ backend/data/
 backend/reports/
 *.xlsx
 *.xls
-*2ND*
-*3RD*
-*4TH*
-*INSPECTION*
+*2ND*.xlsx
+*2ND*.xls
+*2ND*.csv
+*3RD*.xlsx
+*3RD*.xls
+*3RD*.csv
+*4TH*.xlsx
+*4TH*.xls
+*4TH*.csv
+*INSPECTION*.xlsx
+*INSPECTION*.xls
+*INSPECTION*.csv
 backend/app/services/models/*.xlsx
 backend/app/services/models/*.xls
 

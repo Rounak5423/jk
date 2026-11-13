@@ -485,29 +485,21 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
     inspectionAudio.playEngineIgnition();
 
     const t1 = window.setTimeout(() => {
-      // Stage 2: Powerful Launch Thrust (Truck accelerates forward across paved road!)
+      // Stage 2: Powerful Launch Thrust (Truck accelerates smoothly in one continuous motion completely out of the frame!)
       setLaunchStage('LAUNCHING');
-      setVehicleTranslateX(450);
+      setVehicleTranslateX(1400);
       inspectionAudio.playVehicleLaunch();
 
       const t2 = window.setTimeout(() => {
-        // Surge forward across highway onto Highway 44
-        setVehicleTranslateX(1150);
-
-        const t3 = window.setTimeout(() => {
-          // Stage 3: Dispatched Highway Cruising (Continuous Forward Highway Drive)
-          setLaunchStage('CRUISING');
-          setVehicleTranslateX(0);
-          if (onLaunchCompleted) {
-            onLaunchCompleted();
-          }
-        }, 1100);
-
-        launchTimerRef.current.push(t3);
-      }, 1400);
+        // Stage 3: Dispatched Highway Cruising (Truck is fully en route, telemetry active)
+        setLaunchStage('CRUISING');
+        if (onLaunchCompleted) {
+          onLaunchCompleted();
+        }
+      }, 1650);
 
       launchTimerRef.current.push(t2);
-    }, 1300);
+    }, 1200);
 
     launchTimerRef.current.push(t1);
   };
@@ -971,17 +963,16 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
           {/* ============================================================== */}
           {/* LAYER 4: VEHICLE & MOUNTED TYRES (Moves on Launch!)           */}
           {/* ============================================================== */}
-          <g className={launchStage === 'CRUISING' ? 'animate-truck-cruising' : ''}>
-            <g
-              style={{
-                transform: `translateX(${vehicleTranslateX}px)`,
-                transition:
-                  launchStage === 'LAUNCHING'
-                    ? 'transform 1.3s cubic-bezier(0.2, 0.8, 0.25, 1)'
-                    : 'transform 0.4s ease-out',
-              }}
-              className={launchStage === 'IGNITION' ? 'animate-engine-rumble' : ''}
-            >
+          <g
+            style={{
+              transform: `translateX(${vehicleTranslateX}px)`,
+              transition:
+                launchStage === 'LAUNCHING'
+                  ? 'transform 1.6s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                  : 'transform 0.4s ease-out',
+            }}
+            className={launchStage === 'IGNITION' ? 'animate-engine-rumble' : ''}
+          >
             {/* ── EXHAUST NITRO FLAMES & SMOKE (Ignition / Launch) ── */}
             {isIgnited && (
               <g>
@@ -1413,7 +1404,6 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                 <line x1="720" y1="300" x2="800" y2="300" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="20 10" className="animate-wind-streak" />
               </g>
             )}
-            </g>
           </g>
         </svg>
       </div>
