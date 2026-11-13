@@ -473,35 +473,40 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
     prevProgressRef.current = progressPercent;
   }, [progressPercent]);
 
-  // Trigger Launch Sequence - Powerful Forward Drive along Highway
+  // Trigger Launch Sequence - Instant, Powerful & Continuous Forward Drive along Highway
   const triggerLaunch = () => {
     // Clear any pending timers
     launchTimerRef.current.forEach((t) => clearTimeout(t));
     launchTimerRef.current = [];
 
-    // Stage 1: Engine Ignition (Vibrating in Depot Bay, Headlights & Nitro flare)
-    setLaunchStage('IGNITION');
-    setVehicleTranslateX(0);
-    inspectionAudio.playEngineIgnition();
+    // If replaying while already off-screen, quickly reset to bay before launching
+    if (vehicleTranslateX !== 0) {
+      setLaunchStage('DEPOT');
+      setVehicleTranslateX(0);
+      const resetWait = window.setTimeout(() => {
+        executeLaunch();
+      }, 60);
+      launchTimerRef.current.push(resetWait);
+      return;
+    }
+    executeLaunch();
+  };
 
-    const t1 = window.setTimeout(() => {
-      // Stage 2: Powerful Launch Thrust (Truck accelerates smoothly in one continuous motion completely out of the frame!)
-      setLaunchStage('LAUNCHING');
-      setVehicleTranslateX(1400);
-      inspectionAudio.playVehicleLaunch();
+  const executeLaunch = () => {
+    // Launch immediately: headlights on, turbo spool, and smooth continuous acceleration off-screen (no stopping!)
+    setLaunchStage('LAUNCHING');
+    inspectionAudio.playVehicleLaunch();
+    setVehicleTranslateX(1800);
 
-      const t2 = window.setTimeout(() => {
-        // Stage 3: Dispatched Highway Cruising (Truck is fully en route, telemetry active)
-        setLaunchStage('CRUISING');
-        if (onLaunchCompleted) {
-          onLaunchCompleted();
-        }
-      }, 1650);
+    const t = window.setTimeout(() => {
+      // Stage 3: Dispatched Highway Cruising (Truck is fully en route, telemetry active)
+      setLaunchStage('CRUISING');
+      if (onLaunchCompleted) {
+        onLaunchCompleted();
+      }
+    }, 1500);
 
-      launchTimerRef.current.push(t2);
-    }, 1200);
-
-    launchTimerRef.current.push(t1);
+    launchTimerRef.current.push(t);
   };
 
   // Reset to Depot Bay
@@ -968,7 +973,7 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
               transform: `translateX(${vehicleTranslateX}px)`,
               transition:
                 launchStage === 'LAUNCHING'
-                  ? 'transform 1.6s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                  ? 'transform 1.45s cubic-bezier(0.4, 0, 1, 1)'
                   : 'transform 0.4s ease-out',
             }}
             className={launchStage === 'IGNITION' ? 'animate-engine-rumble' : ''}
