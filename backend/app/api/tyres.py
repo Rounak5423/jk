@@ -8,6 +8,7 @@ from app.extensions import db
 from app.models import Tyre, TyreFitment, Vehicle, Alert, THIRecord, TyreLifecycleHistory, TelemetryRecord
 from app.models.tyre import TyreStatus, LifecycleType, HealthStatus
 from app.services.wear_engine import WearEngine
+from app.services.rul_service import RULService
 from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 from app.utils.audit import record_audit
 
@@ -394,3 +395,108 @@ def fit_tyre(tyre_id):
 
     record_audit("TYRE_FITTED", "TYRE", tyre.id, {"vehicle": vehicle.vehicle_number, "position": wheel_position}, tyre.fleet_id)
     return jsonify({"message": f"Tyre {tyre.serial_number} mounted to {wheel_position}", "fitment": new_fit.to_dict()}), 200
+
+
+
+@tyres_bp.route("/<tyre_id>/rul-prediction", methods=["GET"])
+@jwt_required
+def predict_tyre_rul(tyre_id):
+    """
+    Advanced RUL (Remaining Useful Life) prediction using ML model.
+    Falls back to formula-based calculation if ML model is unavailable.
+    
+    Query Parameters:
+    - d_limit: Minimum safe tread depth threshold in mm (default: 1.6)
+    - compare: If 'true', returns both ML and formula predictions for comparison
+    """
+    tyre = Tyre.query.get(tyre_id)
+    if not tyre:
+        return jsonify({"error": "Tyre not found"}), 404
+
+    if not enforce_fleet_access(tyre.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized tyre access"}), 403
+
+    # Get query parameters
+    d_limit = float(request.args.get("d_limit", 1.6))
+    compare_mode = request.args.get("compare", "false").lower() == "true"
+
+    # Gather inspection history from fitments
+    inspection_history = []
+    fitments = TyreFitment.query.filter_by(tyre_id=tyre.id).order_by(TyreFitment.fitted_at.asc()).all()
+    
+    for fitment in fitments:
+        insp = {
+            "tyre_id": tyre.id,
+            "inspection_date": fitment.fitted_at.isoformat() if fitment.fitted_at else None,
+            "odometer_km": fitment.fitted_odometer or 0,
+            "nsd_fl_mm": fitment.fitted_nsd,
+            "otd_mm": tyre.blueprint_nsd,
+        }
+        inspection_history.append(insp)
+    
+    # Add current state as latest "inspection"
+    if tyre.active_fitment:
+        vehicle = Vehicle.query.get(tyre.active_fitment.vehicle_id)
+        current_insp = {
+            "tyre_id": tyre.id,
+            "inspection_date": datetime.now(timezone.utc).isoformat(),
+            "odometer_km": vehicle.current_odometer if vehicle else 0,
+            "nsd_fl_mm": tyre.current_nsd,
+            "otd_mm": tyre.blueprint_nsd,
+        }
+        inspection_history.append(current_insp)
+
+    # Check if ML model is available
+    model_available = RULService.is_model_available()
+
+    if compare_mode:
+        # Return both ML and formula predictions
+        result = RULService.compare_with_formula(tyre.id, inspection_history, d_limit)
+    else:
+        # Return recommended prediction (ML if available, otherwise formula)
+        result = RULService.predict_rul(tyre.id, inspection_history, d_limit)
+
+    return jsonify({
+        "tyre_id": tyre_id,
+        "serial_number": tyre.serial_number,
+        "model_available": model_available,
+        "d_limit_mm": d_limit,
+        "prediction": result,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }), 200
+
+
+@tyres_bp.route("/rul-model/status", methods=["GET"])
+@jwt_required
+def rul_model_status():
+    """
+    Returns the status and availability of the RUL ML model.
+    """
+    fleet_id = get_effective_fleet_id()
+    if not fleet_id or not enforce_fleet_access(fleet_id):
+        return jsonify({"error": "Forbidden"}), 403
+
+    model_available = RULService.is_model_available()
+    
+    status = {
+        "model_available": model_available,
+        "model_type": "ML" if model_available else "FORMULA_FALLBACK",
+        "description": (
+            "Advanced ML-based RUL prediction available" if model_available
+            else "Using formula-based wear prediction (ML model not trained yet)"
+        ),
+        "endpoints": {
+            "predict": "/api/v1/tyres/<tyre_id>/rul-prediction",
+            "compare": "/api/v1/tyres/<tyre_id>/rul-prediction?compare=true",
+        }
+    }
+    
+    if model_available:
+        try:
+            predictor = RULService._get_predictor()
+            if predictor and hasattr(predictor, 'meta'):
+                status["model_metadata"] = predictor.meta
+        except Exception:
+            pass
+    
+    return jsonify(status), 200

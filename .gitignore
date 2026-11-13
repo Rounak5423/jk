@@ -12,6 +12,18 @@ backend/instance/
 backend/uploads/
 scratch/
 
+# RUL Model Data Files (PRIVATE - DO NOT COMMIT)
+backend/data/
+backend/reports/
+*.xlsx
+*.xls
+*2ND*
+*3RD*
+*4TH*
+*INSPECTION*
+backend/app/services/models/*.xlsx
+backend/app/services/models/*.xls
+
 # Node
 node_modules/
 frontend/node_modules/
