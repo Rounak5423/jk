@@ -381,6 +381,39 @@ def create_inspection():
             blueprint_nsd=tyre.blueprint_nsd,
         )
 
+        # Synchronize Tyre Health Index (THI) & record daily evaluation
+        try:
+            from app.models.thi import THIRecord
+            from app.services.thi_engine import THIEngine
+            thi_eval = THIEngine.calculate_tyre_thi(
+                pressure_psi=measured_p,
+                temperature_c=temperature_at_inspection,
+                min_nsd_mm=measured_nsd,
+                blueprint_nsd_mm=tyre.blueprint_nsd or 16.5,
+                recommended_psi=vehicle.baseline_pressure or 125.0,
+                wheel_position=tyre.active_fitment.wheel_position if tyre.active_fitment else "1R",
+            )
+            tyre.current_thi = thi_eval["score"]
+            tyre.thi_status = thi_eval["status"]
+
+            thi_rec = THIRecord(
+                tyre_id=tyre.id,
+                vehicle_id=vehicle.id,
+                calculated_at=datetime.now(timezone.utc),
+                score=thi_eval["score"],
+                status=thi_eval["status"],
+                pressure_score=thi_eval["components"].get("pressure_score", 95.0),
+                temp_score=thi_eval["components"].get("temp_score", 92.0),
+                wear_score=thi_eval["components"].get("wear_score", 90.0),
+                rrc_score=thi_eval["components"].get("rrc_score", 92.0),
+                explanation=thi_eval["explanation"],
+                rule_version=thi_eval["rule_version"],
+            )
+            thi_rec.inputs = thi_eval["inputs"]
+            db.session.add(thi_rec)
+        except Exception as thi_err:
+            current_app.logger.warning(f"Notice: THI recalculation skipped during inspection: {thi_err}")
+
         db.session.commit()
         record_audit("INSPECTION_SUBMITTED", "INSPECTION", insp.id, {"tyre": tyre.serial_number, "nsd": measured_nsd}, vehicle.fleet_id)
 
