@@ -111,6 +111,10 @@ export const VehicleInspectionPage: React.FC = () => {
   const [viewingReportModal, setViewingReportModal] = useState<VehicleInspectionReport | null>(null);
   const [resetTrigger, setResetTrigger] = useState(0);
 
+  // Delete inspection modal/confirm state
+  const [showDeleteInspectionConfirm, setShowDeleteInspectionConfirm] = useState(false);
+  const [deletingInspectionId, setDeletingInspectionId] = useState<string | null>(null);
+
   // Fetch Vehicle Inspection Summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['vehicle-inspection-summary', id],
@@ -139,6 +143,7 @@ export const VehicleInspectionPage: React.FC = () => {
     if (positions.length > 0) {
       const initialInspected = new Set<string>();
       positions.forEach((p) => {
+        // has_inspection_data is now ONLY true for the current open cycle (not historical fallback)
         if (p.has_inspection_data && p.tyre?.id) {
           initialInspected.add(p.tyre.id);
         }
@@ -203,7 +208,7 @@ export const VehicleInspectionPage: React.FC = () => {
 
   // Calculate Inspection Progress Percentage
   const mountedTyresCount = positions.filter((p) => p.tyre !== null).length;
-  const inspectedCount = positions.filter((p) => p.tyre && (inspectedTyreIds.has(p.tyre.id) || p.has_inspection_data)).length;
+  const inspectedCount = positions.filter((p) => p.tyre && inspectedTyreIds.has(p.tyre.id)).length;
   const inspectionPercentage = mountedTyresCount > 0 ? Math.min(100, Math.round((inspectedCount / mountedTyresCount) * 100)) : 0;
   const isComplete = inspectionPercentage === 100 && mountedTyresCount > 0;
 
@@ -266,6 +271,33 @@ export const VehicleInspectionPage: React.FC = () => {
     },
     onError: (err: any) => {
       alert(err.response?.data?.error || 'Failed to close inspection.');
+    },
+  });
+
+  // Delete Inspection (undo a tyre inspection from current cycle)
+  const deleteInspectionMutation = useMutation({
+    mutationFn: async (inspectionId: string) => {
+      const res = await api.delete(`/inspections/${inspectionId}`);
+      return res.data;
+    },
+    onSuccess: (resData) => {
+      const tyreId = resData.tyre_id as string;
+      if (tyreId) {
+        setInspectedTyreIds((prev) => {
+          const next = new Set(prev);
+          next.delete(tyreId);
+          return next;
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['vehicle-inspection-summary', id] });
+      setShowDeleteInspectionConfirm(false);
+      setDeletingInspectionId(null);
+      setSubmitError(null);
+    },
+    onError: (err: any) => {
+      setShowDeleteInspectionConfirm(false);
+      setDeletingInspectionId(null);
+      setSubmitError(err.response?.data?.error || 'Failed to delete inspection.');
     },
   });
 
@@ -836,7 +868,23 @@ export const VehicleInspectionPage: React.FC = () => {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              {/* Delete inspection (only shown when this tyre has been inspected in current cycle) */}
+              {selectedPos?.tyre && (inspectedTyreIds.has(selectedPos.tyre.id) || selectedPos.has_inspection_data) && selectedPos.latest_inspection?.id ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeletingInspectionId(selectedPos.latest_inspection!.id);
+                    setShowDeleteInspectionConfirm(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                  title="Delete this inspection record and allow re-inspection"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Inspection
+                </button>
+              ) : (
+                <div />
+              )}
               <button
                 type="submit"
                 disabled={createInspectionMutation.isPending}
@@ -1525,7 +1573,7 @@ export const VehicleInspectionPage: React.FC = () => {
                         {insp.inspection_result || 'PASS'}
                       </span>
                     </td>
-                    <td className="py-3 px-6 text-right">
+                    <td className="py-3 px-6 text-right flex items-center justify-end gap-2">
                       {insp.photo_url ? (
                         <button
                           type="button"
@@ -1536,12 +1584,24 @@ export const VehicleInspectionPage: React.FC = () => {
                               subtitle: `Measured: ${insp.measured_nsd} mm • Date: ${new Date(insp.inspected_at).toLocaleDateString()}`,
                             })
                           }
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold transition shadow-sm"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold transition shadow-sm cursor-pointer"
                         >
                           <Camera className="w-3 h-3 text-blue-600" /> View Photo
                         </button>
-                      ) : (
-                        <span className="text-slate-400 text-[11px] font-mono">—</span>
+                      ) : null}
+                      {/* Allow deleting if in current cycle */}
+                      {(!data?.latest_closed_report || new Date(insp.inspected_at) > new Date(data.latest_closed_report.completed_at)) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeletingInspectionId(insp.id);
+                            setShowDeleteInspectionConfirm(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold transition shadow-sm cursor-pointer"
+                          title="Delete this inspection record"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-600" /> Delete
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -1924,6 +1984,63 @@ export const VehicleInspectionPage: React.FC = () => {
                 className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
               >
                 Close Certificate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Inspection Confirmation Modal ── */}
+      {showDeleteInspectionConfirm && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Delete Tyre Inspection?</h3>
+                <p className="text-xs text-[#5B6068]">
+                  Position <strong className="text-slate-900 font-mono">{selectedPos?.wheel_position}</strong> • Serial <strong className="text-slate-900 font-mono">{selectedPos?.tyre?.serial_number}</strong>
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              Are you sure you want to delete this recorded inspection? This will remove the inspection result, clear the verified checkmark, and allow you to re-inspect this tyre.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteInspectionConfirm(false);
+                  setDeletingInspectionId(null);
+                }}
+                disabled={deleteInspectionMutation.isPending}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (deletingInspectionId) {
+                    deleteInspectionMutation.mutate(deletingInspectionId);
+                  }
+                }}
+                disabled={deleteInspectionMutation.isPending}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {deleteInspectionMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Confirm Delete
+                  </>
+                )}
               </button>
             </div>
           </div>

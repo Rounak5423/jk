@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { Inspection, Vehicle, Tyre } from '../../types';
-import { ClipboardCheck, Plus, Camera, CheckCircle, AlertCircle, X, AlertTriangle } from 'lucide-react';
+import { ClipboardCheck, Plus, Camera, CheckCircle, AlertCircle, X, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 type LifecycleDecision = '' | 'NEW' | 'REUSE' | 'RETREAD' | 'SCRAP';
@@ -112,6 +112,21 @@ export const InspectionsPage: React.FC = () => {
     },
   });
 
+  const deleteInspectionMutation = useMutation({
+    mutationFn: async (inspectionId: string) => {
+      const res = await api.delete(`/inspections/${inspectionId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-tyres'] });
+      queryClient.invalidateQueries({ queryKey: ['fleet-vehicles'] });
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.error || 'Failed to delete inspection.');
+    },
+  });
+
   const resetForm = () => {
     setVehicleId('');
     setTyreId('');
@@ -204,7 +219,7 @@ export const InspectionsPage: React.FC = () => {
                 <th className="py-3.5 px-4">Result</th>
                 <th className="py-3.5 px-4">Lifecycle</th>
                 <th className="py-3.5 px-4">Visual Condition</th>
-                <th className="py-3.5 px-6 text-right">Photo</th>
+                <th className="py-3.5 px-6 text-right">Photo / Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gold-light text-[#344054]">
@@ -251,13 +266,28 @@ export const InspectionsPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
-                    {i.photo_url ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-warm-gold font-medium">
-                        <Camera className="w-3.5 h-3.5" /> Attached
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {i.photo_url ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-warm-gold font-medium">
+                          <Camera className="w-3.5 h-3.5" /> Attached
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-xs">—</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Delete this inspection for tyre ${i.tyre_serial || i.id}?`)) {
+                            deleteInspectionMutation.mutate(i.id);
+                          }
+                        }}
+                        disabled={deleteInspectionMutation.isPending}
+                        className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                        title="Delete Inspection"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

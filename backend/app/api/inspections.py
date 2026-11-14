@@ -97,15 +97,19 @@ def get_vehicle_inspections_summary(vehicle_id):
 
     # Map latest inspection per tyre for current cycle
     latest_by_tyre = {}
+    current_cycle_tyre_ids = set()
     for insp in current_cycle_inspections:
         if insp.tyre_id not in latest_by_tyre:
             latest_by_tyre[insp.tyre_id] = insp.to_dict()
+        current_cycle_tyre_ids.add(insp.tyre_id)
 
-    # Fallback to latest historical inspection per tyre so verified audit data persists across page refreshes
-    if not latest_by_tyre and all_inspections:
+    # Separate fallback map for display only (historical data for form pre-fill)
+    # but we track which tyres are TRULY in the current cycle vs just historical
+    display_by_tyre = dict(latest_by_tyre)
+    if not display_by_tyre and all_inspections:
         for insp in all_inspections:
-            if insp.tyre_id not in latest_by_tyre:
-                latest_by_tyre[insp.tyre_id] = insp.to_dict()
+            if insp.tyre_id not in display_by_tyre:
+                display_by_tyre[insp.tyre_id] = insp.to_dict()
 
     def _norm_code(code):
         return "".join(ch for ch in (code or "").upper() if ch.isalnum())
@@ -124,7 +128,10 @@ def get_vehicle_inspections_summary(vehicle_id):
     positions_data = []
     for fit in active_fitments:
         tyre = fit.tyre
-        latest_insp = latest_by_tyre.get(fit.tyre_id)
+        # For the form pre-fill: use display_by_tyre (which falls back to historical)
+        display_insp = display_by_tyre.get(fit.tyre_id)
+        # is_inspected_this_cycle: ONLY true if inspected in the current active cycle
+        is_inspected_this_cycle = fit.tyre_id in current_cycle_tyre_ids if tyre else False
         positions_data.append({
             "fitment_id": fit.id,
             "wheel_position": fit.wheel_position,
@@ -147,8 +154,10 @@ def get_vehicle_inspections_summary(vehicle_id):
                 "lifecycle_type": tyre.lifecycle_type if tyre else LifecycleType.NEW,
                 "status": tyre.status if tyre else TyreStatus.IN_INVENTORY,
             } if tyre else None,
-            "latest_inspection": latest_insp,
-            "has_inspection_data": latest_insp is not None,
+            # latest_inspection: used only for form pre-fill (may be historical)
+            "latest_inspection": display_insp,
+            # has_inspection_data: TRUE only when inspected in current cycle (drives tick marks)
+            "has_inspection_data": is_inspected_this_cycle,
         })
 
     # Include any vacant wheel positions defined in vehicle layout so Fitment & 2D Inspection allow direct fitting
@@ -628,4 +637,68 @@ def get_single_inspection_report(report_id):
         return jsonify({"error": "Forbidden: unauthorized access"}), 403
 
     return jsonify(report.to_dict()), 200
+
+
+@inspections_bp.route("/<inspection_id>", methods=["DELETE"])
+@jwt_required
+def delete_inspection(inspection_id):
+    """
+    Deletes a single inspection record from the current open cycle.
+    Only allowed if the inspection belongs to the caller's fleet and has
+    NOT been locked inside a closed VehicleInspectionReport.
+    After deletion the tyre tick-mark is removed so it can be re-inspected.
+    """
+    user = g.current_user
+
+    insp = Inspection.query.get(inspection_id)
+    if not insp:
+        return jsonify({"error": "Inspection not found"}), 404
+
+    if not enforce_fleet_access(insp.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized access"}), 403
+
+    # Safety check: make sure the inspection is NOT inside a closed report.
+    # A closed report stores its cutoff time in completed_at; any inspection
+    # whose inspected_at is <= that time is considered archived and read-only.
+    vehicle = Vehicle.query.get(insp.vehicle_id)
+    latest_report = VehicleInspectionReport.query.filter_by(
+        vehicle_id=insp.vehicle_id
+    ).order_by(VehicleInspectionReport.completed_at.desc()).first()
+
+    if latest_report:
+        t_insp = insp.inspected_at.replace(tzinfo=timezone.utc) if insp.inspected_at.tzinfo is None else insp.inspected_at
+        t_cut = latest_report.completed_at.replace(tzinfo=timezone.utc) if latest_report.completed_at.tzinfo is None else latest_report.completed_at
+        if t_insp <= t_cut:
+            return jsonify({
+                "error": "Cannot delete an inspection that is part of a closed report. "
+                         "Only inspections in the current open cycle can be deleted."
+            }), 400
+
+    try:
+        tyre = Tyre.query.get(insp.tyre_id)
+        db.session.delete(insp)
+        db.session.commit()
+
+        record_audit(
+            "INSPECTION_DELETED",
+            "INSPECTION",
+            inspection_id,
+            {
+                "tyre": tyre.serial_number if tyre else insp.tyre_id,
+                "vehicle_id": insp.vehicle_id,
+                "deleted_by": user.email,
+            },
+            insp.fleet_id,
+        )
+
+        return jsonify({
+            "message": "Inspection deleted successfully. Tyre can now be re-inspected.",
+            "inspection_id": inspection_id,
+            "tyre_id": insp.tyre_id,
+        }), 200
+
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error(f"Inspection deletion failed: {exc}")
+        return jsonify({"error": "Failed to delete inspection."}), 500
 
