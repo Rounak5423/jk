@@ -33,6 +33,22 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
+const formatXAxisDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const m = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return `${months[m] || parts[1]} ${day}`;
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+};
+
 export const TrendsPage: React.FC = () => {
   const { activeFleetId } = useAuthStore();
   const [days, setDays] = useState(14);
@@ -341,7 +357,7 @@ export const TrendsPage: React.FC = () => {
         </div>
 
         {/* SVG Responsive Chart Container */}
-        <div className="h-84 w-full pt-2">
+        <div className="h-96 w-full pt-2 pb-3">
           {trendsLoading ? (
             <div className="h-full flex items-center justify-center text-xs text-[#5B6068] gap-2">
               <RefreshCw className="w-4 h-4 animate-spin text-brand-gold" /> Loading trend telemetry...
@@ -353,16 +369,50 @@ export const TrendsPage: React.FC = () => {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={trendPoints} margin={{ top: 15, right: 25, left: 0, bottom: 0 }}>
+              <ComposedChart data={trendPoints} margin={{ top: 15, right: 30, left: 15, bottom: 25 }}>
                 <defs>
                   <linearGradient id="thiGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} />
-                <YAxis domain={[40, 100]} stroke="#64748b" tick={{ fontSize: 11 }} unit=" pts" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#94a3b8' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
+                  tickFormatter={formatXAxisDate}
+                  minTickGap={24}
+                  label={{
+                    value: 'Timeline (Date)',
+                    position: 'insideBottom',
+                    offset: -16,
+                    fontSize: 12,
+                    fill: '#475569',
+                    fontWeight: 700,
+                  }}
+                />
+                <YAxis
+                  domain={[40, 100]}
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#94a3b8' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
+                  tickCount={7}
+                  tickFormatter={(v) => `${v} pts`}
+                  width={68}
+                  label={{
+                    value: 'Tyre Health Index (0 - 100 pts)',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 0,
+                    fontSize: 12,
+                    fill: '#475569',
+                    fontWeight: 700,
+                  }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
@@ -371,6 +421,7 @@ export const TrendsPage: React.FC = () => {
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                   }}
                   itemStyle={{ fontSize: '12px', color: '#1e293b' }}
+                  labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 
@@ -444,15 +495,50 @@ export const TrendsPage: React.FC = () => {
               {summary.current_pressure_health}%
             </span>
           </div>
-          <div className="h-52 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendPoints}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis domain={[70, 100]} stroke="#64748b" tick={{ fontSize: 10 }} unit="%" />
+              <LineChart data={trendPoints} margin={{ top: 12, right: 18, left: 10, bottom: 22 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickFormatter={formatXAxisDate}
+                  minTickGap={18}
+                  label={{
+                    value: 'Date',
+                    position: 'insideBottom',
+                    offset: -14,
+                    fontSize: 10,
+                    fill: '#64748b',
+                    fontWeight: 700,
+                  }}
+                />
+                <YAxis
+                  domain={[70, 100]}
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickCount={4}
+                  tickFormatter={(val) => `${val}%`}
+                  width={48}
+                  label={{
+                    value: 'Compliance %',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 5,
+                    fontSize: 10,
+                    fill: '#0891b2',
+                    fontWeight: 700,
+                  }}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px' }}
                   itemStyle={{ color: '#1e293b' }}
+                  labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
                 <Line
                   type="monotone"
@@ -481,15 +567,50 @@ export const TrendsPage: React.FC = () => {
               {summary.current_thermal_health}%
             </span>
           </div>
-          <div className="h-52 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendPoints}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis domain={[60, 100]} stroke="#64748b" tick={{ fontSize: 10 }} unit="%" />
+              <LineChart data={trendPoints} margin={{ top: 12, right: 18, left: 10, bottom: 22 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickFormatter={formatXAxisDate}
+                  minTickGap={18}
+                  label={{
+                    value: 'Date',
+                    position: 'insideBottom',
+                    offset: -14,
+                    fontSize: 10,
+                    fill: '#64748b',
+                    fontWeight: 700,
+                  }}
+                />
+                <YAxis
+                  domain={[60, 100]}
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickCount={5}
+                  tickFormatter={(val) => `${val}%`}
+                  width={48}
+                  label={{
+                    value: 'Thermal Health %',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 5,
+                    fontSize: 10,
+                    fill: '#ea580c',
+                    fontWeight: 700,
+                  }}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px' }}
                   itemStyle={{ color: '#1e293b' }}
+                  labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
                 <Line
                   type="monotone"
@@ -518,15 +639,50 @@ export const TrendsPage: React.FC = () => {
               {summary.current_wear_health}%
             </span>
           </div>
-          <div className="h-52 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendPoints}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis domain={[70, 100]} stroke="#64748b" tick={{ fontSize: 10 }} unit="%" />
+              <LineChart data={trendPoints} margin={{ top: 12, right: 18, left: 10, bottom: 22 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickFormatter={formatXAxisDate}
+                  minTickGap={18}
+                  label={{
+                    value: 'Date',
+                    position: 'insideBottom',
+                    offset: -14,
+                    fontSize: 10,
+                    fill: '#64748b',
+                    fontWeight: 700,
+                  }}
+                />
+                <YAxis
+                  domain={[70, 100]}
+                  stroke="#64748b"
+                  tickLine={{ stroke: '#cbd5e1' }}
+                  axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                  tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
+                  tickCount={4}
+                  tickFormatter={(val) => `${val}%`}
+                  width={48}
+                  label={{
+                    value: 'Wear Health %',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 5,
+                    fontSize: 10,
+                    fill: '#059669',
+                    fontWeight: 700,
+                  }}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px' }}
                   itemStyle={{ color: '#1e293b' }}
+                  labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
                 <Line
                   type="monotone"
