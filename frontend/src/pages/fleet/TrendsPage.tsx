@@ -36,7 +36,9 @@ import { useAuthStore } from '../../store/authStore';
 export const TrendsPage: React.FC = () => {
   const { activeFleetId } = useAuthStore();
   const [days, setDays] = useState(14);
-  const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(() => {
+    return localStorage.getItem('jk_trends_selected_veh') || '';
+  });
   const [chartViewMode, setChartViewMode] = useState<'thi_baseline' | 'multi_metric'>('thi_baseline');
 
   // ML interactive prediction state
@@ -134,7 +136,11 @@ export const TrendsPage: React.FC = () => {
             <Truck className="w-3.5 h-3.5 text-slate-700" />
             <select
               value={selectedVehicleId}
-              onChange={(e) => setSelectedVehicleId(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedVehicleId(val);
+                localStorage.setItem('jk_trends_selected_veh', val);
+              }}
               className="bg-cream text-slate-900 font-bold focus:outline-none text-xs cursor-pointer"
             >
               <option value="">All Fleet Vehicles</option>

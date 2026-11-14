@@ -126,8 +126,55 @@ def create_vehicle():
         status="ACTIVE",
     )
     veh.layout = layout_dict
-
     db.session.add(veh)
+    db.session.flush()
+
+    # Automatically provision initial fitted tyres for all wheel positions in vehicle layout
+    from app.models.tyre import HealthStatus
+    for axle in layout_dict.get("axles", []):
+        axle_idx = axle["index"]
+        is_dual = axle.get("dual", False)
+        for pos in axle["positions"]:
+            pos_clean = pos.replace("_", "-")
+            serial_sfx = uuid.uuid4().hex[:6].upper()
+            serial = f"JK-{wheel_config[:2]}-{pos_clean}-{serial_sfx}"
+            is_steer = "FL" in pos or "FR" in pos
+            t_model = "Jetway JUH5" if is_steer else "Jetsteel JDH3"
+            t_nsd = 16.5 if is_steer else 18.0
+
+            tyre = Tyre(
+                id=str(uuid.uuid4()),
+                fleet_id=fleet_id,
+                serial_number=serial,
+                brand="JK Tyre",
+                model=t_model,
+                size="295/80R22.5",
+                blueprint_nsd=t_nsd,
+                current_nsd=t_nsd,
+                retread_count=0,
+                total_km_run=current_odometer,
+                current_thi=95.0,
+                thi_status=HealthStatus.HEALTHY,
+                status=TyreStatus.FITTED,
+                created_at=datetime.now(timezone.utc),
+            )
+            db.session.add(tyre)
+            db.session.flush()
+
+            fit = TyreFitment(
+                id=str(uuid.uuid4()),
+                tyre_id=tyre.id,
+                vehicle_id=veh.id,
+                axle_number=axle_idx,
+                wheel_position=pos,
+                is_dual=is_dual,
+                is_inner=("LI" in pos or "RI" in pos),
+                fitted_at=datetime.now(timezone.utc),
+                fitted_odometer=current_odometer,
+                fitted_nsd=t_nsd,
+            )
+            db.session.add(fit)
+
     db.session.commit()
 
     record_audit(

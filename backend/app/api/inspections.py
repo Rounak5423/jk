@@ -101,6 +101,12 @@ def get_vehicle_inspections_summary(vehicle_id):
         if insp.tyre_id not in latest_by_tyre:
             latest_by_tyre[insp.tyre_id] = insp.to_dict()
 
+    # Fallback to latest historical inspection per tyre so verified audit data persists across page refreshes
+    if not latest_by_tyre and all_inspections:
+        for insp in all_inspections:
+            if insp.tyre_id not in latest_by_tyre:
+                latest_by_tyre[insp.tyre_id] = insp.to_dict()
+
     def _norm_code(code):
         return "".join(ch for ch in (code or "").upper() if ch.isalnum())
 

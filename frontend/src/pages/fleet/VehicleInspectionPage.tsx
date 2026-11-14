@@ -146,9 +146,11 @@ export const VehicleInspectionPage: React.FC = () => {
       // Synchronize inspected set directly with backend cycle
       setInspectedTyreIds(initialInspected);
 
-      // Auto-select first position if none selected or not present
+      // Auto-select saved or first position if none selected or not present
       if (!selectedPos || !positions.some((p) => p.wheel_position === selectedPos.wheel_position)) {
-        const firstWithTyre = positions.find((p) => p.tyre !== null);
+        const savedPosCode = localStorage.getItem(`jk_insp_pos_${id}`);
+        const savedPos = savedPosCode ? positions.find((p) => p.wheel_position === savedPosCode) : null;
+        const firstWithTyre = savedPos || positions.find((p) => p.tyre !== null);
         if (firstWithTyre) {
           selectPositionForInspection(firstWithTyre);
         }
@@ -158,23 +160,45 @@ export const VehicleInspectionPage: React.FC = () => {
 
   const selectPositionForInspection = (pos: PositionData) => {
     setSelectedPos(pos);
+    if (id) {
+      localStorage.setItem(`jk_insp_pos_${id}`, pos.wheel_position);
+    }
     setSubmitError(null);
-    if (pos.tyre) {
-      setMeasuredNsd(pos.tyre.current_nsd?.toString() || '14.0');
+
+    // If this wheel position has verified or entered inspection data, load it so entered data stays!
+    if (pos.latest_inspection) {
+      const li = pos.latest_inspection;
+      setMeasuredNsd(li.measured_nsd?.toString() || pos.tyre?.current_nsd?.toString() || '14.0');
+      setMeasuredPressure(li.measured_pressure?.toString() || vehicle?.baseline_pressure?.toString() || '125');
+      setOdometer(li.odometer_at_inspection?.toString() || vehicle?.current_odometer?.toString() || '0');
+      setVisualCondition(li.visual_condition || 'NORMAL');
+      setNotes(li.notes || '');
+      setTemperature(li.temperature_at_inspection?.toString() || '38.5');
+      setInspectionResult((li.inspection_result as any) || 'PASS');
+      if (li.photo_url) {
+        setPhotoPreview(li.photo_url.startsWith('http') ? li.photo_url : `/api/v1/inspections/photo/${li.photo_url}`);
+      } else {
+        if (photoPreview) URL.revokeObjectURL(photoPreview);
+        setPhotoPreview(null);
+      }
+    } else {
+      if (pos.tyre) {
+        setMeasuredNsd(pos.tyre.current_nsd?.toString() || '14.0');
+      }
+      if (vehicle?.baseline_pressure) {
+        setMeasuredPressure(vehicle.baseline_pressure.toString());
+      }
+      if (vehicle?.current_odometer) {
+        setOdometer(vehicle.current_odometer.toString());
+      }
+      setVisualCondition('NORMAL');
+      setNotes('');
+      setTemperature('38.5');
+      setInspectionResult('PASS');
+      setPhotoFile(null);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(null);
     }
-    if (vehicle?.baseline_pressure) {
-      setMeasuredPressure(vehicle.baseline_pressure.toString());
-    }
-    if (vehicle?.current_odometer) {
-      setOdometer(vehicle.current_odometer.toString());
-    }
-    setVisualCondition('NORMAL');
-    setNotes('');
-    setTemperature('38.5');
-    setInspectionResult('PASS');
-    setPhotoFile(null);
-    if (photoPreview) URL.revokeObjectURL(photoPreview);
-    setPhotoPreview(null);
   };
 
   // Calculate Inspection Progress Percentage
