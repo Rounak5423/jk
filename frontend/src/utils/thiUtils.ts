@@ -11,17 +11,11 @@ export interface VehicleTHIResult {
 }
 
 /**
- * Calculates a vehicle's Tyre Health Index (THI) as the weighted average
- * of all fitted tyres, giving higher priority to critical tyres so they
- * impact the vehicle's overall THI more heavily.
- *
- * Priority Weights:
- * - Critical tyre (score < 70 or CRITICAL): weight = 4.0
- * - Warning tyre (70 <= score < 85 or WARNING): weight = 2.0
- * - Healthy tyre (score >= 85 or HEALTHY): weight = 1.0
+ * Calculates a vehicle's Tyre Health Index (THI) as the arithmetic average
+ * of all fitted tyres' THI scores.
  */
 export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
-  // If backend precalculated the weighted THI, use it as baseline
+  // If backend precalculated THI, use it as baseline
   if (vehicle.thi !== undefined && vehicle.thi !== null) {
     return {
       thi: vehicle.thi,
@@ -47,9 +41,7 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
     };
   }
 
-  let totalWeight = 0;
-  let weightedSum = 0;
-  let unweightedSum = 0;
+  let totalSum = 0;
   let critCount = 0;
   let warnCount = 0;
   let healthyCount = 0;
@@ -60,39 +52,18 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
     const status = (f.tyre?.thi_status || (score < 70 ? 'CRITICAL' : score < 85 ? 'WARNING' : 'HEALTHY')).toUpperCase();
 
     lowestThi = Math.min(lowestThi, score);
-    unweightedSum += score;
+    totalSum += score;
 
-    // Critical tyres have 4x priority weight, Warning tyres 2x, Healthy tyres 1x
-    let weight = 1.0;
     if (score < 70 || status === 'CRITICAL') {
-      weight = 4.0;
       critCount++;
     } else if (score < 85 || status === 'WARNING') {
-      weight = 2.0;
       warnCount++;
     } else {
-      weight = 1.0;
       healthyCount++;
     }
-
-    weightedSum += score * weight;
-    totalWeight += weight;
   }
 
-  if (totalWeight === 0) {
-    return {
-      thi: 100.0,
-      unweighted_thi: 100.0,
-      thi_status: 'HEALTHY',
-      critical_tyres_count: 0,
-      warning_tyres_count: 0,
-      healthy_tyres_count: 0,
-      lowest_tyre_thi: 100.0,
-    };
-  }
-
-  const vehThi = Number((weightedSum / totalWeight).toFixed(1));
-  const unweighted = Number((unweightedSum / fitments.length).toFixed(1));
+  const vehThi = Number((totalSum / fitments.length).toFixed(1));
 
   let overallStatus: 'HEALTHY' | 'WARNING' | 'CRITICAL' = 'HEALTHY';
   if (vehThi < 70 || critCount > 0) overallStatus = 'CRITICAL';
@@ -100,7 +71,7 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
 
   return {
     thi: vehThi,
-    unweighted_thi: unweighted,
+    unweighted_thi: vehThi,
     thi_status: overallStatus,
     critical_tyres_count: critCount,
     warning_tyres_count: warnCount,

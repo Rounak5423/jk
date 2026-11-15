@@ -169,9 +169,9 @@ export const VehicleDetailPage: React.FC = () => {
           </div>
           <span className="text-[10px] text-slate-300 block mt-0.5">
             {thiData.critical_tyres_count > 0
-              ? `⚠️ ${thiData.critical_tyres_count} critical tyre (4x weight)`
+              ? `⚠️ ${thiData.critical_tyres_count} critical tyre${thiData.critical_tyres_count > 1 ? 's' : ''}`
               : thiData.warning_tyres_count > 0
-              ? `⚡ ${thiData.warning_tyres_count} warning tyre`
+              ? `⚡ ${thiData.warning_tyres_count} warning tyre${thiData.warning_tyres_count > 1 ? 's' : ''}`
               : 'All tyres optimal'}
           </span>
         </div>

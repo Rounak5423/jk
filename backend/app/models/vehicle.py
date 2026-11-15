@@ -135,14 +135,7 @@ class Vehicle(db.Model):
 
     def calculate_thi(self):
         """
-        Calculates vehicle THI as the weighted average of all currently fitted tyres,
-        giving higher priority/weight to critical and degraded tyres so that
-        safety risks and severe tyre faults impact the vehicle's THI more heavily.
-        
-        Weighting Policy:
-        - Critical tyre (THI < 70 or CRITICAL): weight = 4.0
-        - Warning tyre (70 <= THI < 85 or WARNING): weight = 2.0
-        - Healthy tyre (THI >= 85 or HEALTHY): weight = 1.0
+        Calculates vehicle THI as the arithmetic average of all currently fitted tyres' THI scores.
         """
         active_fits = self.active_fitments
         if not active_fits:
@@ -156,9 +149,8 @@ class Vehicle(db.Model):
                 "lowest_tyre_thi": 100.0,
             }
 
-        total_weight = 0.0
-        weighted_sum = 0.0
-        unweighted_sum = 0.0
+        total_sum = 0.0
+        valid_tyres_count = 0
         crit_count = 0
         warn_count = 0
         healthy_count = 0
@@ -173,23 +165,17 @@ class Vehicle(db.Model):
             status = (tyre.thi_status or "HEALTHY").upper()
 
             lowest_thi = min(lowest_thi, score)
-            unweighted_sum += score
+            total_sum += score
+            valid_tyres_count += 1
 
-            # Priority Weight: Critical tyres affect the vehicle THI 4x more, Warning 2x more
             if score < 70.0 or status == "CRITICAL":
-                weight = 4.0
                 crit_count += 1
             elif score < 85.0 or status == "WARNING":
-                weight = 2.0
                 warn_count += 1
             else:
-                weight = 1.0
                 healthy_count += 1
 
-            weighted_sum += score * weight
-            total_weight += weight
-
-        if total_weight == 0.0:
+        if valid_tyres_count == 0:
             return {
                 "thi": 100.0,
                 "unweighted_thi": 100.0,
@@ -200,8 +186,7 @@ class Vehicle(db.Model):
                 "lowest_tyre_thi": 100.0,
             }
 
-        veh_thi = round(weighted_sum / total_weight, 1)
-        unweighted_thi = round(unweighted_sum / len(active_fits), 1)
+        veh_thi = round(total_sum / valid_tyres_count, 1)
 
         if veh_thi < 70.0 or crit_count > 0:
             overall_status = "CRITICAL"
@@ -212,7 +197,7 @@ class Vehicle(db.Model):
 
         return {
             "thi": veh_thi,
-            "unweighted_thi": unweighted_thi,
+            "unweighted_thi": veh_thi,
             "thi_status": overall_status,
             "critical_tyres_count": crit_count,
             "warning_tyres_count": warn_count,

@@ -263,11 +263,11 @@ export const VehiclesPage: React.FC = () => {
                   Tyre Health Index (THI) Section
                 </h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cream-100 text-slate-600 border border-gold-light uppercase tracking-wider">
-                  Critical Priority Weighted
+                  Fitted Tyres Average
                 </span>
               </div>
               <p className="text-xs text-[#5B6068] mt-1">
-                Vehicle THI is the weighted average of its fitted tyres with critical tyres weighted 4x more to reflect blowout risk. The fleet average is the mean of all vehicle THIs.
+                Vehicle THI is the average tyre health index across all fitted wheel positions. The fleet average is the mean of all vehicle THIs.
               </p>
             </div>
 
@@ -449,7 +449,7 @@ export const VehiclesPage: React.FC = () => {
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 block mt-3">
-                Severe blowout risk • Critical tyre weighted 4x
+                Vehicles requiring immediate tyre attention
               </span>
             </div>
           </div>
@@ -557,16 +557,14 @@ export const VehiclesPage: React.FC = () => {
                         {v.critical_tyres_count > 0 ? (
                           <span
                             className="text-[10px] text-red-600 font-semibold block mt-1"
-                            title="Critical tyres impact vehicle THI with 4x priority weighting"
                           >
-                            ⚠️ {v.critical_tyres_count} critical tyre{v.critical_tyres_count > 1 ? 's' : ''} (4x weight)
+                            ⚠️ {v.critical_tyres_count} critical tyre{v.critical_tyres_count > 1 ? 's' : ''}
                           </span>
                         ) : v.warning_tyres_count > 0 ? (
                           <span
                             className="text-[10px] text-[#E8770E] font-semibold block mt-1"
-                            title="Warning tyres impact vehicle THI with 2x priority weighting"
                           >
-                            ⚡ {v.warning_tyres_count} warning tyre{v.warning_tyres_count > 1 ? 's' : ''} (2x weight)
+                            ⚡ {v.warning_tyres_count} warning tyre{v.warning_tyres_count > 1 ? 's' : ''}
                           </span>
                         ) : (
                           <span className="text-[10px] text-[#5B6068] block mt-1">
