@@ -36,6 +36,12 @@ class THIEngine:
     CRITICAL_NSD_THRESHOLD = 3.0    # Operational replacement recommendation threshold
     
     DEFAULT_RECOMMENDED_PSI = 125.0 # Target cold inflation pressure (PSI)
+    BASELINE_PRESSURES = {
+        "HEAVY_TRUCK": 110.0,
+        "LIGHT_TRUCK": 65.0,
+        "BUS": 105.0,
+        "PASSENGER_CAR": 32.0,
+    }
     PRESSURE_TOLERANCE_PSI = 20.0   # Acceptable operating window (+/- 20 PSI)
     
     TEMP_NORMAL_C = 35.0            # Nominal operating temperature (C)
@@ -98,6 +104,8 @@ class THIEngine:
     ) -> Dict[str, Any]:
         """Backward-compatible wrapper for legacy test suites and callers."""
         nsd = min_nsd_mm if min_nsd_mm is not None else current_nsd_mm
+        if recommended_psi is None and vehicle_type:
+            recommended_psi = cls.BASELINE_PRESSURES.get(vehicle_type.upper(), cls.DEFAULT_RECOMMENDED_PSI)
         return cls.calculate_tyre_thi(
             pressure_psi=pressure_psi,
             temperature_c=temperature_c,
@@ -149,38 +157,66 @@ class THIEngine:
                 "data_quality": "STALE_DATA",
             }
 
+        if pressure_psi is None and temperature_c is None:
+            return {
+                "score": 0.0,
+                "status": "UNKNOWN",
+                "components": {"wear_score": None, "tread_score": None, "pressure_score": None, "temp_score": None, "inv_severity_score": None},
+                "explanation": "Telemetry unavailable: real-time pressure and temperature sensors not transmitting.",
+                "data_quality": "MISSING_DATA",
+            }
+
         p_rec = recommended_psi if recommended_psi is not None else cls.DEFAULT_RECOMMENDED_PSI
         speed = float(speed_kmh) if speed_kmh is not None else 0.0
         explanations = []
 
-        # 1. Wear Score (Sw, weight 50%)
-        # r = 1 / km_per_mm_wear (mm/km)
-        if km_per_mm_wear is not None and km_per_mm_wear > 0:
-            r = 1.0 / km_per_mm_wear
-            s_w = float(np.clip(100.0 * (1.0 - (r / cls.WEAR_RATE_LIMIT)), 0.0, 100.0))
-            if s_w < 40.0:
-                explanations.append(f"Accelerated tread wear rate ({km_per_mm_wear:.0f} km/mm).")
-        else:
-            # Baseline proxy from NSD worn vs 50,000 km standard interval
-            s_w = 44.44
-
-        # 2. Tread Score (Sn, weight 25%)
+        # 1. Tread Score (Sn, weight 25%)
         # Sn = 100 * clip((NSD_curr - 1.6) / (16.5 - 1.6), 0, 1)
         curr_nsd = float(min_nsd_mm) if min_nsd_mm is not None else blueprint_nsd_mm
         s_n = float(np.clip(100.0 * (curr_nsd - cls.LEGAL_MIN_NSD_MM) / (blueprint_nsd_mm - cls.LEGAL_MIN_NSD_MM), 0.0, 100.0))
+        is_critical_nsd = False
         if curr_nsd <= cls.CRITICAL_NSD_THRESHOLD:
-            explanations.append(f"Critical tread depth ({curr_nsd:.1f} mm <= {cls.CRITICAL_NSD_THRESHOLD:.1f} mm threshold). Replacement urgent.")
+            is_critical_nsd = True
+            explanations.append(f"Critical tread wear: NSD at {curr_nsd:.1f} mm (safety limit {cls.CRITICAL_NSD_THRESHOLD:.1f} mm). Replacement urgent.")
         elif curr_nsd < 6.0:
             explanations.append(f"Low tread depth ({curr_nsd:.1f} mm remaining). Plan retreading.")
 
+        # 2. Wear Score (Sw, weight 50%)
+        # r = 1 / km_per_mm_wear (mm/km)
+        # Commercial benchmark:
+        # r <= 0.00020 mm/km (>= 5,000 km/mm): optimal wear rate (100)
+        # 0.00020 < r <= 0.00045 (2,222 to 5,000 km/mm): acceptable normal wear (scales 100 -> 70)
+        # r > 0.00045 (< 2,222 km/mm): accelerated wear (scales below 70)
+        if km_per_mm_wear is not None and km_per_mm_wear > 0:
+            r = 1.0 / km_per_mm_wear
+            if r <= 0.00020:
+                s_w = 100.0
+            elif r <= cls.WEAR_RATE_LIMIT: # 0.00045
+                s_w = float(100.0 - 30.0 * ((r - 0.00020) / (cls.WEAR_RATE_LIMIT - 0.00020)))
+                if s_w < 80.0:
+                    explanations.append(f"Moderate tread wear rate ({km_per_mm_wear:.0f} km/mm).")
+            else:
+                s_w = float(np.clip(70.0 - 70.0 * ((r - cls.WEAR_RATE_LIMIT) / 0.00030), 0.0, 70.0))
+                explanations.append(f"Accelerated tread wear rate ({km_per_mm_wear:.0f} km/mm).")
+        else:
+            # When wear rate history is not yet established (fresh or single-cycle tyre),
+            # wear score reflects current physical tread health
+            s_w = s_n
+
         # 3. Pressure Score (Sp, weight 8.333%)
         # Sp = 100 * clip(1 - |P_act - P_rec| / 20.0, 0, 1)
+        is_severe_underinflation = False
+        is_moderate_underinflation = False
         if pressure_psi is not None and pressure_psi > 0:
             p_act = float(pressure_psi)
             dev = abs(p_act - p_rec)
             s_p = float(np.clip(100.0 * (1.0 - dev / cls.PRESSURE_TOLERANCE_PSI), 0.0, 100.0))
-            if p_act < (p_rec - 15.0):
+            if p_act < (p_rec - 20.0) or (p_act / p_rec) <= 0.78:
+                is_severe_underinflation = True
                 explanations.append(f"Severe under-inflation ({p_act:.1f} PSI vs {p_rec:.0f} target). Risk of tyre shoulder blowout.")
+            elif p_act < (p_rec - 10.0) or (p_act / p_rec) <= 0.88:
+                is_moderate_underinflation = True
+                explanations.append(f"Moderate under-inflation ({p_act:.1f} PSI vs {p_rec:.0f} target).")
             elif p_act > (p_rec + 15.0):
                 explanations.append(f"Severe over-inflation ({p_act:.1f} PSI vs {p_rec:.0f} target). Centre tread wear risk.")
         else:
@@ -188,17 +224,21 @@ class THIEngine:
             explanations.append("Tyre pressure reading missing.")
 
         # 4. Temperature Score (St, weight 8.333%)
-        # St = 100 * clip((65 - T_act) / (65 - 35), 0, 1)
+        is_severe_overheating = False
         if temperature_c is not None:
             t_act = float(temperature_c)
-            if t_act <= cls.TEMP_NORMAL_C:
+            if t_act <= 50.0:
                 s_t = 100.0
-            else:
-                s_t = float(np.clip(100.0 * (cls.TEMP_CRITICAL_C - t_act) / (cls.TEMP_CRITICAL_C - cls.TEMP_NORMAL_C), 0.0, 100.0))
-            if t_act >= 55.0:
-                explanations.append(f"Dangerous high temperature ({t_act:.1f} °C). Immediate cooling required.")
-            elif t_act >= 45.0:
+            elif t_act <= cls.TEMP_CRITICAL_C: # 65 C
+                s_t = float(np.clip(100.0 - 30.0 * ((t_act - 50.0) / (cls.TEMP_CRITICAL_C - 50.0)), 70.0, 100.0))
                 explanations.append(f"Elevated operating temperature ({t_act:.1f} °C).")
+            else:
+                s_t = float(np.clip(70.0 - 70.0 * ((t_act - cls.TEMP_CRITICAL_C) / (85.0 - cls.TEMP_CRITICAL_C)), 0.0, 70.0))
+                if t_act >= 80.0:
+                    is_severe_overheating = True
+                    explanations.append(f"Dangerous overheating ({t_act:.1f} °C > 80 °C limit). Immediate cooling required.")
+                else:
+                    explanations.append(f"Dangerous high temperature ({t_act:.1f} °C). Immediate cooling required.")
         else:
             s_t = 50.0
 
@@ -211,16 +251,22 @@ class THIEngine:
         thi = 0.50 * s_w + 0.25 * s_n + (0.25 / 3.0) * (s_p + s_t + inv_os)
         thi = float(np.clip(thi, 0.0, 100.0))
 
-        # Status categorization
-        if thi >= 85.0:
+        # Status categorization with safety-critical capping
+        if is_severe_underinflation or is_severe_overheating or is_critical_nsd:
+            status = "CRITICAL"
+            thi = min(thi, 48.0)
+        elif is_moderate_underinflation:
+            status = "WARNING"
+            thi = min(max(thi, 60.0), 78.0)
+        elif thi >= 80.0:
             status = "HEALTHY"
-        elif thi >= 70.0:
+        elif thi >= 60.0:
             status = "WARNING"
         else:
             status = "CRITICAL"
 
         if not explanations:
-            explanations.append("Tyre parameters nominal. Pressure, temperature, and wear index optimal.")
+            explanations.append("All tyre operating parameters (pressure, temperature, tread depth) are optimal.")
 
         return {
             "score": round(thi, 1),
