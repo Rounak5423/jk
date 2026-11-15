@@ -528,48 +528,61 @@ export const VehiclesPage: React.FC = () => {
                         {v.make} {v.model} ({v.year})
                       </td>
 
-                      {/* ── Vehicle THI (Priority Weighted) ── */}
+                      {/* ── Vehicle THI ── */}
                       <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-sm text-slate-900">
-                            {v.thi.toFixed(1)}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                              v.thi_status === 'HEALTHY'
-                                ? 'bg-emerald-500 text-white'
-                                : v.thi_status === 'WARNING'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-red-500 text-white'
-                            }`}
-                          >
-                            {v.thi_status}
-                          </span>
-                        </div>
-                        <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              v.thi >= 85 ? 'bg-emerald-500' : v.thi >= 70 ? 'bg-[#E8770E]' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${Math.min(100, Math.max(0, v.thi))}%` }}
-                          />
-                        </div>
-                        {v.critical_tyres_count > 0 ? (
-                          <span
-                            className="text-[10px] text-red-600 font-semibold block mt-1"
-                          >
-                            ⚠️ {v.critical_tyres_count} critical tyre{v.critical_tyres_count > 1 ? 's' : ''}
-                          </span>
-                        ) : v.warning_tyres_count > 0 ? (
-                          <span
-                            className="text-[10px] text-[#E8770E] font-semibold block mt-1"
-                          >
-                            ⚡ {v.warning_tyres_count} warning tyre{v.warning_tyres_count > 1 ? 's' : ''}
-                          </span>
+                        {v.fitted_tyre_count === 0 ? (
+                          <div className="space-y-1">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                              NO TYRES FITTED
+                            </span>
+                            <span className="text-[10px] text-amber-700 block">
+                              Pending wheel fitment
+                            </span>
+                          </div>
                         ) : (
-                          <span className="text-[10px] text-[#5B6068] block mt-1">
-                            All tyres optimal
-                          </span>
+                          <>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-sm text-slate-900">
+                                {v.thi?.toFixed(1) ?? '--'}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  v.thi_status === 'HEALTHY'
+                                    ? 'bg-emerald-500 text-white'
+                                    : v.thi_status === 'WARNING'
+                                    ? 'bg-amber-500 text-white'
+                                    : 'bg-red-500 text-white'
+                                }`}
+                              >
+                                {v.thi_status}
+                              </span>
+                            </div>
+                            <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  v.thi >= 85 ? 'bg-emerald-500' : v.thi >= 70 ? 'bg-[#E8770E]' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(0, v.thi || 0))}%` }}
+                              />
+                            </div>
+                            {v.critical_tyres_count > 0 ? (
+                              <span
+                                className="text-[10px] text-red-600 font-semibold block mt-1"
+                              >
+                                ⚠️ {v.critical_tyres_count} critical tyre{v.critical_tyres_count > 1 ? 's' : ''}
+                              </span>
+                            ) : v.warning_tyres_count > 0 ? (
+                              <span
+                                className="text-[10px] text-[#E8770E] font-semibold block mt-1"
+                              >
+                                ⚡ {v.warning_tyres_count} warning tyre{v.warning_tyres_count > 1 ? 's' : ''}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-[#5B6068] block mt-1">
+                                All tyres optimal
+                              </span>
+                            )}
+                          </>
                         )}
                       </td>
 
