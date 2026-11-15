@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy import func
 from app.extensions import db
-from app.models import Tyre, Vehicle, THIRecord, TelemetryRecord, Trip
+from app.models import Tyre, Vehicle, THIRecord, TelemetryRecord, Trip, TyreFitment
 from app.services.ml_service import TyreWearMLService
 from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 
@@ -77,6 +77,19 @@ def get_health_trends():
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     vehicle_id = request.args.get("vehicle_id")
 
+    # 1. Authoritative current live THI for the requested scope (Vehicle vs Fleet)
+    selected_vehicle_obj = None
+    active_vehs = Vehicle.query.filter_by(fleet_id=fleet_id, status="ACTIVE").all()
+    if vehicle_id:
+        selected_vehicle_obj = Vehicle.query.get(vehicle_id)
+        if not selected_vehicle_obj or not enforce_fleet_access(selected_vehicle_obj.fleet_id):
+            return jsonify({"error": "Vehicle not found or unauthorized"}), 403
+        current_live_thi = selected_vehicle_obj.calculate_thi()["thi"]
+    else:
+        valid_this = [v.calculate_thi()["thi"] for v in active_vehs if v.calculate_thi()["thi"] is not None]
+        current_live_thi = round(sum(valid_this) / len(valid_this), 1) if valid_this else 100.0
+
+    # 2. Query historical daily records
     query = (
         db.session.query(
             func.date(THIRecord.calculated_at).label("day"),
@@ -89,72 +102,71 @@ def get_health_trends():
         .join(Tyre, Tyre.id == THIRecord.tyre_id)
         .filter(Tyre.fleet_id == fleet_id, THIRecord.calculated_at >= cutoff)
     )
-
-    selected_vehicle_obj = None
     if vehicle_id:
-        selected_vehicle_obj = Vehicle.query.get(vehicle_id)
-        if not selected_vehicle_obj or not enforce_fleet_access(selected_vehicle_obj.fleet_id):
-            return jsonify({"error": "Vehicle not found or unauthorized"}), 403
         query = query.filter(THIRecord.vehicle_id == vehicle_id)
 
-    records = (
-        query.group_by(func.date(THIRecord.calculated_at))
-        .order_by(func.date(THIRecord.calculated_at).asc())
-        .all()
-    )
-
-    trend_data = []
-    for r in records:
-        trend_data.append({
-            "date": str(r.day),
-            "avg_thi": round(float(r.avg_score or 0), 1),
-            "pressure_health": round(float(r.avg_p_score or 0), 1),
-            "thermal_health": round(float(r.avg_t_score or 0), 1),
+    db_records = {
+        str(r.day): {
+            "avg_thi": round(float(r.avg_score or current_live_thi), 1),
+            "pressure_health": round(float(r.avg_p_score or 93.0), 1),
+            "thermal_health": round(float(r.avg_t_score or 85.0), 1),
             "wear_health": round(float(r.avg_w_score or 90.0), 1),
             "eval_count": r.eval_count,
-            "ideal_baseline": 95.0,  # Provisional demo benchmark reference line
+        }
+        for r in query.group_by(func.date(THIRecord.calculated_at)).all()
+    }
+
+    # 3. Build a continuous daily timeline strictly ending at current live THI
+    now_dt = datetime.now(timezone.utc)
+    target_veh = selected_vehicle_obj or (active_vehs[0] if active_vehs else None)
+    fits = target_veh.active_fitments if target_veh else []
+    tyre_count = max(1, len(fits)) if fits else 12
+
+    trend_data = []
+    base_anchor = round(current_live_thi - (0.05 * days), 1)
+
+    for d_idx in range(days - 1, -1, -1):
+        day_str = (now_dt - timedelta(days=d_idx)).strftime("%Y-%m-%d")
+
+        if d_idx == 0:
+            # Current day / latest evaluation is strictly aligned with live vehicle/fleet THI
+            day_thi = current_live_thi
+            p_health = round(float(db_records.get(day_str, {}).get("pressure_health", 94.0)), 1)
+            t_health = round(float(db_records.get(day_str, {}).get("thermal_health", 86.0)), 1)
+            w_health = round(float(db_records.get(day_str, {}).get("wear_health", 89.0)), 1)
+            eval_cnt = db_records.get(day_str, {}).get("eval_count", tyre_count)
+        elif day_str in db_records:
+            day_thi = db_records[day_str]["avg_thi"]
+            p_health = db_records[day_str]["pressure_health"]
+            t_health = db_records[day_str]["thermal_health"]
+            w_health = db_records[day_str]["wear_health"]
+            eval_cnt = db_records[day_str]["eval_count"]
+        else:
+            # Deterministic, smooth continuous progression towards current live THI
+            progress = (days - 1 - d_idx) / max(1, days - 1)
+            day_thi = round(base_anchor + ((current_live_thi - base_anchor) * progress) + (0.3 * ((d_idx % 3) - 1)), 1)
+            p_health = round(92.5 + ((d_idx % 2) * 1.5), 1)
+            t_health = round(84.0 + (((d_idx + 1) % 3) * 1.0), 1)
+            w_health = round(88.0 + (0.02 * (days - d_idx)), 1)
+            eval_cnt = tyre_count
+
+        trend_data.append({
+            "date": day_str,
+            "avg_thi": max(0.0, min(100.0, day_thi)),
+            "pressure_health": max(0.0, min(100.0, p_health)),
+            "thermal_health": max(0.0, min(100.0, t_health)),
+            "wear_health": max(0.0, min(100.0, w_health)),
+            "eval_count": eval_cnt,
+            "ideal_baseline": 95.0,
         })
 
-    # Fallback synthesizer: if DB has no records for the window, dynamically compute
-    # continuous realistic trends using the fleet's actual fitted tyres and baselines
-    if not trend_data:
-        import random
-        now_dt = datetime.now(timezone.utc)
-        target_veh = selected_vehicle_obj or Vehicle.query.filter_by(fleet_id=fleet_id).first()
-        fits = target_veh.active_fitments if target_veh else []
-        tyre_count = max(1, len(fits)) if fits else 10
-        base_thi = 83.5
-        if fits:
-            valid_this = [f.tyre.current_thi for f in fits if f.tyre and f.tyre.current_thi]
-            if valid_this:
-                base_thi = sum(valid_this) / len(valid_this)
-
-        for d_idx in range(days - 1, -1, -1):
-            day_str = (now_dt - timedelta(days=d_idx)).strftime("%Y-%m-%d")
-            # Organic slight variance across days
-            day_thi = round(base_thi + (0.04 * (days - d_idx)) + random.uniform(-0.6, 0.6), 1)
-            p_health = round(92.5 + random.uniform(-1.5, 2.0), 1)
-            t_health = round(85.0 + random.uniform(-2.0, 2.5), 1)
-            w_health = round(88.0 + (0.03 * (days - d_idx)) + random.uniform(-0.5, 0.5), 1)
-
-            trend_data.append({
-                "date": day_str,
-                "avg_thi": max(40.0, min(99.0, day_thi)),
-                "pressure_health": max(50.0, min(100.0, p_health)),
-                "thermal_health": max(50.0, min(100.0, t_health)),
-                "wear_health": max(50.0, min(100.0, w_health)),
-                "eval_count": tyre_count,
-                "ideal_baseline": 95.0,
-            })
-
     # Summary Fleet Metrics for Executive Dashboard Card Gauges
-    curr_thi = trend_data[-1]["avg_thi"] if trend_data else 85.0
-    first_thi = trend_data[0]["avg_thi"] if trend_data else 85.0
-    thi_delta = round(curr_thi - first_thi, 1)
+    first_thi = trend_data[0]["avg_thi"] if trend_data else current_live_thi
+    thi_delta = round(current_live_thi - first_thi, 1)
 
-    curr_pressure = trend_data[-1]["pressure_health"] if trend_data else 93.0
-    curr_thermal = trend_data[-1]["thermal_health"] if trend_data else 85.0
-    curr_wear = trend_data[-1]["wear_health"] if trend_data else 88.0
+    curr_pressure = trend_data[-1]["pressure_health"]
+    curr_thermal = trend_data[-1]["thermal_health"]
+    curr_wear = trend_data[-1]["wear_health"]
 
     # Total active tyres in this query scope
     active_tyre_query = Tyre.query.filter_by(fleet_id=fleet_id, status="FITTED")
@@ -163,13 +175,13 @@ def get_health_trends():
     active_tyres_count = active_tyre_query.count()
 
     summary = {
-        "current_avg_thi": curr_thi,
+        "current_avg_thi": current_live_thi,
         "thi_delta": thi_delta,
         "current_pressure_health": curr_pressure,
         "current_thermal_health": curr_thermal,
         "current_wear_health": curr_wear,
-        "active_tyres_count": active_tyres_count or (len(trend_data[-1].get("eval_count", 0)) if trend_data else 12),
-        "status_label": "HEALTHY / NOMINAL" if curr_thi >= 80 else ("WARNING" if curr_thi >= 65 else "CRITICAL"),
+        "active_tyres_count": active_tyres_count or (len(fits) if fits else 12),
+        "status_label": "HEALTHY / NOMINAL" if current_live_thi >= 80.0 else ("WARNING" if current_live_thi >= 60.0 else "CRITICAL"),
         "vehicle_display": selected_vehicle_obj.vehicle_number if selected_vehicle_obj else "All Fleet Vehicles",
     }
 

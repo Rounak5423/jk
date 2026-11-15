@@ -168,9 +168,9 @@ class Vehicle(db.Model):
             total_sum += score
             valid_tyres_count += 1
 
-            if score < 70.0 or status == "CRITICAL":
+            if score < 60.0 or status == "CRITICAL":
                 crit_count += 1
-            elif score < 85.0 or status == "WARNING":
+            elif score < 80.0 or status == "WARNING":
                 warn_count += 1
             else:
                 healthy_count += 1
@@ -188,9 +188,9 @@ class Vehicle(db.Model):
 
         veh_thi = round(total_sum / valid_tyres_count, 1)
 
-        if veh_thi < 70.0 or crit_count > 0:
+        if veh_thi < 60.0 or crit_count > 0:
             overall_status = "CRITICAL"
-        elif veh_thi < 85.0 or warn_count > 0:
+        elif veh_thi < 80.0 or warn_count > 0:
             overall_status = "WARNING"
         else:
             overall_status = "HEALTHY"

@@ -20,7 +20,7 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
     return {
       thi: vehicle.thi,
       unweighted_thi: vehicle.unweighted_thi ?? vehicle.thi,
-      thi_status: (vehicle.thi_status as any) || (vehicle.thi < 70 ? 'CRITICAL' : vehicle.thi < 85 ? 'WARNING' : 'HEALTHY'),
+      thi_status: (vehicle.thi_status as any) || (vehicle.thi < 60 ? 'CRITICAL' : vehicle.thi < 80 ? 'WARNING' : 'HEALTHY'),
       critical_tyres_count: vehicle.critical_tyres_count ?? 0,
       warning_tyres_count: vehicle.warning_tyres_count ?? 0,
       healthy_tyres_count: vehicle.healthy_tyres_count ?? 0,
@@ -49,14 +49,14 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
 
   for (const f of fitments) {
     const score = f.tyre?.current_thi ?? 100.0;
-    const status = (f.tyre?.thi_status || (score < 70 ? 'CRITICAL' : score < 85 ? 'WARNING' : 'HEALTHY')).toUpperCase();
+    const status = (f.tyre?.thi_status || (score < 60 ? 'CRITICAL' : score < 80 ? 'WARNING' : 'HEALTHY')).toUpperCase();
 
     lowestThi = Math.min(lowestThi, score);
     totalSum += score;
 
-    if (score < 70 || status === 'CRITICAL') {
+    if (score < 60 || status === 'CRITICAL') {
       critCount++;
-    } else if (score < 85 || status === 'WARNING') {
+    } else if (score < 80 || status === 'WARNING') {
       warnCount++;
     } else {
       healthyCount++;
@@ -66,8 +66,8 @@ export function computeVehicleTHI(vehicle: Vehicle): VehicleTHIResult {
   const vehThi = Number((totalSum / fitments.length).toFixed(1));
 
   let overallStatus: 'HEALTHY' | 'WARNING' | 'CRITICAL' = 'HEALTHY';
-  if (vehThi < 70 || critCount > 0) overallStatus = 'CRITICAL';
-  else if (vehThi < 85 || warnCount > 0) overallStatus = 'WARNING';
+  if (vehThi < 60 || critCount > 0) overallStatus = 'CRITICAL';
+  else if (vehThi < 80 || warnCount > 0) overallStatus = 'WARNING';
 
   return {
     thi: vehThi,

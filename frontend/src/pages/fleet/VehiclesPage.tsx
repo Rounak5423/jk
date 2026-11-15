@@ -387,7 +387,7 @@ export const VehiclesPage: React.FC = () => {
                 </span>
                 <span className="text-xs text-slate-300 font-medium">vehicles</span>
                 <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">
-                  THI ≥ 85
+                  THI ≥ 80
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 block mt-3">
@@ -416,7 +416,7 @@ export const VehiclesPage: React.FC = () => {
                 </span>
                 <span className="text-xs text-slate-300 font-medium">vehicles</span>
                 <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white">
-                  70 ≤ THI &lt; 85
+                  60 ≤ THI &lt; 80
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 block mt-3">
@@ -445,7 +445,7 @@ export const VehiclesPage: React.FC = () => {
                 </span>
                 <span className="text-xs text-slate-300 font-medium">vehicles</span>
                 <span className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">
-                  THI &lt; 70
+                  THI &lt; 60
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 block mt-3">
@@ -560,7 +560,7 @@ export const VehiclesPage: React.FC = () => {
                             <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
                               <div
                                 className={`h-full rounded-full transition-all ${
-                                  v.thi >= 85 ? 'bg-emerald-500' : v.thi >= 70 ? 'bg-[#E8770E]' : 'bg-red-500'
+                                  v.thi >= 80 ? 'bg-emerald-500' : v.thi >= 60 ? 'bg-[#E8770E]' : 'bg-red-500'
                                 }`}
                                 style={{ width: `${Math.min(100, Math.max(0, v.thi || 0))}%` }}
                               />
