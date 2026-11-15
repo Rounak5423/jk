@@ -312,13 +312,13 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
     }
   }, [is12Wheeler, is14Wheeler, is16Wheeler]);
 
-  // Map database wheel position to diagram slot (handles '1R', 'A1-R', '3RO', 'A3-LO', 'R1_LO', etc.)
+  // Map database wheel position to diagram slot (handles '1R', 'A1-R', '3RO', 'A3-LO', 'R1_LO', 'R1_RI', 'R1_RO', etc.)
   const findPositionData = (defaultCode: string, axleNum: number, side: string): PositionData | null => {
     // 1. Direct exact match
     let match = positions.find((p) => p.wheel_position.toUpperCase() === defaultCode.toUpperCase());
     if (match) return match;
 
-    const clean = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const clean = (s: string) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     const defNorm = clean(defaultCode); // e.g. "A3RO", "A1R"
     const defNoA = defNorm.startsWith('A') ? defNorm.slice(1) : defNorm; // e.g. "3RO", "1R"
 
@@ -335,77 +335,95 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
     });
     if (match) return match;
 
-    // 3. Axle number + side / dual / inner match (if DB has axle_number)
+    // Helper: determine the exact target wheel position tag for this slot side
+    const getTargetTag = (s: string) => {
+      switch (s) {
+        case 'TOP_OUTER': return 'LO';
+        case 'TOP_INNER': return 'LI';
+        case 'BOTTOM_INNER': return 'RI';
+        case 'BOTTOM_OUTER': return 'RO';
+        case 'TOP_SINGLE': return 'L';
+        case 'BOTTOM_SINGLE': return 'R';
+        default: return '';
+      }
+    };
+
+    // Helper: extract the position tag from a database wheel position code
+    const extractTag = (raw: string) => {
+      const c = clean(raw);
+      if (c.endsWith('LO')) return 'LO';
+      if (c.endsWith('LI')) return 'LI';
+      if (c.endsWith('RI')) return 'RI';
+      if (c.endsWith('RO')) return 'RO';
+      if (c.endsWith('L') || c.startsWith('FL') || (raw || '').toUpperCase().includes('_L')) return 'L';
+      if (c.endsWith('R') || c.startsWith('FR') || (raw || '').toUpperCase().includes('_R')) return 'R';
+      return c;
+    };
+
+    const targetTag = getTargetTag(side);
+
+    // 3. Match by explicit axle_number and wheel position tag (LO, LI, RI, RO, L, R)
     match = positions.find((p) => {
       if (p.axle_number && p.axle_number === axleNum) {
-        const pNorm = clean(p.wheel_position);
-        if (side === 'TOP_SINGLE' && !p.is_dual && (pNorm.includes('L') && !pNorm.includes('R'))) return true;
-        if (side === 'BOTTOM_SINGLE' && !p.is_dual && (pNorm.includes('R') && !pNorm.includes('L'))) return true;
-        if (side === 'TOP_OUTER' && p.is_dual && !p.is_inner && (pNorm.includes('LO') || pNorm.includes('L'))) return true;
-        if (side === 'TOP_INNER' && p.is_dual && p.is_inner && (pNorm.includes('LI') || pNorm.includes('L'))) return true;
-        if (side === 'BOTTOM_INNER' && p.is_dual && p.is_inner && (pNorm.includes('RI') || pNorm.includes('R'))) return true;
-        if (side === 'BOTTOM_OUTER' && p.is_dual && !p.is_inner && (pNorm.includes('RO') || pNorm.includes('R'))) return true;
+        const pTag = extractTag(p.wheel_position);
+        if (pTag === targetTag) return true;
       }
       return false;
     });
     if (match) return match;
 
-    // 4. Legacy naming aliases (FL, FR, FL2, FR2, R1_LO, R2_LO, etc.)
+    // 4. Fallback matching with axle aliases (handles R1, R2, R3, FL, FR, etc. when axle_number is missing or mismatched)
     match = positions.find((p) => {
       const code = clean(p.wheel_position);
+      const pTag = extractTag(p.wheel_position);
+
       if (axleNum === 1) {
-        if (side === 'TOP_SINGLE' && (code === 'FL' || code === '1L' || code === 'A1L' || code === 'FL1')) return true;
-        if (side === 'BOTTOM_SINGLE' && (code === 'FR' || code === '1R' || code === 'A1R' || code === 'FR1')) return true;
+        if (targetTag === 'L' && (code === 'FL' || code === '1L' || code === 'A1L' || code === 'FL1')) return true;
+        if (targetTag === 'R' && (code === 'FR' || code === '1R' || code === 'A1R' || code === 'FR1')) return true;
       } else if (axleNum === 2) {
         if (is12Wheeler || is14Wheeler || is16Wheeler) {
-          if (side === 'TOP_SINGLE' && (code === 'FL2' || code === '2L' || code === 'A2L')) return true;
-          if (side === 'BOTTOM_SINGLE' && (code === 'FR2' || code === '2R' || code === 'A2R')) return true;
+          if (targetTag === 'L' && (code === 'FL2' || code === '2L' || code === 'A2L')) return true;
+          if (targetTag === 'R' && (code === 'FR2' || code === '2R' || code === 'A2R')) return true;
         } else {
           // 10-wheeler axle 2 is drive R1
-          if (side === 'TOP_OUTER' && (code === 'R1LO' || code === '2LO' || code === 'R1L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R1LI' || code === '2LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R1RI' || code === '2RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '2RO' || code === 'R1R')) return true;
+          if (code.startsWith('R1') || code.startsWith('2') || code.startsWith('A2')) {
+            return pTag === targetTag;
+          }
         }
       } else if (axleNum === 3) {
         if (is14Wheeler) {
-          if (side === 'TOP_SINGLE' && (code === 'FL3' || code === '3L' || code === 'A3L')) return true;
-          if (side === 'BOTTOM_SINGLE' && (code === 'FR3' || code === '3R' || code === 'A3R')) return true;
+          if (targetTag === 'L' && (code === 'FL3' || code === '3L' || code === 'A3L')) return true;
+          if (targetTag === 'R' && (code === 'FR3' || code === '3R' || code === 'A3R')) return true;
         } else if (is12Wheeler || is16Wheeler) {
-          if (side === 'TOP_OUTER' && (code === 'R1LO' || code === '3LO' || code === 'R1L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R1LI' || code === '3LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R1RI' || code === '3RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '3RO' || code === 'R1R')) return true;
+          // 12-wheeler / 16-wheeler axle 3 is drive R1
+          if (code.startsWith('R1') || code.startsWith('3') || code.startsWith('A3')) {
+            return pTag === targetTag;
+          }
         } else {
           // 10-wheeler axle 3 is drive R2
-          if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '3LO' || code === 'R2L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R2LI' || code === '3LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '3RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '3RO' || code === 'R2R')) return true;
+          if (code.startsWith('R2') || code.startsWith('3') || code.startsWith('A3')) {
+            return pTag === targetTag;
+          }
         }
       } else if (axleNum === 4) {
         if (is14Wheeler) {
-          if (side === 'TOP_OUTER' && (code === 'R1LO' || code === '4LO' || code === 'R1L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R1LI' || code === '4LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R1RI' || code === '4RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R1RO' || code === '4RO' || code === 'R1R')) return true;
+          if (code.startsWith('R1') || code.startsWith('4') || code.startsWith('A4')) {
+            return pTag === targetTag;
+          }
         } else if (is12Wheeler || is16Wheeler) {
-          if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '4LO' || code === 'R2L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R2LI' || code === '4LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '4RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '4RO' || code === 'R2R')) return true;
+          if (code.startsWith('R2') || code.startsWith('4') || code.startsWith('A4')) {
+            return pTag === targetTag;
+          }
         }
       } else if (axleNum === 5) {
         if (is14Wheeler) {
-          if (side === 'TOP_OUTER' && (code === 'R2LO' || code === '5LO' || code === 'R2L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R2LI' || code === '5LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R2RI' || code === '5RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R2RO' || code === '5RO' || code === 'R2R')) return true;
+          if (code.startsWith('R2') || code.startsWith('5') || code.startsWith('A5')) {
+            return pTag === targetTag;
+          }
         } else if (is16Wheeler) {
-          if (side === 'TOP_OUTER' && (code === 'R3LO' || code === '5LO' || code === 'R3L')) return true;
-          if (side === 'TOP_INNER' && (code === 'R3LI' || code === '5LI')) return true;
-          if (side === 'BOTTOM_INNER' && (code === 'R3RI' || code === '5RI')) return true;
-          if (side === 'BOTTOM_OUTER' && (code === 'R3RO' || code === '5RO' || code === 'R3R')) return true;
+          if (code.startsWith('R3') || code.startsWith('5') || code.startsWith('A5')) {
+            return pTag === targetTag;
+          }
         }
       }
       return false;
@@ -801,12 +819,32 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
           <line x1="20" y1="348" x2="1000" y2="348" stroke="#334155" strokeWidth="1" strokeDasharray="6 6" />
           <line x1="20" y1="178" x2="1000" y2="178" stroke="#334155" strokeWidth="1.2" strokeDasharray="8 8" opacity="0.5" />
 
+          {/* Side Indicator Guidelines: LEFT (LO / LI) vs RIGHT (RI / RO) */}
+          <g opacity="0.65">
+            <text x="36" y="20" fill="#94A3B8" fontSize="9" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+              ▲ LEFT SIDE (LO / LI)
+            </text>
+            <text x="36" y="356" fill="#94A3B8" fontSize="9" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+              ▼ RIGHT SIDE (RI / RO)
+            </text>
+          </g>
+
           {/* ============================================================== */}
           {/* LAYER 2: FRESHLY PAVED HIGHWAY (Clipped to pavedFrontierX)     */}
           {/* ============================================================== */}
           <g clipPath="url(#paved-road-clip)">
             {/* Jet black highway asphalt surface */}
             <rect x="20" y="12" width="980" height="344" fill="url(#asphalt-grad)" />
+
+            {/* Paved side indicator text */}
+            <g opacity="0.8">
+              <text x="36" y="20" fill="#CBD5E1" fontSize="9" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+                ▲ LEFT SIDE (LO / LI)
+              </text>
+              <text x="36" y="356" fill="#CBD5E1" fontSize="9" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+                ▼ RIGHT SIDE (RI / RO)
+              </text>
+            </g>
 
             {/* Top & Bottom Rumble Strip Curbs */}
             <rect x="20" y="12" width="980" height="7" fill="url(#curb-stripes)" />
@@ -1241,6 +1279,20 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                 }
 
                 const displayPosCode = posData?.wheel_position || slot.defaultCode;
+                const cleanCode = (displayPosCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const displayPosTag = cleanCode.endsWith('LO')
+                  ? 'LO'
+                  : cleanCode.endsWith('LI')
+                  ? 'LI'
+                  : cleanCode.endsWith('RI')
+                  ? 'RI'
+                  : cleanCode.endsWith('RO')
+                  ? 'RO'
+                  : cleanCode.endsWith('L')
+                  ? 'L'
+                  : cleanCode.endsWith('R')
+                  ? 'R'
+                  : displayPosCode;
 
                 return (
                   <g
@@ -1360,13 +1412,14 @@ export const Vehicle2DExplodedViewer: React.FC<Props> = ({
                         {isInspected ? (
                           <text
                             x={slot.x + slot.width / 2}
-                            y={slot.y + slot.height / 2 + 3.5}
+                            y={slot.y + slot.height / 2 + 3.2}
                             textAnchor="middle"
                             fill="#FFFFFF"
-                            fontSize="11"
+                            fontSize="9"
                             fontWeight="bold"
+                            fontFamily="monospace"
                           >
-                            ✓
+                            ✓ {displayPosTag}
                           </text>
                         ) : (
                           <text
