@@ -343,6 +343,9 @@ def create_inspection():
         db.session.add(insp)
         db.session.flush()  # get insp.id before creating history
 
+        # Refresh cumulative distance run for tyre
+        tyre.total_km_run = tyre.calculate_total_km()
+
         # Handle lifecycle transitions
         if lifecycle_type_change and lifecycle_type_change != tyre.lifecycle_type:
             prev_lifecycle = tyre.lifecycle_type
@@ -449,6 +452,7 @@ def create_inspection():
                 "status": tyre.status,
                 "current_nsd": tyre.current_nsd,
                 "retread_count": tyre.retread_count,
+                "total_km_run": tyre.total_km_run,
             }
         }), 201
 
@@ -574,6 +578,11 @@ def close_vehicle_inspection(vehicle_id):
         details=details,
         completed_at=datetime.now(timezone.utc),
     )
+
+    # Refresh cumulative distance for all tyres on this vehicle
+    for fit in active_fitments:
+        if fit.tyre:
+            fit.tyre.total_km_run = fit.tyre.calculate_total_km()
 
     try:
         db.session.add(report)

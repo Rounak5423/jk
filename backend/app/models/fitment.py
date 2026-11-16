@@ -53,7 +53,7 @@ class TyreFitment(db.Model):
                 "current_nsd": self.tyre.current_nsd,
                 "current_thi": self.tyre.current_thi,
                 "thi_status": self.tyre.thi_status,
-                "total_km_run": self.tyre.total_km_run,
+                "total_km_run": self.tyre.calculate_total_km() if hasattr(self.tyre, "calculate_total_km") else self.tyre.total_km_run,
             }
         if include_vehicle and self.vehicle:
             res["vehicle"] = {

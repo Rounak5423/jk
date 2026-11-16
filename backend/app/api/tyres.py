@@ -264,6 +264,7 @@ def remove_tyre(tyre_id):
     active.removed_odometer = odometer
     active.removal_reason = removal_reason
     tyre.status = TyreStatus.IN_INVENTORY
+    tyre.total_km_run = tyre.calculate_total_km()
 
     db.session.commit()
     record_audit("TYRE_REMOVED", "TYRE", tyre.id, {"position": active.wheel_position, "reason": removal_reason}, tyre.fleet_id)
@@ -305,13 +306,15 @@ def get_tyre_detail(tyre_id):
     if not enforce_fleet_access(tyre.fleet_id):
         return jsonify({"error": "Forbidden: unauthorized tyre access"}), 403
 
+    total_km = tyre.calculate_total_km()
+    tyre.total_km_run = total_km
     data = tyre.to_dict(include_history=True)
 
     # Calculate remaining life estimate
     rul_estimate = WearEngine.estimate_remaining_life(
         blueprint_nsd=tyre.blueprint_nsd,
         current_nsd=tyre.current_nsd,
-        total_km_run=tyre.total_km_run,
+        total_km_run=total_km,
     )
     data["remaining_life_estimate"] = rul_estimate
 
@@ -365,6 +368,7 @@ def fit_tyre(tyre_id):
         prev.removed_at = datetime.now(timezone.utc)
         prev.removed_odometer = vehicle.current_odometer
         prev.removal_reason = "REMOUNTED"
+        prev.tyre.total_km_run = prev.tyre.calculate_total_km()
 
     # Check if target position is occupied on the new vehicle
     existing_fit = TyreFitment.query.filter_by(vehicle_id=vehicle.id, wheel_position=wheel_position, removed_at=None).first()
@@ -373,6 +377,7 @@ def fit_tyre(tyre_id):
         existing_fit.removed_odometer = vehicle.current_odometer
         existing_fit.removal_reason = "REPLACED_BY_ROTATION"
         existing_fit.tyre.status = TyreStatus.IN_INVENTORY
+        existing_fit.tyre.total_km_run = existing_fit.tyre.calculate_total_km()
 
     # Use provided odometer/nsd or fall back to vehicle current
     actual_odometer = float(fitted_odometer) if fitted_odometer is not None else vehicle.current_odometer
