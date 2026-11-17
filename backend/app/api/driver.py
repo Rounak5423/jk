@@ -145,10 +145,74 @@ def end_trip():
     trip.trip_score_status = score_res["status"]
     trip.score_breakdown = score_res
 
-    db.session.commit()
-    record_audit("TRIP_COMPLETED", "TRIP", trip.id, {"distance_km": distance, "trip_score": trip.trip_score}, user.fleet_id)
+    # Calculate and credit JK Tyre Driver Rewards based on Trip Score
+    from app.services.reward_service import RewardService
+    from app.models.reward import DriverReward
+    reward_calc = RewardService.calculate_trip_rewards(trip.trip_score, trip.distance_km)
+    if reward_calc.get("points", 0) > 0:
+        reward_entry = DriverReward(
+            fleet_id=user.fleet_id,
+            driver_id=user.id,
+            trip_id=trip.id,
+            reward_type="TRIP_SCORE_REWARD",
+            trip_score=trip.trip_score,
+            trip_distance_km=trip.distance_km,
+            points_earned=reward_calc["points"],
+            discount_value=reward_calc["discount_value"],
+            description=reward_calc["description"],
+        )
+        db.session.add(reward_entry)
 
-    return jsonify({"message": "Trip completed successfully", "trip": trip.to_dict()}), 200
+    db.session.commit()
+    record_audit(
+        "TRIP_COMPLETED",
+        "TRIP",
+        trip.id,
+        {
+            "distance_km": distance,
+            "trip_score": trip.trip_score,
+            "rewards_earned": reward_calc.get("points", 0),
+        },
+        user.fleet_id,
+    )
+
+    trip_data = trip.to_dict()
+    trip_data["rewards_earned"] = reward_calc
+    return jsonify({
+        "message": f"Trip completed successfully. Earned {reward_calc.get('points', 0):,.0f} JK Tyre reward points!",
+        "trip": trip_data,
+    }), 200
+
+
+@driver_bp.route("/rewards", methods=["GET"])
+@jwt_required
+def get_driver_rewards():
+    user = g.current_user
+    from app.services.reward_service import RewardService
+    summary = RewardService.get_driver_reward_summary(user.id, user.fleet_id)
+    return jsonify(summary), 200
+
+
+@driver_bp.route("/rewards/redeem", methods=["POST"])
+@jwt_required
+def redeem_driver_rewards():
+    user = g.current_user
+    data = request.get_json() or {}
+    points = data.get("points")
+    notes = data.get("notes")
+
+    from app.services.reward_service import RewardService
+    res = RewardService.redeem_driver_rewards(
+        driver_id=user.id,
+        fleet_id=user.fleet_id,
+        points_to_redeem=points,
+        redeemed_by="DRIVER",
+        notes=notes,
+    )
+    if not res.get("success"):
+        return jsonify({"error": res.get("error")}), 400
+
+    return jsonify(res), 200
 
 
 @driver_bp.route("/alerts", methods=["GET"])

@@ -11,6 +11,7 @@ from app.models.inspection import Inspection, InspectionCondition, InspectionRes
 from app.models.audit import AuditLog
 from app.models.lifecycle_history import TyreLifecycleHistory
 from app.models.oem_vault import OEMFleetVault
+from app.models.reward import DriverReward, DriverRedemption
 
 __all__ = [
     "Fleet",
@@ -40,4 +41,6 @@ __all__ = [
     "AuditLog",
     "TyreLifecycleHistory",
     "OEMFleetVault",
+    "DriverReward",
+    "DriverRedemption",
 ]

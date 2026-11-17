@@ -211,3 +211,48 @@ def create_fleet():
 
     return jsonify({"message": f"Fleet '{new_fleet.name}' registered successfully.", "fleet": new_fleet.to_dict()}), 201
 
+
+@fleet_bp.route("/driver-rewards", methods=["GET"])
+@jwt_required
+def get_fleet_driver_rewards():
+    """
+    Returns rewards leaderboard and balance status for all drivers in the active fleet.
+    Accessible to FLEET_MANAGER and SUPER_ADMIN.
+    """
+    user = g.current_user
+    fleet_id = request.headers.get("X-Fleet-Id") or user.fleet_id
+    if not fleet_id:
+        return jsonify({"error": "No active fleet specified"}), 400
+
+    from app.services.reward_service import RewardService
+    data = RewardService.get_fleet_drivers_rewards_summary(fleet_id)
+    return jsonify(data), 200
+
+
+@fleet_bp.route("/drivers/<driver_id>/redeem-reward", methods=["POST"])
+@jwt_required
+def fleet_redeem_driver_reward(driver_id):
+    """
+    Allows a fleet manager or depot manager to process/settle a driver's reward at the fleet counter,
+    issuing a discount voucher and resetting their available balance to zero.
+    """
+    user = g.current_user
+    fleet_id = request.headers.get("X-Fleet-Id") or user.fleet_id
+    data = request.get_json() or {}
+    points = data.get("points")
+    notes = data.get("notes") or f"Settled by Fleet Manager ({user.full_name})"
+
+    from app.services.reward_service import RewardService
+    res = RewardService.redeem_driver_rewards(
+        driver_id=driver_id,
+        fleet_id=fleet_id,
+        points_to_redeem=points,
+        redeemed_by="FLEET_MANAGER",
+        notes=notes,
+    )
+    if not res.get("success"):
+        return jsonify({"error": res.get("error")}), 400
+
+    return jsonify(res), 200
+
+

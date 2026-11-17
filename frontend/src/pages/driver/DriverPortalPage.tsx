@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { offlineQueue, QueuedItem } from '../../services/offlineQueue';
@@ -17,6 +18,10 @@ import {
   AlertCircle,
   Wifi,
   WifiOff,
+  Gift,
+  Tag,
+  Award,
+  ArrowRight,
 } from 'lucide-react';
 
 export const DriverPortalPage: React.FC = () => {
@@ -71,6 +76,20 @@ export const DriverPortalPage: React.FC = () => {
     queryKey: ['driver-alerts'],
     queryFn: async () => {
       const res = await api.get('/driver/alerts');
+      return res.data;
+    },
+  });
+
+  const { data: rewardsData } = useQuery<{
+    points_balance: number;
+    discount_value: number;
+    lifetime_earned: number;
+    tier_badge: string;
+    vouchers: any[];
+  }>({
+    queryKey: ['driver-rewards-data'],
+    queryFn: async () => {
+      const res = await api.get('/driver/rewards');
       return res.data;
     },
   });
@@ -215,6 +234,50 @@ export const DriverPortalPage: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Driver Rewards & Product Discounts Overview */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/40 border border-gold-border/60 rounded-3xl p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="p-1 rounded-lg bg-amber-500/20 text-brand-gold">
+                <Gift className="w-4 h-4" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-gold">
+                JK Tyre Driver Rewards
+              </span>
+              {rewardsData?.tier_badge && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                  {rewardsData.tier_badge}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="text-3xl font-black text-white font-mono">
+                ₹{(rewardsData?.points_balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">
+                ({(rewardsData?.points_balance ?? 0).toLocaleString()} reward pts available)
+              </span>
+            </div>
+            <p className="text-xs text-slate-300">
+              Redeemable as instant discounts on JK commercial tyres, retreads &amp; tubes.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Link
+              to="/driver/rewards"
+              className="px-4 py-2.5 bg-brand-gold hover:bg-brand-warm-gold text-black rounded-xl text-xs font-bold transition shadow-md inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <Tag className="w-3.5 h-3.5" />
+              {(rewardsData?.points_balance ?? 0) > 0 ? 'Redeem Discount' : 'View Rewards Wallet'}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Assigned Vehicle Card */}
       <div className="black-glow-card p-6">

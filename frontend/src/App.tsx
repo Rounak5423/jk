@@ -26,12 +26,14 @@ import { TrendsPage } from './pages/fleet/TrendsPage';
 import { ComparisonPage } from './pages/fleet/ComparisonPage';
 import { ReportsPage } from './pages/fleet/ReportsPage';
 import { FitmentPage } from './pages/fleet/FitmentPage';
+import { FleetDriverRewardsPage } from './pages/fleet/DriverRewardsPage';
 
 // Role-specific portals
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminMapPage } from './pages/admin/AdminMapPage';
 import { OEMFleetVaultPage } from './pages/admin/OEMFleetVaultPage';
 import { DriverPortalPage } from './pages/driver/DriverPortalPage';
+import { DriverRewardsPage } from './pages/driver/DriverRewardsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -66,6 +68,7 @@ export const App: React.FC = () => {
         <Route path="/tyres" element={<TyresPage />} />
         <Route path="/tyres/:id" element={<TyreDetailPage />} />
         <Route path="/trips" element={<TripsPage />} />
+        <Route path="/rewards" element={<FleetDriverRewardsPage />} />
         <Route path="/inspections" element={<InspectionsPage />} />
         <Route path="/fitment" element={<FitmentPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
@@ -79,6 +82,7 @@ export const App: React.FC = () => {
         <Route path="/admin/oem-vault" element={<OEMFleetVaultPage />} />
         <Route path="/admin/*" element={<AdminDashboardPage />} />
         <Route path="/driver" element={<DriverPortalPage />} />
+        <Route path="/driver/rewards" element={<DriverRewardsPage />} />
       </Route>
 
       {/* Catch-all redirect */}
