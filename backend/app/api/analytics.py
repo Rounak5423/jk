@@ -158,6 +158,9 @@ def get_health_trends():
             "wear_health": max(0.0, min(100.0, w_health)),
             "eval_count": eval_cnt,
             "ideal_baseline": 95.0,
+            "ideal_pressure_baseline": 95.0,
+            "ideal_thermal_baseline": 90.0,
+            "ideal_wear_baseline": 90.0,
         })
 
     # Summary Fleet Metrics for Executive Dashboard Card Gauges

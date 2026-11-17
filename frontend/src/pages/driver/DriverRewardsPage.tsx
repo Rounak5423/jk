@@ -517,3 +517,4 @@ export const DriverRewardsPage: React.FC = () => {
     </div>
   );
 };
+

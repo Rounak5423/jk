@@ -323,3 +323,4 @@ class RewardService:
             "drivers": driver_summaries,
             "eligible_products": cls.JK_ELIGIBLE_PRODUCTS,
         }
+

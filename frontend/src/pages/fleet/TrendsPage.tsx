@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
   Legend,
   Area,
+  ReferenceLine,
 } from 'recharts';
 import {
   TrendingUp,
@@ -127,7 +128,12 @@ export const TrendsPage: React.FC = () => {
     vehicle_display: 'All Fleet Vehicles',
   };
 
-  const trendPoints = trendsData?.trend || [];
+  const trendPoints = (trendsData?.trend || []).map((pt: any) => ({
+    ...pt,
+    ideal_pressure_baseline: pt.ideal_pressure_baseline ?? 95.0,
+    ideal_thermal_baseline: pt.ideal_thermal_baseline ?? 90.0,
+    ideal_wear_baseline: pt.ideal_wear_baseline ?? 90.0,
+  }));
   const selectedVehicleObj = vehicles?.find((v) => v.id === selectedVehicleId);
 
   return (
@@ -517,12 +523,12 @@ export const TrendsPage: React.FC = () => {
                   }}
                 />
                 <YAxis
-                  domain={[70, 100]}
+                  domain={[65, 100]}
                   stroke="#64748b"
                   tickLine={{ stroke: '#cbd5e1' }}
                   axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
                   tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
-                  tickCount={4}
+                  tickCount={5}
                   tickFormatter={(val) => `${val}%`}
                   width={48}
                   label={{
@@ -540,6 +546,14 @@ export const TrendsPage: React.FC = () => {
                   itemStyle={{ color: '#1e293b' }}
                   labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
+                <ReferenceLine
+                  y={95}
+                  stroke="#64748b"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                  label={{ value: 'Target 95%', position: 'top', fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                />
                 <Line
                   type="monotone"
                   dataKey="pressure_health"
@@ -547,6 +561,15 @@ export const TrendsPage: React.FC = () => {
                   stroke="#06b6d4"
                   strokeWidth={2.2}
                   dot={{ r: 2.5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="ideal_pressure_baseline"
+                  name="Target Baseline (95%)"
+                  stroke="#64748b"
+                  strokeWidth={1.8}
+                  strokeDasharray="5 3"
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -612,6 +635,14 @@ export const TrendsPage: React.FC = () => {
                   itemStyle={{ color: '#1e293b' }}
                   labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
+                <ReferenceLine
+                  y={90}
+                  stroke="#64748b"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                  label={{ value: 'Nominal 90%', position: 'top', fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                />
                 <Line
                   type="monotone"
                   dataKey="thermal_health"
@@ -619,6 +650,15 @@ export const TrendsPage: React.FC = () => {
                   stroke="#E8770E"
                   strokeWidth={2.2}
                   dot={{ r: 2.5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="ideal_thermal_baseline"
+                  name="Nominal Baseline (90%)"
+                  stroke="#64748b"
+                  strokeWidth={1.8}
+                  strokeDasharray="5 3"
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -661,12 +701,12 @@ export const TrendsPage: React.FC = () => {
                   }}
                 />
                 <YAxis
-                  domain={[70, 100]}
+                  domain={[65, 100]}
                   stroke="#64748b"
                   tickLine={{ stroke: '#cbd5e1' }}
                   axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
                   tick={{ fontSize: 10, fill: '#334155', fontWeight: 600 }}
-                  tickCount={4}
+                  tickCount={5}
                   tickFormatter={(val) => `${val}%`}
                   width={48}
                   label={{
@@ -684,6 +724,14 @@ export const TrendsPage: React.FC = () => {
                   itemStyle={{ color: '#1e293b' }}
                   labelFormatter={(label) => `Date: ${formatXAxisDate(String(label))}`}
                 />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
+                <ReferenceLine
+                  y={90}
+                  stroke="#64748b"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                  label={{ value: 'Expected 90%', position: 'top', fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                />
                 <Line
                   type="monotone"
                   dataKey="wear_health"
@@ -691,6 +739,15 @@ export const TrendsPage: React.FC = () => {
                   stroke="#10b981"
                   strokeWidth={2.2}
                   dot={{ r: 2.5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="ideal_wear_baseline"
+                  name="Expected Baseline (90%)"
+                  stroke="#64748b"
+                  strokeWidth={1.8}
+                  strokeDasharray="5 3"
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>

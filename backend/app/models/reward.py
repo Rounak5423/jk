@@ -76,3 +76,4 @@ class DriverRedemption(db.Model):
             "notes": self.notes,
             "redeemed_at": self.redeemed_at.isoformat() if self.redeemed_at else None,
         }
+

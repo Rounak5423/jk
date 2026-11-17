@@ -616,3 +616,4 @@ export const FleetDriverRewardsPage: React.FC = () => {
     </div>
   );
 };
+
