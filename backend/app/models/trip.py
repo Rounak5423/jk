@@ -48,6 +48,19 @@ class Trip(db.Model):
         self.score_breakdown_json = json.dumps(val) if val is not None else None
 
     def to_dict(self):
+        breakdown = self.score_breakdown
+        if (breakdown is None or "formula_breakdown" not in breakdown) and self.trip_score is not None:
+            try:
+                from app.services.trip_score_engine import TripScoreEngine
+                base_p = self.vehicle.baseline_pressure if self.vehicle and self.vehicle.baseline_pressure else 130.0
+                breakdown = TripScoreEngine.generate_breakdown_from_score(
+                    trip_score=self.trip_score,
+                    distance_km=self.distance_km or 200.0,
+                    baseline_pressure=base_p,
+                )
+            except Exception:
+                pass
+
         return {
             "id": self.id,
             "fleet_id": self.fleet_id,
@@ -65,7 +78,7 @@ class Trip(db.Model):
             "distance_km": round(self.distance_km, 1) if self.distance_km is not None else None,
             "trip_score": round(self.trip_score, 1) if self.trip_score is not None else None,
             "trip_score_status": self.trip_score_status,
-            "score_breakdown": self.score_breakdown,
+            "score_breakdown": breakdown,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

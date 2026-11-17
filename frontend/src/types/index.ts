@@ -233,6 +233,103 @@ export interface Trip {
       thermal_stability?: number;
       fuel_efficiency?: number;
     };
+    formula_breakdown?: {
+      composite_formula?: string;
+      composite_expanded?: string;
+      severity_blend_formula?: string;
+      relative_z_score_formula?: string;
+      risk_burden_formula?: string;
+      exponential_mapping_formula?: string;
+      weights?: Record<string, number>;
+      contributions?: {
+        speed_points?: number;
+        smoothness_points?: number;
+        tyre_safety_points?: number;
+        pressure_points?: number;
+        thermal_points?: number;
+        total_calculated?: number;
+      };
+      constants?: Record<string, number>;
+    };
+    telematics_parameters?: {
+      speed?: {
+        metric_name?: string;
+        weight_pct?: number;
+        score?: number;
+        points_contributed?: number;
+        risk_burden_R?: number;
+        decay_k?: number;
+        speed_limit_kmh?: number;
+        critical_speed_kmh?: number;
+        mean_speed_kmh?: number;
+        max_speed_kmh?: number;
+        overspeed_instances?: number;
+        overspeed_duration_sec?: number;
+        overspeed_pct?: number;
+        fleet_baseline_mean_kmh?: number;
+        fleet_baseline_std_kmh?: number;
+        status?: string;
+      };
+      smoothness?: {
+        metric_name?: string;
+        weight_pct?: number;
+        score?: number;
+        points_contributed?: number;
+        risk_burden_R?: number;
+        decay_k?: number;
+        warning_accel_ms2?: number;
+        critical_accel_ms2?: number;
+        mean_abs_accel_ms2?: number;
+        max_accel_ms2?: number;
+        harsh_braking_events?: number;
+        rapid_accel_events?: number;
+        fleet_baseline_mean_ms2?: number;
+        fleet_baseline_std_ms2?: number;
+        status?: string;
+      };
+      pressure?: {
+        metric_name?: string;
+        weight_pct?: number;
+        sub_weight_pct?: number;
+        score?: number;
+        points_contributed?: number;
+        risk_burden_R?: number;
+        decay_k?: number;
+        baseline_target_psi?: number;
+        critical_deviation_psi?: number;
+        mean_pressure_psi?: number;
+        max_deviation_psi?: number;
+        pressure_dev_events?: number;
+        fleet_baseline_mean_psi?: number;
+        fleet_baseline_std_psi?: number;
+        status?: string;
+      };
+      thermal?: {
+        metric_name?: string;
+        weight_pct?: number;
+        sub_weight_pct?: number;
+        score?: number;
+        points_contributed?: number;
+        risk_burden_R?: number;
+        decay_k?: number;
+        warning_temp_c?: number;
+        critical_temp_c?: number;
+        mean_temp_c?: number;
+        max_temp_c?: number;
+        high_temp_events?: number;
+        fleet_baseline_mean_c?: number;
+        fleet_baseline_std_c?: number;
+        status?: string;
+      };
+      tyre_composite?: {
+        metric_name?: string;
+        weight_pct?: number;
+        sub_formula?: string;
+        score?: number;
+        points_contributed?: number;
+        status?: string;
+      };
+    };
     risk_burdens?: {
       r_speed?: number;
       r_smoothness?: number;
@@ -247,7 +344,13 @@ export interface Trip {
       max_decel_ms2?: number;
       overspeed_ratio?: number;
     };
+    adaptive_learning?: {
+      learning_rate_eta?: number;
+      fleet_baselines_snapshot?: Record<string, number>;
+    };
     explanation: string;
+    sample_count?: number;
+    rule_version?: string;
   } | null;
   status: 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   created_at: string;
