@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jk-tyre-fleet-platform
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SECRET_KEY=jk-tyre-secure-production-secret-2026
+      - JWT_SECRET_KEY=jk-tyre-jwt-production-secret-2026
+      - DEMO_MODE=true
+    volumes:
+      - app-data:/app/backend/instance
+      - app-uploads:/app/backend/uploads
+
+volumes:
+  app-data:
+  app-uploads:

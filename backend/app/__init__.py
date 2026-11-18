@@ -61,6 +61,11 @@ def create_app(config_class=Config):
                 app.logger.info("Fresh database or empty fleet detected. Auto-seeding commercial multi-axle fleet...")
                 from synthetic.generator import generate_fleet_data
                 generate_fleet_data(num_vehicles=20, seed=42, weeks_history=3)
+                try:
+                    from scripts.setup_inspection_trips_and_drivers import run as setup_drivers_and_trips
+                    setup_drivers_and_trips()
+                except Exception as exc:
+                    app.logger.warning(f"Inspection setup notice on auto-seed: {exc}")
         except Exception as exc:
             app.logger.warning(f"Migration, OEM sync, or auto-seed notice: {exc}")
 
