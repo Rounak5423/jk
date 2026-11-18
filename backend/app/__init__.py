@@ -67,20 +67,13 @@ def create_app(config_class=Config):
                 shutil.copy2(seed_db, inst_db)
                 app.logger.info("Restored seed database with 2 vehicles.")
 
-            # 2. Prune any excess vehicles to guarantee exactly 2 vehicles (TN04 BF5918 and TN04 BF5974)
+            # 2. Prune any excess vehicles to guarantee strictly 2 vehicles (TN04 BF5918 and TN04 BF5974)
             excess_vehicles = Vehicle.query.filter(~Vehicle.vehicle_number.in_(["TN04 BF5918", "TN04 BF5974"])).all()
             if excess_vehicles:
                 app.logger.info(f"Pruning {len(excess_vehicles)} excess vehicles to enforce strictly 2 fleet vehicles...")
                 for ev in excess_vehicles:
                     db.session.delete(ev)
                 db.session.commit()
-
-            # 3. Ensure trips, rewards, and genuine drivers are in sync
-            try:
-                from scripts.setup_inspection_trips_and_drivers import run as setup_drivers_and_trips
-                setup_drivers_and_trips()
-            except Exception as exc:
-                app.logger.warning(f"Inspection setup notice on boot: {exc}")
         except Exception as exc:
             app.logger.warning(f"Migration, OEM sync, or auto-seed notice: {exc}")
 
