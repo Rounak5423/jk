@@ -27,6 +27,38 @@ def get_driver_vehicle():
     return jsonify({"vehicle": veh.to_dict(include_fitments=True)}), 200
 
 
+@driver_bp.route("/fleet-vehicles", methods=["GET"])
+@jwt_required
+def get_fleet_vehicles():
+    """
+    Returns all active vehicles in the driver's fleet so the driver can choose
+    which vehicle to inspect or operate on a given journey.
+    """
+    user = g.current_user
+    if not user.fleet_id:
+        return jsonify([]), 200
+
+    vehicles = Vehicle.query.filter_by(fleet_id=user.fleet_id, status="ACTIVE").order_by(Vehicle.vehicle_number.asc()).all()
+    res = []
+    for v in vehicles:
+        res.append({
+            "id": v.id,
+            "vehicle_number": v.vehicle_number,
+            "make": v.make,
+            "model": v.model,
+            "vehicle_type": v.vehicle_type,
+            "wheel_config": v.wheel_config,
+            "axle_count": v.axle_count,
+            "current_odometer": v.current_odometer,
+            "baseline_pressure": v.baseline_pressure,
+            "fitted_tyre_count": len([f for f in v.active_tyre_fitments if f.is_mounted]) if v.active_tyre_fitments else 0,
+            "expected_tyre_count": v.expected_tyre_count,
+            "status": v.status,
+            "is_assigned": (v.id == user.assigned_vehicle_id),
+        })
+    return jsonify(res), 200
+
+
 @driver_bp.route("/active-trip", methods=["GET"])
 @jwt_required
 def get_active_trip():
@@ -71,6 +103,7 @@ def start_trip():
 
     # Monotonic update
     vehicle.current_odometer = start_odo
+    user.assigned_vehicle_id = vehicle.id
 
     trip_code = f"TRP-{vehicle.vehicle_number[-4:]}-{uuid.uuid4().hex[:4].upper()}"
     new_trip = Trip(
