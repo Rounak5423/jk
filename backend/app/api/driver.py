@@ -230,3 +230,65 @@ def get_driver_alerts():
 
     alerts = query.order_by(Alert.created_at.desc()).limit(20).all()
     return jsonify([a.to_dict() for a in alerts]), 200
+
+
+@driver_bp.route("/activities", methods=["GET"])
+@jwt_required
+def get_driver_activities():
+    user = g.current_user
+    from app.services.reward_service import RewardService
+    from app.models.reward import DriverActivity
+
+    activities = (
+        DriverActivity.query.filter_by(driver_id=user.id)
+        .order_by(DriverActivity.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return jsonify({
+        "assigned_activities": RewardService.ASSIGNED_ACTIVITIES,
+        "activities": [a.to_dict() for a in activities],
+    }), 200
+
+
+@driver_bp.route("/activities", methods=["POST"])
+@jwt_required
+def log_driver_activity():
+    user = g.current_user
+    data = request.get_json() or {}
+
+    activity_type = data.get("activity_type")
+    if not activity_type:
+        return jsonify({"error": "activity_type is required (e.g. REFUELING, STOP_ODOMETER, TYRE_CHECK)"}), 400
+
+    odometer = data.get("odometer")
+    location = data.get("location")
+    notes = data.get("notes")
+    metadata = data.get("metadata") or {}
+    vehicle_id = data.get("vehicle_id") or user.assigned_vehicle_id
+    trip_id = data.get("trip_id")
+
+    from app.services.reward_service import RewardService
+    result = RewardService.log_driver_activity(
+        driver_id=user.id,
+        fleet_id=user.fleet_id,
+        activity_type=activity_type,
+        odometer=float(odometer) if odometer is not None and str(odometer).strip() != "" else None,
+        location=location,
+        notes=notes,
+        metadata=metadata,
+        vehicle_id=vehicle_id,
+        trip_id=trip_id,
+    )
+
+    if not result.get("success"):
+        return jsonify({"error": result.get("error", "Failed to log activity")}), 400
+
+    record_audit(
+        "DRIVER_ACTIVITY_LOGGED",
+        "DRIVER_ACTIVITY",
+        result["activity"]["id"],
+        {"activity_type": activity_type, "points_earned": result["points_earned"]},
+    )
+
+    return jsonify(result), 201

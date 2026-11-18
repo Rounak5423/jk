@@ -17,6 +17,8 @@ import {
   Sparkles,
   Clock,
   ExternalLink,
+  Fuel,
+  MapPin,
 } from 'lucide-react';
 
 interface EligibleProduct {
@@ -25,6 +27,28 @@ interface EligibleProduct {
   discount_rate: string;
   description: string;
   badge: string;
+}
+
+interface AssignedActivity {
+  activity_type: string;
+  title: string;
+  base_points: number;
+  discount_value: number;
+  description: string;
+  badge: string;
+}
+
+interface DriverActivityItem {
+  id: string;
+  activity_type: string;
+  title: string;
+  odometer: number | null;
+  location: string | null;
+  points_earned: number;
+  discount_value: number;
+  metadata: any;
+  notes: string | null;
+  created_at: string;
 }
 
 interface RewardRecord {
@@ -63,6 +87,8 @@ interface DriverRewardsData {
   total_redeemed: number;
   trips_completed_count: number;
   avg_trip_score: number | null;
+  assigned_activities?: AssignedActivity[];
+  recent_activities?: DriverActivityItem[];
   recent_rewards: RewardRecord[];
   vouchers: Voucher[];
   eligible_products: EligibleProduct[];
@@ -383,16 +409,91 @@ export const DriverRewardsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Trip Rewards History Table */}
+      {/* 5. Assigned Activities & Ways to Earn Points */}
+      <div className="bg-cream border border-gold-border rounded-3xl p-6 shadow-sm space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-brand-gold" />
+            Assigned Driver Activities &amp; Earning Rules
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Reward points are generated through assigned operational updates and high trip safety scores:
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="p-2 rounded-xl bg-amber-50 text-amber-700">
+                <Fuel className="w-4 h-4" />
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                +50 Pts
+              </span>
+            </div>
+            <h4 className="text-xs font-bold text-slate-900">Refueling Log</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Record litres, fuel invoice cost, pump location, and verified odometer reading.
+            </p>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="p-2 rounded-xl bg-blue-50 text-blue-700">
+                <MapPin className="w-4 h-4" />
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                +30 Pts
+              </span>
+            </div>
+            <h4 className="text-xs font-bold text-slate-900">Stop &amp; Odometer</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Log highway halts, rest intervals, toll booths, and update vehicle odometer.
+            </p>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="p-2 rounded-xl bg-purple-50 text-purple-700">
+                <Disc className="w-4 h-4" />
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                +40 Pts
+              </span>
+            </div>
+            <h4 className="text-xs font-bold text-slate-900">Tyre Walkaround</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Inspect fitted commercial radial tyres for cuts, uneven tread wear, and stones.
+            </p>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="p-2 rounded-xl bg-amber-50 text-brand-gold">
+                <Award className="w-4 h-4" />
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Up to +150+ Pts
+              </span>
+            </div>
+            <h4 className="text-xs font-bold text-slate-900">Trip Score Bonus</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Earned on completing journey with safe telemetry compliance (score ≥ 70/100).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Rewards & Activity Submissions History Table */}
       <div className="cream-glow-card p-6 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <Clock className="w-4 h-4 text-blue-600" />
-          Trip Rewards &amp; Scoring History ({rewards.length})
+          Rewards &amp; Activity Submissions History ({rewards.length})
         </h3>
 
         {rewards.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-400">
-            No completed trip scores recorded yet. Complete journeys with score ≥ 70 to accumulate reward points.
+            No rewards or activity logs recorded yet. Log duty activities or complete trips with score ≥ 70 to accumulate reward points.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -400,50 +501,75 @@ export const DriverRewardsPage: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-semibold">
                   <th className="pb-3 px-3">Date</th>
-                  <th className="pb-3 px-3">Trip Code</th>
-                  <th className="pb-3 px-3">Distance</th>
-                  <th className="pb-3 px-3">Trip Score</th>
-                  <th className="pb-3 px-3">Reward Details</th>
+                  <th className="pb-3 px-3">Type</th>
+                  <th className="pb-3 px-3">Reference / Trip</th>
+                  <th className="pb-3 px-3">Performance / Score</th>
+                  <th className="pb-3 px-3">Activity Description</th>
                   <th className="pb-3 px-3 text-right">Points Earned</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {rewards.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-3 text-slate-500 font-mono">
-                      {new Date(r.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-3 font-mono font-bold text-slate-900">
-                      {r.trip_code || '—'}
-                    </td>
-                    <td className="py-3 px-3 font-mono">
-                      {r.trip_distance_km ? `${r.trip_distance_km} km` : '—'}
-                    </td>
-                    <td className="py-3 px-3">
-                      {r.trip_score !== null && r.trip_score !== undefined ? (
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            r.trip_score >= 90
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : r.trip_score >= 80
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-orange-100 text-orange-800'
-                          }`}
-                        >
-                          {r.trip_score} / 100
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 max-w-xs truncate" title={r.description}>
-                      {r.description}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
-                      +{r.points_earned} pts (₹{r.discount_value})
-                    </td>
-                  </tr>
-                ))}
+                {rewards.map((r) => {
+                  const isRefuel = r.reward_type === 'REFUELING';
+                  const isStop = r.reward_type === 'STOP_ODOMETER';
+                  const isTyre = r.reward_type === 'TYRE_CHECK';
+                  const isTrip = !isRefuel && !isStop && !isTyre;
+
+                  return (
+                    <tr key={r.id} className="hover:bg-slate-50/80 transition">
+                      <td className="py-3 px-3 text-slate-500 font-mono">
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-3">
+                        {isRefuel ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <Fuel className="w-3 h-3 text-amber-600" /> Refuel
+                          </span>
+                        ) : isStop ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                            <MapPin className="w-3 h-3 text-blue-600" /> Stop Odo
+                          </span>
+                        ) : isTyre ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                            <Disc className="w-3 h-3 text-purple-600" /> Tyre Check
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <Award className="w-3 h-3 text-emerald-600" /> Trip Score
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 font-mono font-bold text-slate-900">
+                        {r.trip_code || (isRefuel ? 'REFUEL-LOG' : isStop ? 'STOP-ODO' : isTyre ? 'TYRE-INSP' : '—')}
+                      </td>
+                      <td className="py-3 px-3">
+                        {r.trip_score !== null && r.trip_score !== undefined ? (
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              r.trip_score >= 90
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : r.trip_score >= 80
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }`}
+                          >
+                            {r.trip_score} / 100
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-[11px]">
+                            {r.trip_distance_km ? `${r.trip_distance_km} km` : 'Duty Action'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 max-w-xs truncate" title={r.description}>
+                        {r.description}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
+                        +{r.points_earned} pts (₹{r.discount_value})
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

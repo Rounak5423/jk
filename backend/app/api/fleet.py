@@ -256,3 +256,31 @@ def fleet_redeem_driver_reward(driver_id):
     return jsonify(res), 200
 
 
+@fleet_bp.route("/driver-activities", methods=["GET"])
+@jwt_required
+def get_fleet_driver_activities():
+    """
+    Returns all driver activity submissions (refueling, stop & odometer updates,
+    tyre inspections, trip scores) for fleet manager monitoring and verification.
+    """
+    user = g.current_user
+    fleet_id = request.headers.get("X-Fleet-Id") or user.fleet_id
+    if not fleet_id:
+        return jsonify({"error": "No active fleet specified"}), 400
+
+    driver_id = request.args.get("driver_id")
+    vehicle_id = request.args.get("vehicle_id")
+    activity_type = request.args.get("activity_type")
+    limit = int(request.args.get("limit", 100))
+
+    from app.services.reward_service import RewardService
+    activities = RewardService.get_fleet_activities(
+        fleet_id=fleet_id,
+        driver_id=driver_id,
+        vehicle_id=vehicle_id,
+        activity_type=activity_type,
+        limit=limit,
+    )
+    return jsonify(activities), 200
+
+

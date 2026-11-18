@@ -22,6 +22,13 @@ import {
   Tag,
   Award,
   ArrowRight,
+  Fuel,
+  MapPin,
+  Disc,
+  X,
+  PlusCircle,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 
 export const DriverPortalPage: React.FC = () => {
@@ -36,6 +43,29 @@ export const DriverPortalPage: React.FC = () => {
 
   // Trip End form state
   const [endOdo, setEndOdo] = useState('');
+
+  // Assigned Activity Modal state
+  const [activeModal, setActiveModal] = useState<'REFUELING' | 'STOP_ODOMETER' | 'TYRE_CHECK' | null>(null);
+
+  // Refueling form state
+  const [fuelLitres, setFuelLitres] = useState('');
+  const [fuelCost, setFuelCost] = useState('');
+  const [fuelStation, setFuelStation] = useState('');
+  const [fuelOdo, setFuelOdo] = useState('');
+  const [fuelReceipt, setFuelReceipt] = useState('');
+  const [fuelNotes, setFuelNotes] = useState('');
+
+  // Stop & Odometer form state
+  const [stopReason, setStopReason] = useState('Driver Rest & Meal');
+  const [stopLocation, setStopLocation] = useState('');
+  const [stopOdo, setStopOdo] = useState('');
+  const [stopNotes, setStopNotes] = useState('');
+
+  // Tyre Walkaround form state
+  const [tyresChecked, setTyresChecked] = useState('10');
+  const [visualCondition, setVisualCondition] = useState('Normal - All tyres in good condition');
+  const [tyreOdo, setTyreOdo] = useState('');
+  const [tyreNotes, setTyreNotes] = useState('');
 
   // Error/Success messages
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -94,8 +124,113 @@ export const DriverPortalPage: React.FC = () => {
     },
   });
 
+  const { data: activitiesData } = useQuery<{
+    assigned_activities: any[];
+    activities: any[];
+  }>({
+    queryKey: ['driver-activities'],
+    queryFn: async () => {
+      const res = await api.get('/driver/activities');
+      return res.data;
+    },
+  });
+
   const vehicle = vehicleData?.vehicle;
   const activeTrip = activeTripData?.trip;
+
+  const activityMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.post('/driver/activities', payload);
+      return res.data;
+    },
+    onSuccess: (resData) => {
+      queryClient.invalidateQueries({ queryKey: ['driver-activities'] });
+      queryClient.invalidateQueries({ queryKey: ['driver-rewards-data'] });
+      queryClient.invalidateQueries({ queryKey: ['driver-assigned-vehicle'] });
+      setActiveModal(null);
+      setMsg({
+        type: 'success',
+        text: `Activity verified! Earned +${resData.points_earned} points (₹${resData.discount_value} JK Tyre Discount).`,
+      });
+      // Reset fields
+      setFuelLitres('');
+      setFuelCost('');
+      setFuelStation('');
+      setFuelReceipt('');
+      setFuelNotes('');
+      setStopLocation('');
+      setStopNotes('');
+      setTyreNotes('');
+    },
+    onError: (err: any) => {
+      setMsg({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to submit driver activity.',
+      });
+    },
+  });
+
+  const handleOpenModal = (type: 'REFUELING' | 'STOP_ODOMETER' | 'TYRE_CHECK') => {
+    const odo = vehicle?.current_odometer?.toString() || '';
+    if (type === 'REFUELING') {
+      setFuelOdo(odo);
+    } else if (type === 'STOP_ODOMETER') {
+      setStopOdo(odo);
+    } else if (type === 'TYRE_CHECK') {
+      setTyreOdo(odo);
+      setTyresChecked(vehicle?.expected_tyre_count?.toString() || '10');
+    }
+    setActiveModal(type);
+  };
+
+  const handleSubmitActivity = (e: React.FormEvent, type: 'REFUELING' | 'STOP_ODOMETER' | 'TYRE_CHECK') => {
+    e.preventDefault();
+    setMsg(null);
+
+    let payload: any = {
+      activity_type: type,
+      vehicle_id: vehicle?.id,
+      trip_id: activeTrip?.id,
+    };
+
+    if (type === 'REFUELING') {
+      payload = {
+        ...payload,
+        odometer: parseFloat(fuelOdo),
+        location: fuelStation,
+        notes: fuelNotes,
+        metadata: {
+          fuel_litres: parseFloat(fuelLitres),
+          fuel_cost: parseFloat(fuelCost),
+          station_name: fuelStation,
+          receipt_no: fuelReceipt,
+        },
+      };
+    } else if (type === 'STOP_ODOMETER') {
+      payload = {
+        ...payload,
+        odometer: parseFloat(stopOdo),
+        location: stopLocation,
+        notes: stopNotes,
+        metadata: {
+          stop_reason: stopReason,
+          stop_location: stopLocation,
+        },
+      };
+    } else if (type === 'TYRE_CHECK') {
+      payload = {
+        ...payload,
+        odometer: parseFloat(tyreOdo),
+        notes: tyreNotes,
+        metadata: {
+          tyres_checked: parseInt(tyresChecked, 10),
+          visual_condition: visualCondition,
+        },
+      };
+    }
+
+    activityMutation.mutate(payload);
+  };
 
   // Pre-fill start odometer from vehicle current odometer
   useEffect(() => {
@@ -317,6 +452,160 @@ export const DriverPortalPage: React.FC = () => {
         )}
       </div>
 
+      {/* Assigned Operational Activities & Instant Rewards */}
+      <div className="bg-cream border border-gold-border rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand-gold" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                Driver Action Items
+              </span>
+            </div>
+            <h2 className="text-lg font-black text-slate-900">
+              Assigned Activities &amp; Bonus Rewards
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Update refueling logs, checkpoint odometers, and tyre checks during duty to earn instant JK Tyre discount points.
+            </p>
+          </div>
+          <span className="self-start sm:self-auto px-3 py-1 bg-amber-500/10 text-amber-800 border border-amber-300 rounded-full text-xs font-semibold">
+            Trip Score + Activities Combined
+          </span>
+        </div>
+
+        {/* 3 Activity Action Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          {/* Activity 1: Refueling */}
+          <div className="bg-white border border-slate-200 hover:border-brand-gold/60 rounded-2xl p-4 shadow-sm flex flex-col justify-between transition group">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                  <Fuel className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  +50 Pts (₹50)
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-800 transition">
+                Refueling Log
+              </h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Log fuel litres pumped, pump cost, fuel station name, and current odometer.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenModal('REFUELING')}
+              className="mt-4 w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Fuel className="w-3.5 h-3.5 text-amber-700" />
+              Log Fuel Refill
+            </button>
+          </div>
+
+          {/* Activity 2: Stop & Odometer */}
+          <div className="bg-white border border-slate-200 hover:border-brand-gold/60 rounded-2xl p-4 shadow-sm flex flex-col justify-between transition group">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  +30 Pts (₹30)
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-800 transition">
+                Stop &amp; Odometer
+              </h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Log intermediate halts (rest, toll plaza, client loading) and verify current odometer.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenModal('STOP_ODOMETER')}
+              className="mt-4 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5 text-blue-700" />
+              Log Stop Checkpoint
+            </button>
+          </div>
+
+          {/* Activity 3: Tyre Walkaround */}
+          <div className="bg-white border border-slate-200 hover:border-brand-gold/60 rounded-2xl p-4 shadow-sm flex flex-col justify-between transition group">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700">
+                  <Disc className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  +40 Pts (₹40)
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-800 transition">
+                Tyre Walkaround
+              </h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Perform visual inspection on fitted commercial radial tyres (cuts, stones, wear).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenModal('TYRE_CHECK')}
+              className="mt-4 w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Disc className="w-3.5 h-3.5 text-purple-700" />
+              Log Tyre Check
+            </button>
+          </div>
+        </div>
+
+        {/* Driver Recent Submissions Mini Feed */}
+        {activitiesData?.activities && activitiesData.activities.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-slate-400" /> Your Recent Submissions ({activitiesData.activities.length})
+              </span>
+              <span className="text-[11px] text-slate-500">Syncs directly to Fleet Admin Console</span>
+            </div>
+
+            <div className="space-y-2">
+              {activitiesData.activities.slice(0, 4).map((act: any) => (
+                <div
+                  key={act.id}
+                  className="bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between text-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-slate-100 text-slate-700">
+                      {act.activity_type === 'REFUELING' ? (
+                        <Fuel className="w-4 h-4 text-amber-600" />
+                      ) : act.activity_type === 'STOP_ODOMETER' ? (
+                        <MapPin className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Disc className="w-4 h-4 text-purple-600" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-900">{act.title}</span>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                        {act.location && <span>📍 {act.location}</span>}
+                        {act.odometer && <span className="font-mono">Odo: {act.odometer.toLocaleString()} km</span>}
+                        <span>• {new Date(act.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 shrink-0 text-xs">
+                    +{act.points_earned} pts
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Active Trip or Start Trip Form */}
       {activeTrip ? (
         // Active Trip in progress
@@ -454,6 +743,335 @@ export const DriverPortalPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 1. Modal: Refueling Log */}
+      {activeModal === 'REFUELING' && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <Fuel className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Log Fuel Refill</h3>
+                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    +50 Points (₹50 JK Tyre Discount)
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => handleSubmitActivity(e, 'REFUELING')} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Fuel Litres (L) *</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    value={fuelLitres}
+                    onChange={(e) => setFuelLitres(e.target.value)}
+                    placeholder="e.g. 160.0"
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Total Cost (₹) *</label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={fuelCost}
+                    onChange={(e) => setFuelCost(e.target.value)}
+                    placeholder="e.g. 14400"
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Fuel Station &amp; Location *</label>
+                <input
+                  type="text"
+                  value={fuelStation}
+                  onChange={(e) => setFuelStation(e.target.value)}
+                  placeholder="e.g. IOCL COCO Toll Plaza, NH-48 Km 182"
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Current Odometer (km) *</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={fuelOdo}
+                    onChange={(e) => setFuelOdo(e.target.value)}
+                    placeholder={vehicle?.current_odometer?.toString() || '0'}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Receipt / Invoice #</label>
+                  <input
+                    type="text"
+                    value={fuelReceipt}
+                    onChange={(e) => setFuelReceipt(e.target.value)}
+                    placeholder="e.g. INV-88219"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Additional Notes</label>
+                <input
+                  type="text"
+                  value={fuelNotes}
+                  onChange={(e) => setFuelNotes(e.target.value)}
+                  placeholder="e.g. Full tank diesel before long expressway segment"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={activityMutation.isPending}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-black bg-brand-gold hover:bg-brand-warm-gold transition shadow flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Fuel className="w-4 h-4" />
+                  {activityMutation.isPending ? 'Submitting…' : 'Submit & Claim +50 Pts'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Modal: Stop & Odometer Checkpoint */}
+      {activeModal === 'STOP_ODOMETER' && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Log Stop Checkpoint</h3>
+                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    +30 Points (₹30 JK Tyre Discount)
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => handleSubmitActivity(e, 'STOP_ODOMETER')} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Halt / Stop Reason *</label>
+                <select
+                  value={stopReason}
+                  onChange={(e) => setStopReason(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="Driver Rest & Meal">Driver Rest &amp; Meal (Dhaba / Plaza)</option>
+                  <option value="Toll Plaza / Border Inspection">Toll Plaza / State Border Checkpoint</option>
+                  <option value="Customer Loading / Unloading">Customer Loading / Hub Unloading</option>
+                  <option value="Weighbridge Verification">Weighbridge Tare / Gross Weighing</option>
+                  <option value="Highway Congestion / Hold">Highway Traffic / Roadwork Delay</option>
+                  <option value="Scheduled Maintenance Pause">Scheduled Tyre / Fluid Check Pause</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Checkpoint Location *</label>
+                <input
+                  type="text"
+                  value={stopLocation}
+                  onChange={(e) => setStopLocation(e.target.value)}
+                  placeholder="e.g. Shree Ganesh Dhaba, Km 320 NH-48"
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Current Odometer (km) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={stopOdo}
+                  onChange={(e) => setStopOdo(e.target.value)}
+                  placeholder={vehicle?.current_odometer?.toString() || '0'}
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-blue-500"
+                />
+                <span className="text-[11px] text-slate-500 mt-1 block">
+                  This reading updates vehicle odometer directly in the admin dashboard.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Checkpoint Notes</label>
+                <input
+                  type="text"
+                  value={stopNotes}
+                  onChange={(e) => setStopNotes(e.target.value)}
+                  placeholder="e.g. Mandatory 45-min rest period observed"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={activityMutation.isPending}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-black bg-brand-gold hover:bg-brand-warm-gold transition shadow flex items-center gap-1.5 cursor-pointer"
+                >
+                  <MapPin className="w-4 h-4" />
+                  {activityMutation.isPending ? 'Submitting…' : 'Submit & Claim +30 Pts'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Modal: Tyre Walkaround Inspection */}
+      {activeModal === 'TYRE_CHECK' && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
+                  <Disc className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Log Tyre Walkaround</h3>
+                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    +40 Points (₹40 JK Tyre Discount)
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => handleSubmitActivity(e, 'TYRE_CHECK')} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Current Odometer (km) *</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={tyreOdo}
+                    onChange={(e) => setTyreOdo(e.target.value)}
+                    placeholder={vehicle?.current_odometer?.toString() || '0'}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Tyres Inspected Count *</label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="22"
+                    value={tyresChecked}
+                    onChange={(e) => setTyresChecked(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Visual Tyre Condition *</label>
+                <select
+                  value={visualCondition}
+                  onChange={(e) => setVisualCondition(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="Normal - All tyres in good condition">Normal — All radial tyres intact &amp; satisfactory</option>
+                  <option value="Minor Pressure Drop Observed">Minor Pressure Drop Observed (Inflated at stop)</option>
+                  <option value="Uneven Tread Wear Noticed">Uneven Tread Wear Noticed on Steer / Drive</option>
+                  <option value="Foreign Stone / Nail Cleared">Stone / Foreign debris trapped in grooves cleared</option>
+                  <option value="Sidewall Scuff / Cut Detected">Sidewall Scuff / Minor Cut Detected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Inspection Notes &amp; Observations</label>
+                <input
+                  type="text"
+                  value={tyreNotes}
+                  onChange={(e) => setTyreNotes(e.target.value)}
+                  placeholder="e.g. Verified dual tyre spacing and cleared small stones"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={activityMutation.isPending}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-black bg-brand-gold hover:bg-brand-warm-gold transition shadow flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Disc className="w-4 h-4" />
+                  {activityMutation.isPending ? 'Submitting…' : 'Submit & Claim +40 Pts'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

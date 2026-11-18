@@ -1,12 +1,56 @@
 import uuid
 from datetime import datetime, timezone
 from app.extensions import db
-from app.models.reward import DriverReward, DriverRedemption
+from app.models.reward import DriverReward, DriverRedemption, DriverActivity
 from app.models.user import User, UserRole
+from app.models.vehicle import Vehicle
 from app.models.trip import Trip, TripStatus
 
 
 class RewardService:
+    ASSIGNED_ACTIVITIES = [
+        {
+            "activity_type": "REFUELING",
+            "title": "Log Fuel Refill & Receipt",
+            "base_points": 50.0,
+            "discount_value": 50.0,
+            "description": "Record fuel litres, total cost, and current odometer at petrol pump stops.",
+            "icon": "Fuel",
+            "badge": "+50 Pts (₹50 Discount)",
+            "fields": ["fuel_litres", "fuel_cost", "odometer", "station_name", "receipt_no"],
+        },
+        {
+            "activity_type": "STOP_ODOMETER",
+            "title": "Log Stop Checkpoint & Odometer",
+            "base_points": 30.0,
+            "discount_value": 30.0,
+            "description": "Record intermediate halt location, stop reason (rest, toll, delivery), and odometer.",
+            "icon": "MapPin",
+            "badge": "+30 Pts (₹30 Discount)",
+            "fields": ["stop_location", "stop_reason", "odometer", "notes"],
+        },
+        {
+            "activity_type": "TYRE_CHECK",
+            "title": "Log Tyre Walkaround Inspection",
+            "base_points": 40.0,
+            "discount_value": 40.0,
+            "description": "Conduct physical walkaround visual and pressure check on commercial fitted tyres.",
+            "icon": "Disc",
+            "badge": "+40 Pts (₹40 Discount)",
+            "fields": ["odometer", "tyres_checked", "visual_condition", "notes"],
+        },
+        {
+            "activity_type": "TRIP_SCORE_REWARD",
+            "title": "Safe Journey Trip Score Bonus",
+            "base_points": 150.0,
+            "discount_value": 150.0,
+            "description": "Earned automatically upon completing journey with high safety compliance (score ≥ 70).",
+            "icon": "Award",
+            "badge": "Up to +150+ Pts",
+            "fields": ["trip_score", "distance_km"],
+        },
+    ]
+
     JK_ELIGIBLE_PRODUCTS = [
         {
             "name": "JK Jetway JUH5 Commercial Radial",
@@ -148,6 +192,14 @@ class RewardService:
             tier_badge = "JK Verified Commercial Driver"
             tier_color = "slate"
 
+        # Recent driver activities logged
+        activities = (
+            DriverActivity.query.filter_by(driver_id=driver_id)
+            .order_by(DriverActivity.created_at.desc())
+            .limit(30)
+            .all()
+        )
+
         return {
             "driver_id": driver.id,
             "driver_name": driver.full_name,
@@ -162,6 +214,8 @@ class RewardService:
             "total_redeemed": round(total_redeemed, 1),
             "trips_completed_count": len(completed_trips),
             "avg_trip_score": avg_score,
+            "assigned_activities": cls.ASSIGNED_ACTIVITIES,
+            "recent_activities": [a.to_dict() for a in activities],
             "recent_rewards": [r.to_dict() for r in reward_records[:20]],
             "vouchers": [v.to_dict() for v in redemptions],
             "eligible_products": cls.JK_ELIGIBLE_PRODUCTS,
@@ -312,15 +366,170 @@ class RewardService:
                     "earned": top["lifetime_earned"],
                 }
 
+        # Query all fleet driver activities
+        all_activities = (
+            DriverActivity.query.filter_by(fleet_id=fleet_id)
+            .order_by(DriverActivity.created_at.desc())
+            .all()
+        )
+        total_activities = len(all_activities)
+        refuel_count = sum(1 for a in all_activities if a.activity_type == "REFUELING")
+        stop_count = sum(1 for a in all_activities if a.activity_type == "STOP_ODOMETER")
+        tyre_check_count = sum(1 for a in all_activities if a.activity_type == "TYRE_CHECK")
+
         return {
             "summary": {
                 "total_drivers": len(drivers),
                 "total_rewards_distributed": round(total_fleet_distributed, 1),
                 "total_rewards_redeemed": round(total_fleet_redeemed, 1),
                 "active_unredeemed_balance": round(active_fleet_unredeemed, 1),
+                "total_activities_count": total_activities,
+                "refuel_count": refuel_count,
+                "stop_count": stop_count,
+                "tyre_check_count": tyre_check_count,
                 "top_driver": top_driver,
             },
             "drivers": driver_summaries,
+            "recent_activities": [a.to_dict() for a in all_activities[:60]],
             "eligible_products": cls.JK_ELIGIBLE_PRODUCTS,
         }
+
+    @classmethod
+    def log_driver_activity(
+        cls,
+        driver_id: str,
+        fleet_id: str,
+        activity_type: str,
+        odometer: float = None,
+        location: str = None,
+        notes: str = None,
+        metadata: dict = None,
+        vehicle_id: str = None,
+        trip_id: str = None,
+    ) -> dict:
+        """
+        Logs an operational activity submitted by the driver (e.g., refueling, intermediate stop odometer,
+        tyre physical check), credits the corresponding reward points/discount, and updates vehicle odometer.
+        """
+        driver = User.query.get(driver_id)
+        if not driver:
+            return {"success": False, "error": "Driver not found"}
+
+        meta = metadata or {}
+
+        # Fallback to driver's assigned vehicle if vehicle_id not explicitly supplied
+        if not vehicle_id and driver.assigned_vehicle_id:
+            vehicle_id = driver.assigned_vehicle_id
+
+        # Fallback to active in-progress trip if not explicitly provided
+        if not trip_id:
+            active_trip = Trip.query.filter_by(driver_id=driver_id, status=TripStatus.IN_PROGRESS).first()
+            if active_trip:
+                trip_id = active_trip.id
+                if not vehicle_id:
+                    vehicle_id = active_trip.vehicle_id
+
+        # Determine points and titles by activity type
+        if activity_type == "REFUELING":
+            points = 50.0
+            litres = meta.get("fuel_litres", "")
+            cost = meta.get("fuel_cost", "")
+            stn = location or meta.get("station_name", "Highway Petrol Pump")
+            title = f"Fuel Refill: {litres} L at {stn}".strip()
+            desc = f"Logged fuel refill ({litres} L, ₹{cost}) at {stn}"
+        elif activity_type == "STOP_ODOMETER":
+            points = 30.0
+            reason = meta.get("stop_reason", "En-Route Stop")
+            loc = location or meta.get("stop_location", "Route Checkpoint")
+            title = f"Stop Check-in: {reason} - {loc}"
+            desc = f"Logged stop ({reason}) at {loc} with odometer {odometer or '—'} km"
+        elif activity_type == "TYRE_CHECK":
+            points = 40.0
+            tyres_cnt = meta.get("tyres_checked", 12)
+            cond = meta.get("visual_condition", "Normal")
+            title = f"Tyre Walkaround: {tyres_cnt} Tyres ({cond})"
+            desc = f"Physical tyre walkaround inspection ({tyres_cnt} tyres, condition: {cond})"
+        else:
+            points = 25.0
+            title = f"Driver Activity: {activity_type}"
+            desc = notes or "Driver activity submitted"
+
+        # Create DriverActivity record
+        activity = DriverActivity(
+            fleet_id=fleet_id or driver.fleet_id,
+            driver_id=driver_id,
+            vehicle_id=vehicle_id,
+            trip_id=trip_id,
+            activity_type=activity_type,
+            title=title,
+            odometer=float(odometer) if odometer is not None else None,
+            location=location,
+            points_earned=points,
+            discount_value=points,
+            notes=notes,
+            status="APPROVED",
+        )
+        activity.activity_metadata = meta
+        db.session.add(activity)
+        db.session.flush()
+
+        # Create corresponding DriverReward entry so it credits rewards wallet
+        reward_entry = DriverReward(
+            fleet_id=fleet_id or driver.fleet_id,
+            driver_id=driver_id,
+            trip_id=trip_id,
+            activity_id=activity.id,
+            reward_type=activity_type,
+            points_earned=points,
+            discount_value=points,
+            description=desc,
+        )
+        db.session.add(reward_entry)
+
+        # Update vehicle current odometer if valid and greater than current
+        if vehicle_id and odometer is not None:
+            try:
+                odo_val = float(odometer)
+                veh = Vehicle.query.get(vehicle_id)
+                if veh and odo_val > (veh.current_odometer or 0.0):
+                    veh.current_odometer = round(odo_val, 1)
+            except Exception:
+                pass
+
+        db.session.commit()
+
+        # Retrieve updated driver reward profile
+        summary = cls.get_driver_reward_summary(driver_id, fleet_id or driver.fleet_id)
+
+        return {
+            "success": True,
+            "activity": activity.to_dict(),
+            "points_earned": points,
+            "discount_value": points,
+            "new_balance": summary.get("points_balance", 0.0),
+            "message": f"Activity successfully logged! Earned +{points:.0f} reward points (₹{points:.0f} JK Tyre discount credit).",
+        }
+
+    @classmethod
+    def get_fleet_activities(
+        cls,
+        fleet_id: str,
+        driver_id: str = None,
+        vehicle_id: str = None,
+        activity_type: str = None,
+        limit: int = 100,
+    ) -> list:
+        """
+        Retrieves driver activity submissions for fleet admin inspection.
+        """
+        query = DriverActivity.query.filter_by(fleet_id=fleet_id)
+        if driver_id:
+            query = query.filter_by(driver_id=driver_id)
+        if vehicle_id:
+            query = query.filter_by(vehicle_id=vehicle_id)
+        if activity_type:
+            query = query.filter_by(activity_type=activity_type)
+
+        records = query.order_by(DriverActivity.created_at.desc()).limit(limit).all()
+        return [r.to_dict() for r in records]
 
