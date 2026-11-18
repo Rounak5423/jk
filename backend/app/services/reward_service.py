@@ -498,6 +498,17 @@ class RewardService:
 
         db.session.commit()
 
+        # Refresh OEM central data vault snapshot so driver updates immediately reflect in admin JSON & Excel
+        try:
+            from app.services.oem_vault_service import OEMDataSyncService
+            OEMDataSyncService.capture_fleet_snapshot(
+                fleet_id=fleet_id or driver.fleet_id,
+                snapshot_type="DRIVER_DUTY_UPDATE",
+                channel="DRIVER_ACTIVITY_INGEST"
+            )
+        except Exception:
+            pass
+
         # Retrieve updated driver reward profile
         summary = cls.get_driver_reward_summary(driver_id, fleet_id or driver.fleet_id)
 

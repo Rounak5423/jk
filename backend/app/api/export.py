@@ -7,7 +7,7 @@ from flask import Blueprint, request, jsonify, g, send_file
 from app.extensions import db
 from app.models import (
     Fleet, User, Vehicle, Tyre, TyreFitment, Trip,
-    TelemetryRecord, THIRecord, Alert, Inspection, AuditLog, UserRole
+    TelemetryRecord, THIRecord, Alert, Inspection, AuditLog, UserRole, DriverActivity
 )
 from app.utils.security import jwt_required, enforce_fleet_access, get_effective_fleet_id
 
@@ -232,7 +232,21 @@ def export_excel_dataset():
             ins.inspected_at.isoformat() if ins.inspected_at else None
         ])
 
-    # 12. Sheet 12: AUDIT_LOGS
+    # 12. Sheet 12: DRIVER_ACTIVITIES (Stoppages, Refueling, Tyre Inspections, Duty Logs)
+    ws_acts = wb.create_sheet(title="DRIVER_ACTIVITIES")
+    cols_acts = ["ID", "Fleet ID", "Driver ID", "Vehicle ID", "Activity Type", "Title", "Odometer (km)", "Location", "Points Earned", "Discount (INR)", "Metadata Details", "Notes", "Status", "Created At"]
+    ws_acts.append(cols_acts)
+    create_header_style(ws_acts, cols_acts)
+    for act in scope_query(DriverActivity).order_by(DriverActivity.created_at.desc()).limit(2000).all():
+        meta_str = str(act.activity_metadata) if hasattr(act, 'activity_metadata') else ''
+        ws_acts.append([
+            act.id, act.fleet_id, act.driver_id, act.vehicle_id, act.activity_type,
+            act.title, act.odometer, act.location, act.points_earned, act.discount_value,
+            meta_str, act.notes, act.status,
+            act.created_at.isoformat() if act.created_at else None
+        ])
+
+    # 13. Sheet 13: AUDIT_LOGS
     ws_audit = wb.create_sheet(title="AUDIT_LOGS")
     cols_audit = ["ID", "User ID", "Fleet ID", "Action", "Resource Type", "Resource ID", "IP Address", "Timestamp"]
     ws_audit.append(cols_audit)
@@ -243,7 +257,7 @@ def export_excel_dataset():
             aud.ip_address, aud.timestamp.isoformat() if aud.timestamp else None
         ])
 
-    # 13. Sheet 13: DATA_DICTIONARY
+    # 14. Sheet 14: DATA_DICTIONARY
     ws_dict = wb.create_sheet(title="DATA_DICTIONARY")
     cols_dict = ["Table", "Field Name", "Data Type", "Constraints", "Description"]
     ws_dict.append(cols_dict)
@@ -323,8 +337,13 @@ def export_csv_table():
         q = Alert.query.filter_by(fleet_id=fleet_id) if fleet_id else Alert.query
         for al in q.all():
             writer.writerow([al.id, al.code, al.severity, al.observed_value, al.unit, al.explanation, al.status])
+    elif table in ("driver_activities", "activities"):
+        writer.writerow(["id", "activity_type", "title", "odometer", "location", "points_earned", "discount_value", "notes", "created_at"])
+        q = DriverActivity.query.filter_by(fleet_id=fleet_id) if fleet_id else DriverActivity.query
+        for da in q.all():
+            writer.writerow([da.id, da.activity_type, da.title, da.odometer, da.location, da.points_earned, da.discount_value, da.notes, da.created_at])
     else:
-        return jsonify({"error": f"Invalid or unsupported table: {table}. Allowed: vehicles, tyres, trips, alerts"}), 400
+        return jsonify({"error": f"Invalid or unsupported table: {table}. Allowed: vehicles, tyres, trips, alerts, driver_activities"}), 400
 
     mem = io.BytesIO()
     mem.write(output.getvalue().encode("utf-8"))

@@ -1,7 +1,10 @@
+import io
 import hashlib
 import json
 import logging
 from datetime import datetime, timezone
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from app.extensions import db
 from app.models import (
     Fleet,
@@ -12,6 +15,8 @@ from app.models import (
     Trip,
     Inspection,
     OEMFleetVault,
+    DriverActivity,
+    DriverReward,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,6 +69,69 @@ class OEMDataSyncService:
                 .limit(40)
                 .all()
             )
+            driver_activities = (
+                DriverActivity.query.filter_by(fleet_id=fleet.id)
+                .order_by(DriverActivity.created_at.desc())
+                .all()
+            )
+
+            # Build categorized driver duty telemetry (refueling, stoppages, tyre checks)
+            refuel_logs = []
+            stop_logs = []
+            tyre_logs = []
+            total_fuel_litres = 0.0
+            total_fuel_cost = 0.0
+
+            for act in driver_activities:
+                meta = act.activity_metadata or {}
+                if act.activity_type == "REFUELING":
+                    litres = float(meta.get("fuel_litres") or 0.0)
+                    cost = float(meta.get("fuel_cost") or 0.0)
+                    total_fuel_litres += litres
+                    total_fuel_cost += cost
+                    refuel_logs.append({
+                        "id": act.id,
+                        "driver_id": act.driver_id,
+                        "driver_name": act.driver.full_name if act.driver else None,
+                        "vehicle_id": act.vehicle_id,
+                        "vehicle_number": act.vehicle.vehicle_number if act.vehicle else None,
+                        "odometer_km": act.odometer,
+                        "station_location": act.location,
+                        "fuel_litres": litres,
+                        "fuel_cost_inr": cost,
+                        "receipt_no": meta.get("receipt_no"),
+                        "notes": act.notes,
+                        "points_earned": act.points_earned,
+                        "timestamp": act.created_at.isoformat() if act.created_at else None,
+                    })
+                elif act.activity_type == "STOP_ODOMETER":
+                    stop_logs.append({
+                        "id": act.id,
+                        "driver_id": act.driver_id,
+                        "driver_name": act.driver.full_name if act.driver else None,
+                        "vehicle_id": act.vehicle_id,
+                        "vehicle_number": act.vehicle.vehicle_number if act.vehicle else None,
+                        "odometer_km": act.odometer,
+                        "stop_location": act.location,
+                        "stop_reason": meta.get("stop_reason"),
+                        "notes": act.notes,
+                        "points_earned": act.points_earned,
+                        "timestamp": act.created_at.isoformat() if act.created_at else None,
+                    })
+                elif act.activity_type == "TYRE_CHECK":
+                    tyre_logs.append({
+                        "id": act.id,
+                        "driver_id": act.driver_id,
+                        "driver_name": act.driver.full_name if act.driver else None,
+                        "vehicle_id": act.vehicle_id,
+                        "vehicle_number": act.vehicle.vehicle_number if act.vehicle else None,
+                        "odometer_km": act.odometer,
+                        "tyres_checked": meta.get("tyres_checked"),
+                        "visual_condition": meta.get("visual_condition"),
+                        "notes": act.notes,
+                        "points_earned": act.points_earned,
+                        "timestamp": act.created_at.isoformat() if act.created_at else None,
+                    })
 
             # Build vehicle entries with active tyre fitments
             vehicles_data = []
@@ -168,6 +236,12 @@ class OEMDataSyncService:
                     "healthy_tyres_count": sum(1 for t in tyres if t.thi_status == "HEALTHY"),
                     "warning_tyres_count": sum(1 for t in tyres if t.thi_status == "WARNING"),
                     "critical_tyres_count": sum(1 for t in tyres if t.thi_status == "CRITICAL"),
+                    "total_driver_activities": len(driver_activities),
+                    "driver_refueling_count": len(refuel_logs),
+                    "driver_stoppage_count": len(stop_logs),
+                    "driver_tyre_inspection_count": len(tyre_logs),
+                    "total_fuel_litres_logged": round(total_fuel_litres, 1),
+                    "total_fuel_cost_logged_inr": round(total_fuel_cost, 2),
                 },
                 "vehicles": vehicles_data,
                 "tyres": tyres_data,
@@ -175,6 +249,15 @@ class OEMDataSyncService:
                 "alerts": [a.to_dict() for a in alerts],
                 "recent_trips": [tr.to_dict() for tr in trips],
                 "inspections": [i.to_dict() for i in inspections],
+                "driver_activities": [a.to_dict() for a in driver_activities],
+                "driver_duty_telemetry": {
+                    "total_activities_count": len(driver_activities),
+                    "total_fuel_litres": round(total_fuel_litres, 1),
+                    "total_fuel_cost_inr": round(total_fuel_cost, 2),
+                    "refueling_logs": refuel_logs,
+                    "stoppage_logs": stop_logs,
+                    "tyre_walkaround_logs": tyre_logs,
+                },
             }
 
             serialized = json.dumps(payload, sort_keys=True)
@@ -282,6 +365,7 @@ class OEMDataSyncService:
         """
         Returns the latest exhaustive telemetry snapshot for a specific fleet,
         along with historical snapshot metadata.
+        Ensures any new driver activities or trip completions trigger an automatic fresh snapshot.
         """
         fleet = Fleet.query.get(fleet_id)
         if not fleet:
@@ -293,7 +377,19 @@ class OEMDataSyncService:
             .first()
         )
 
-        if not latest:
+        # Check if snapshot is missing driver activities or older than the most recent driver activity
+        latest_act = (
+            DriverActivity.query.filter_by(fleet_id=fleet.id)
+            .order_by(DriverActivity.created_at.desc())
+            .first()
+        )
+        needs_refresh = False
+        if not latest or not latest.payload or "driver_activities" not in latest.payload:
+            needs_refresh = True
+        elif latest_act and latest.captured_at and latest_act.created_at > latest.captured_at:
+            needs_refresh = True
+
+        if needs_refresh:
             latest = cls.capture_fleet_snapshot(fleet.id, channel="OEM_ON_DEMAND_CAPTURE")
 
         history = (
@@ -331,3 +427,261 @@ class OEMDataSyncService:
             "fleet_telemetry_payload": detail["latest_snapshot"].get("payload"),
         }
         return export_package
+
+    @classmethod
+    def generate_fleet_excel_export(cls, fleet_id: str):
+        """
+        Builds a comprehensive multi-sheet Excel (.xlsx) workbook containing complete fleetwise
+        operational records: driver activities (stoppages, refuelings, tyre inspections), vehicle
+        status, tyre registry, trip scoring, and operational alerts.
+        """
+        fleet = Fleet.query.get(fleet_id)
+        if not fleet:
+            return None, None
+
+        # Ensure latest snapshot has fresh data
+        detail = cls.get_fleet_detail(fleet_id)
+        payload = detail["latest_snapshot"].get("payload", {}) if detail and detail.get("latest_snapshot") else {}
+
+        wb = openpyxl.Workbook()
+        wb.remove(wb.active)  # remove default sheet
+
+        def apply_header_style(ws, cols):
+            header_fill = PatternFill(start_color="292D32", end_color="292D32", fill_type="solid")
+            header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+            thin_border = Border(
+                left=Side(style='thin', color='D0D5DD'),
+                right=Side(style='thin', color='D0D5DD'),
+                top=Side(style='thin', color='D0D5DD'),
+                bottom=Side(style='thin', color='D0D5DD')
+            )
+            for col_idx in range(1, len(cols) + 1):
+                cell = ws.cell(row=1, column=col_idx)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+                cell.border = thin_border
+
+        # 1. Sheet: README_PROVENANCE
+        ws_readme = wb.create_sheet(title="README_PROVENANCE")
+        ws_readme.views.sheetView[0].showGridLines = True
+        readme_rows = [
+            ["JK TYRE & INDUSTRIES LTD. — OEM FLEET INTELLIGENCE & TELEMETRY EXPORT"],
+            [],
+            ["Export Timestamp (UTC)", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")],
+            ["Fleet Operator", fleet.name],
+            ["Fleet ID", fleet.id],
+            ["Registration No", fleet.registration_no or "N/A"],
+            ["Headquarters City", fleet.city or "N/A"],
+            ["Data Classification", "JK Tyre Corporate OEM Ingest (Confidential)"],
+            ["File Format", "Microsoft Excel (.xlsx) - Multi-Sheet Structured Workbook"],
+            [],
+            ["WORKBOOK CONTENTS:"],
+            ["1. README_PROVENANCE", "Export metadata, provenance statement, and classification"],
+            ["2. FLEET_SUMMARY", "Executive KPI summary (vehicles, tyres, THI, odometer km, driver activities)"],
+            ["3. DRIVER_ACTIVITIES", "Complete driver duty updates (refueling, stoppages, walkaround checks)"],
+            ["4. STOPPAGES_AND_ODOMETERS", "Detailed stoppage checkpoint records (halt reasons, locations, odometers)"],
+            ["5. REFUELING_LOGS", "Detailed fuel logs (station names, litres, costs, odometer readings, receipts)"],
+            ["6. TYRE_WALKAROUNDS", "Physical tyre inspection records (tyres checked count, visual condition, notes)"],
+            ["7. VEHICLES", "Commercial vehicle inventory, status, odometer readings, and fitted tyre counts"],
+            ["8. TYRES_REGISTRY", "Permanent tyre asset ledger (serials, NSD, wear %, THI composite scores)"],
+            ["9. TRIPS_AND_SCORES", "Driver journey records, start/end odometers, distances, and trip scores"],
+            ["10. ALERTS", "Active and historical operational alerts (pressure, temperature, tread wear)"],
+        ]
+        for r_idx, row in enumerate(readme_rows, 1):
+            for c_idx, val in enumerate(row, 1):
+                cell = ws_readme.cell(row=r_idx, column=c_idx, value=val)
+                if r_idx == 1:
+                    cell.font = Font(name="Calibri", size=14, bold=True, color="292D32")
+                elif len(row) == 1 and val.endswith(":"):
+                    cell.font = Font(name="Calibri", size=11, bold=True, color="292D32")
+        ws_readme.column_dimensions["A"].width = 32
+        ws_readme.column_dimensions["B"].width = 80
+
+        # 2. Sheet: FLEET_SUMMARY
+        ws_summary = wb.create_sheet(title="FLEET_SUMMARY")
+        cols_summary = ["Metric / Parameter", "Value", "Unit / Scope", "Notes"]
+        ws_summary.append(cols_summary)
+        apply_header_style(ws_summary, cols_summary)
+
+        metrics = payload.get("metrics_summary", {})
+        fleet_meta = payload.get("fleet", {})
+        summary_data = [
+            ["Fleet Name", fleet_meta.get("name", fleet.name), "Organization", "Registered commercial operator"],
+            ["Total Commercial Vehicles", metrics.get("total_vehicles", 0), "Units", "Active fleet trucks"],
+            ["Total Tyre Assets", metrics.get("total_tyres", 0), "Tyres", "Mounted & inventory radials"],
+            ["Average Fleet THI Score", metrics.get("average_thi", 100.0), "/ 100", "Tyre Health Index"],
+            ["Total Fleet Odometer", metrics.get("total_fleet_odometer_km", 0), "km", "Accumulated commercial distance"],
+            ["Active Alerts Count", metrics.get("active_alerts_count", 0), "Alerts", "Unresolved TPMS/THI warnings"],
+            ["Total Driver Duty Activities", metrics.get("total_driver_activities", 0), "Submissions", "Logged duty submissions"],
+            ["Driver Stoppages Logged", metrics.get("driver_stoppage_count", 0), "Checkpoints", "En-route rest/toll/loading stops"],
+            ["Driver Refuelings Logged", metrics.get("driver_refueling_count", 0), "Refills", "Fuel station updates"],
+            ["Driver Tyre Inspections", metrics.get("driver_tyre_inspection_count", 0), "Inspections", "Walkaround visual checks"],
+            ["Total Fuel Logged", metrics.get("total_fuel_litres_logged", 0), "Litres", "Verified fuel pumped"],
+            ["Total Fuel Cost Logged", metrics.get("total_fuel_cost_logged_inr", 0), "INR (₹)", "Expenditure logged by drivers"],
+        ]
+        for row in summary_data:
+            ws_summary.append(row)
+
+        # Query all DriverActivity records for this fleet
+        driver_acts = (
+            DriverActivity.query.filter_by(fleet_id=fleet_id)
+            .order_by(DriverActivity.created_at.desc())
+            .all()
+        )
+
+        # 3. Sheet: DRIVER_ACTIVITIES (All duty updates)
+        ws_acts = wb.create_sheet(title="DRIVER_ACTIVITIES")
+        cols_acts = [
+            "Activity ID", "Date & Time (UTC)", "Driver Name", "Vehicle Number", "Activity Type",
+            "Reported Odometer (km)", "Location / Station", "Details / Data", "Points Awarded",
+            "Discount (₹)", "Driver Remarks", "Audit Status"
+        ]
+        ws_acts.append(cols_acts)
+        apply_header_style(ws_acts, cols_acts)
+        for a in driver_acts:
+            meta = a.activity_metadata or {}
+            detail_str = ""
+            if a.activity_type == "REFUELING":
+                detail_str = f"{meta.get('fuel_litres', '—')} L | ₹{meta.get('fuel_cost', '—')} | Inv: {meta.get('receipt_no', 'N/A')}"
+            elif a.activity_type == "STOP_ODOMETER":
+                detail_str = f"Reason: {meta.get('stop_reason', 'En-Route Stop')}"
+            elif a.activity_type == "TYRE_CHECK":
+                detail_str = f"{meta.get('tyres_checked', 10)} Tyres | Condition: {meta.get('visual_condition', 'Normal')}"
+            else:
+                detail_str = a.title
+
+            ws_acts.append([
+                a.id,
+                a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else None,
+                a.driver.full_name if a.driver else "Driver",
+                a.vehicle.vehicle_number if a.vehicle else "Fleet Vehicle",
+                a.activity_type,
+                a.odometer,
+                a.location,
+                detail_str,
+                a.points_earned,
+                a.discount_value,
+                a.notes,
+                a.status,
+            ])
+
+        # 4. Sheet: STOPPAGES_AND_ODOMETERS
+        ws_stops = wb.create_sheet(title="STOPPAGES_AND_ODOMETERS")
+        cols_stops = ["Date & Time (UTC)", "Driver Name", "Vehicle Number", "Stop Checkpoint", "Reported Odometer (km)", "Stop Reason", "Remarks / Notes"]
+        ws_stops.append(cols_stops)
+        apply_header_style(ws_stops, cols_stops)
+        for a in [x for x in driver_acts if x.activity_type == "STOP_ODOMETER"]:
+            meta = a.activity_metadata or {}
+            ws_stops.append([
+                a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else None,
+                a.driver.full_name if a.driver else "Driver",
+                a.vehicle.vehicle_number if a.vehicle else "Fleet Vehicle",
+                a.location,
+                a.odometer,
+                meta.get("stop_reason", "En-Route Stop"),
+                a.notes,
+            ])
+
+        # 5. Sheet: REFUELING_LOGS
+        ws_fuel = wb.create_sheet(title="REFUELING_LOGS")
+        cols_fuel = ["Date & Time (UTC)", "Driver Name", "Vehicle Number", "Station / Pump Location", "Odometer (km)", "Fuel Litres (L)", "Total Cost (₹)", "Receipt / Invoice #", "Notes"]
+        ws_fuel.append(cols_fuel)
+        apply_header_style(ws_fuel, cols_fuel)
+        for a in [x for x in driver_acts if x.activity_type == "REFUELING"]:
+            meta = a.activity_metadata or {}
+            ws_fuel.append([
+                a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else None,
+                a.driver.full_name if a.driver else "Driver",
+                a.vehicle.vehicle_number if a.vehicle else "Fleet Vehicle",
+                a.location or meta.get("station_name"),
+                a.odometer,
+                meta.get("fuel_litres"),
+                meta.get("fuel_cost"),
+                meta.get("receipt_no"),
+                a.notes,
+            ])
+
+        # 6. Sheet: TYRE_WALKAROUNDS
+        ws_tyre_insp = wb.create_sheet(title="TYRE_WALKAROUNDS")
+        cols_tyre_insp = ["Date & Time (UTC)", "Driver Name", "Vehicle Number", "Odometer (km)", "Tyres Checked Count", "Visual Tyre Condition", "Physical Observations / Notes"]
+        ws_tyre_insp.append(cols_tyre_insp)
+        apply_header_style(ws_tyre_insp, cols_tyre_insp)
+        for a in [x for x in driver_acts if x.activity_type == "TYRE_CHECK"]:
+            meta = a.activity_metadata or {}
+            ws_tyre_insp.append([
+                a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else None,
+                a.driver.full_name if a.driver else "Driver",
+                a.vehicle.vehicle_number if a.vehicle else "Fleet Vehicle",
+                a.odometer,
+                meta.get("tyres_checked"),
+                meta.get("visual_condition"),
+                a.notes,
+            ])
+
+        # 7. Sheet: VEHICLES
+        ws_vehs = wb.create_sheet(title="VEHICLES")
+        cols_vehs = ["Vehicle Number", "Model", "Vehicle Type", "Wheel Config", "Axles", "Current Odometer (km)", "Current Location", "Status", "Fitted Tyres Count"]
+        ws_vehs.append(cols_vehs)
+        apply_header_style(ws_vehs, cols_vehs)
+        for v in Vehicle.query.filter_by(fleet_id=fleet_id).all():
+            ws_vehs.append([
+                v.vehicle_number, v.model, v.vehicle_type, v.wheel_config, v.axle_count,
+                v.current_odometer, v.current_location_name or "En-route", v.status, len(v.active_fitments)
+            ])
+
+        # 8. Sheet: TYRES_REGISTRY
+        ws_tyres = wb.create_sheet(title="TYRES_REGISTRY")
+        cols_tyres = ["Serial Number", "Brand", "Model", "Size", "Blueprint NSD (mm)", "Current NSD (mm)", "Wear %", "THI Score", "THI Status", "Total KM Run", "Fitted Vehicle", "Wheel Position"]
+        ws_tyres.append(cols_tyres)
+        apply_header_style(ws_tyres, cols_tyres)
+        for t in Tyre.query.filter_by(fleet_id=fleet_id).all():
+            wear_pct = round(max(0.0, (1.0 - (t.current_nsd / max(1.0, t.blueprint_nsd))) * 100), 1) if (t.current_nsd and t.blueprint_nsd) else 0.0
+            veh_num = t.active_fitment.vehicle.vehicle_number if (t.active_fitment and t.active_fitment.vehicle) else None
+            pos = t.active_fitment.wheel_position if t.active_fitment else None
+            ws_tyres.append([
+                t.serial_number, t.brand, t.model, t.size, t.blueprint_nsd, t.current_nsd,
+                wear_pct, t.current_thi, t.thi_status, t.total_km_run, veh_num, pos
+            ])
+
+        # 9. Sheet: TRIPS_AND_SCORES
+        ws_trips = wb.create_sheet(title="TRIPS_AND_SCORES")
+        cols_trips = ["Trip Code", "Driver Name", "Vehicle Number", "Origin", "Destination", "Distance (km)", "Start Odometer", "End Odometer", "Trip Score", "Score Status", "Status", "Start Time"]
+        ws_trips.append(cols_trips)
+        apply_header_style(ws_trips, cols_trips)
+        for tr in Trip.query.filter_by(fleet_id=fleet_id).order_by(Trip.start_time.desc()).limit(1500).all():
+            ws_trips.append([
+                tr.trip_code,
+                tr.driver.full_name if tr.driver else "Driver",
+                tr.vehicle.vehicle_number if tr.vehicle else None,
+                tr.origin, tr.destination, tr.distance_km, tr.start_odometer, tr.end_odometer,
+                tr.trip_score, tr.trip_score_status, tr.status,
+                tr.start_time.strftime("%Y-%m-%d %H:%M") if tr.start_time else None
+            ])
+
+        # 10. Sheet: ALERTS
+        ws_alerts = wb.create_sheet(title="ALERTS")
+        cols_alerts = ["Date & Time (UTC)", "Vehicle Number", "Tyre Position", "Code", "Category", "Severity", "Observed Value", "Unit", "Explanation", "Status"]
+        ws_alerts.append(cols_alerts)
+        apply_header_style(ws_alerts, cols_alerts)
+        for al in Alert.query.filter_by(fleet_id=fleet_id).order_by(Alert.created_at.desc()).limit(1000).all():
+            ws_alerts.append([
+                al.created_at.strftime("%Y-%m-%d %H:%M:%S") if al.created_at else None,
+                al.vehicle.vehicle_number if al.vehicle else None,
+                al.wheel_position, al.code, al.category, al.severity, al.observed_value, al.unit, al.explanation, al.status
+            ])
+
+        # Auto-fit column widths across all sheets
+        for sheet in wb.worksheets:
+            for col in sheet.columns:
+                max_len = max(len(str(cell.value or '')) for cell in col)
+                col_letter = openpyxl.utils.get_column_letter(col[0].column)
+                sheet.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 48)
+
+        output_stream = io.BytesIO()
+        wb.save(output_stream)
+        output_stream.seek(0)
+
+        safe_fleet_name = "".join(c if c.isalnum() or c in (' ', '_') else '_' for c in fleet.name).replace(" ", "_")
+        filename = f"JK_TYRE_OEM_INGEST_{safe_fleet_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx"
+        return output_stream, filename

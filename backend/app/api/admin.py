@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, send_file
 from app.extensions import db
 from app.models import User, UserRole, Fleet, Vehicle, Tyre, Alert, AuditLog
 from app.utils.security import roles_required
@@ -217,11 +217,30 @@ def trigger_oem_sync_now():
 @roles_required(UserRole.SUPER_ADMIN)
 def export_oem_fleet_payload(fleet_id):
     """
-    Direct export of complete fleetwise operational and sensor dataset for JK Tyre engineering.
+    Direct export of complete fleetwise operational and sensor dataset for JK Tyre engineering (JSON).
     """
     from app.services.oem_vault_service import OEMDataSyncService
     export_pkg = OEMDataSyncService.export_fleet_payload(fleet_id)
     if not export_pkg:
         return jsonify({"error": "Fleet data not available for export"}), 404
     return jsonify(export_pkg), 200
+
+
+@admin_bp.route("/oem-vault/export-excel/<fleet_id>", methods=["GET"])
+@roles_required(UserRole.SUPER_ADMIN)
+def export_oem_fleet_excel(fleet_id):
+    """
+    Direct Excel (.xlsx) download of comprehensive fleet dataset, including
+    driver duty updates, vehicle stoppages, refuels, and tyre inspections for JK Tyre corporate engineering.
+    """
+    from app.services.oem_vault_service import OEMDataSyncService
+    excel_stream, filename = OEMDataSyncService.generate_fleet_excel_export(fleet_id)
+    if not excel_stream:
+        return jsonify({"error": "Fleet data not available for Excel export"}), 404
+    return send_file(
+        excel_stream,
+        download_name=filename,
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 

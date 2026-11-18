@@ -147,13 +147,39 @@ def end_trip():
 
     # Calculate and credit JK Tyre Driver Rewards based on Trip Score
     from app.services.reward_service import RewardService
-    from app.models.reward import DriverReward
+    from app.models.reward import DriverReward, DriverActivity
     reward_calc = RewardService.calculate_trip_rewards(trip.trip_score, trip.distance_km)
     if reward_calc.get("points", 0) > 0:
+        activity = DriverActivity(
+            fleet_id=user.fleet_id,
+            driver_id=user.id,
+            vehicle_id=trip.vehicle_id,
+            trip_id=trip.id,
+            activity_type="TRIP_SCORE_REWARD",
+            title=f"Safe Trip Journey: {trip.trip_code} (Score {trip.trip_score}/100)",
+            odometer=trip.end_odometer,
+            location=f"{trip.origin} → {trip.destination}",
+            points_earned=reward_calc["points"],
+            discount_value=reward_calc["discount_value"],
+            notes=reward_calc["description"],
+            status="APPROVED",
+        )
+        activity.activity_metadata = {
+            "trip_code": trip.trip_code,
+            "origin": trip.origin,
+            "destination": trip.destination,
+            "distance_km": trip.distance_km,
+            "trip_score": trip.trip_score,
+            "tier": reward_calc.get("tier"),
+        }
+        db.session.add(activity)
+        db.session.flush()
+
         reward_entry = DriverReward(
             fleet_id=user.fleet_id,
             driver_id=user.id,
             trip_id=trip.id,
+            activity_id=activity.id,
             reward_type="TRIP_SCORE_REWARD",
             trip_score=trip.trip_score,
             trip_distance_km=trip.distance_km,
@@ -164,6 +190,16 @@ def end_trip():
         db.session.add(reward_entry)
 
     db.session.commit()
+
+    try:
+        from app.services.oem_vault_service import OEMDataSyncService
+        OEMDataSyncService.capture_fleet_snapshot(
+            fleet_id=user.fleet_id,
+            snapshot_type="TRIP_COMPLETION",
+            channel="DRIVER_TRIP_COMPLETION"
+        )
+    except Exception:
+        pass
     record_audit(
         "TRIP_COMPLETED",
         "TRIP",
