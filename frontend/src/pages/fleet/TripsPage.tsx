@@ -34,7 +34,6 @@ export const TripsPage: React.FC = () => {
   const vehicleIdParam = searchParams.get('vehicle_id') || '';
 
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
-  const [activeModalTab, setActiveModalTab] = useState<'parameters' | 'formula' | 'sensor_bounds'>('parameters');
   const [startDate, setStartDate] = useState(searchParams.get('start_date') || '');
   const [endDate, setEndDate] = useState(searchParams.get('end_date') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
@@ -295,8 +294,6 @@ export const TripsPage: React.FC = () => {
       {selectedTrip && (() => {
         const breakdown: any = selectedTrip.score_breakdown || {};
         const comp = breakdown.components || {};
-        const formula = breakdown.formula_breakdown || {};
-        const contrib = formula.contributions || {};
         const p = breakdown.telematics_parameters || {};
         const speedP = p.speed || {};
         const smoothP = p.smoothness || {};
@@ -310,15 +307,16 @@ export const TripsPage: React.FC = () => {
         const s_temp = comp.thermal_stability ?? (selectedTrip.trip_score ? Math.max(50, selectedTrip.trip_score - 3.0) : 85);
         const s_t = comp.tyre_safety ?? (0.60 * s_p + 0.40 * s_temp);
 
-        const speedPts = contrib.speed_points ?? Number((s_v * 0.50).toFixed(2));
-        const smoothPts = contrib.smoothness_points ?? Number((s_d * 0.30).toFixed(2));
-        const presPts = contrib.pressure_points ?? Number((s_p * 0.12).toFixed(2));
-        const thermPts = contrib.thermal_points ?? Number((s_temp * 0.08).toFixed(2));
-        const totalCalculated = contrib.total_calculated ?? selectedTrip.trip_score ?? Number((speedPts + smoothPts + presPts + thermPts).toFixed(1));
+        const speedPts = s_v * 0.50;
+        const smoothPts = s_d * 0.30;
+        const presPts = s_p * 0.12;
+        const thermPts = s_temp * 0.08;
+        const tyrePts = s_t * 0.20;
+        const totalScore = selectedTrip.trip_score ?? (speedPts + smoothPts + tyrePts);
 
         return (
           <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
-            <div className="bg-[#FAF8F5] border border-gold-border rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <div className="bg-[#FAF8F5] border border-gold-border rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
               {/* Modal Sticky Header */}
               <div className="p-5 border-b border-gold-light bg-cream flex items-start justify-between gap-4 shrink-0">
                 <div className="space-y-1">
@@ -362,11 +360,11 @@ export const TripsPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="text-right bg-white px-3.5 py-1.5 rounded-2xl border border-gold-border shadow-xs">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Final Trip Score</div>
+                  <div className="text-right bg-white px-4 py-2 rounded-2xl border border-gold-border shadow-xs">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Trip Score</div>
                     <div className="text-2xl font-black font-mono text-slate-900 flex items-baseline justify-end gap-1">
-                      <span className={totalCalculated >= 85 ? 'text-emerald-600' : totalCalculated >= 70 ? 'text-amber-600' : 'text-red-600'}>
-                        {totalCalculated.toFixed(1)}
+                      <span className={totalScore >= 85 ? 'text-emerald-600' : totalScore >= 70 ? 'text-amber-600' : 'text-red-600'}>
+                        {totalScore.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold">/ 100</span>
                     </div>
@@ -384,521 +382,266 @@ export const TripsPage: React.FC = () => {
 
               {/* Scrollable Content */}
               <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs">
-                {/* Master Mathematical Formula Card */}
-                <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950 p-4 sm:p-5 text-white border border-gold-border/40 shadow-lg space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <Scale className="w-4 h-4 text-brand-gold" />
-                      <span className="font-bold text-xs uppercase tracking-wider text-brand-gold">
-                        Trip Scoring Mathematical Formulation
+                {/* Score Summary Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {/* Speed Compliance */}
+                  <div className="bg-white border border-blue-200/80 rounded-2xl p-3.5 space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-blue-600" /> Speed Compliance
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-400">50% Weight</span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-black font-mono text-slate-900">{s_v.toFixed(1)}%</span>
+                      <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        +{speedPts.toFixed(1)} pts
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-300 font-mono">
-                      Rule Version: {breakdown.rule_version || 'v2.0.0-adaptive-relative-ml'}
-                    </span>
-                  </div>
-
-                  {/* Formula Equations Banner */}
-                  <div className="bg-black/40 border border-white/10 rounded-xl p-3 font-mono text-[11px] space-y-1.5 text-slate-200">
-                    <div className="text-brand-gold font-bold text-xs">
-                      S = 0.50 · S_v + 0.30 · S_d + 0.20 · S_t
-                    </div>
-                    <div className="text-slate-300 text-[10px]">
-                      = 0.50 · S_v + 0.30 · S_d + 0.12 · S_p + 0.08 · S_temp
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate-400 pt-1 border-t border-white/5">
-                      <span>Severity Blend: <strong className="text-slate-200">E_i = 0.80 E_abs + 0.20 E_rel</strong></span>
-                      <span>Relative Normalization: <strong className="text-slate-200">z = (x - μ_b) / σ_b</strong></span>
-                      <span>Risk Mapping: <strong className="text-slate-200">S_j = 100 · exp(-k_j R_j)</strong></span>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-500 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, s_v))}%` }}
+                      />
                     </div>
                   </div>
 
-                  {/* 4 Points Contribution Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                    {/* Speed Pillar */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-blue-300 flex items-center gap-1">
-                          <Zap className="w-3 h-3" /> Speed (S_v)
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">50% wt</span>
-                      </div>
-                      <div className="text-lg font-mono font-bold text-white">
-                        {s_v.toFixed(1)}%
-                      </div>
-                      <div className="text-[10px] text-blue-300/80 font-mono font-semibold">
-                        +{speedPts.toFixed(2)} pts
-                      </div>
+                  {/* Driving Smoothness */}
+                  <div className="bg-white border border-emerald-200/80 rounded-2xl p-3.5 space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-emerald-600" /> Driving Smoothness
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-400">30% Weight</span>
                     </div>
-
-                    {/* Smoothness Pillar */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-emerald-300 flex items-center gap-1">
-                          <Activity className="w-3 h-3" /> Dynamics (S_d)
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">30% wt</span>
-                      </div>
-                      <div className="text-lg font-mono font-bold text-white">
-                        {s_d.toFixed(1)}%
-                      </div>
-                      <div className="text-[10px] text-emerald-300/80 font-mono font-semibold">
-                        +{smoothPts.toFixed(2)} pts
-                      </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-black font-mono text-slate-900">{s_d.toFixed(1)}%</span>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        +{smoothPts.toFixed(1)} pts
+                      </span>
                     </div>
-
-                    {/* Tyre Pressure Pillar */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-cyan-300 flex items-center gap-1">
-                          <Gauge className="w-3 h-3" /> Pressure (S_p)
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">12% wt</span>
-                      </div>
-                      <div className="text-lg font-mono font-bold text-white">
-                        {s_p.toFixed(1)}%
-                      </div>
-                      <div className="text-[10px] text-cyan-300/80 font-mono font-semibold">
-                        +{presPts.toFixed(2)} pts
-                      </div>
-                    </div>
-
-                    {/* Tyre Thermal Pillar */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-amber-300 flex items-center gap-1">
-                          <Thermometer className="w-3 h-3" /> Thermal (S_temp)
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">8% wt</span>
-                      </div>
-                      <div className="text-lg font-mono font-bold text-white">
-                        {s_temp.toFixed(1)}%
-                      </div>
-                      <div className="text-[10px] text-amber-300/80 font-mono font-semibold">
-                        +{thermPts.toFixed(2)} pts
-                      </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, s_d))}%` }}
+                      />
                     </div>
                   </div>
 
-                  {/* Weighted Points Sum Reconciliation */}
-                  <div className="bg-black/30 rounded-xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-white/5 text-[11px] font-mono">
-                    <span className="text-slate-300">
-                      Weighted Contribution Sum:
-                      <strong className="text-white ml-1">
-                        {speedPts.toFixed(2)} + {smoothPts.toFixed(2)} + {presPts.toFixed(2)} + {thermPts.toFixed(2)} = {totalCalculated.toFixed(1)} / 100
-                      </strong>
-                    </span>
-                    <span className="text-emerald-400 text-[10px] font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Mathematical Proof Verified
+                  {/* Tyre Pressure */}
+                  <div className="bg-white border border-cyan-200/80 rounded-2xl p-3.5 space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-cyan-900 flex items-center gap-1.5">
+                        <Gauge className="w-3.5 h-3.5 text-cyan-600" /> Tyre Pressure
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-400">12% Weight</span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-black font-mono text-slate-900">{s_p.toFixed(1)}%</span>
+                      <span className="text-xs font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                        +{presPts.toFixed(1)} pts
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-cyan-500 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, s_p))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tyre Thermal */}
+                  <div className="bg-white border border-amber-200/80 rounded-2xl p-3.5 space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <Thermometer className="w-3.5 h-3.5 text-amber-600" /> Tyre Temperature
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-400">8% Weight</span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-black font-mono text-slate-900">{s_temp.toFixed(1)}%</span>
+                      <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        +{thermPts.toFixed(1)} pts
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-amber-500 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, s_temp))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Combined Tyre Safety Bar */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-amber-700" />
+                    <div>
+                      <span className="font-bold text-slate-900 text-xs">Combined Tyre Safety Score:</span>
+                      <span className="text-slate-600 ml-1 text-[11px]">
+                        Evaluated across Pressure ({s_p.toFixed(1)}%) and Temperature ({s_temp.toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-end sm:self-auto font-mono">
+                    <span className="font-black text-amber-900 text-sm">{s_t.toFixed(1)}%</span>
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                      20% Weight • +{tyrePts.toFixed(1)} pts
                     </span>
                   </div>
                 </div>
 
-                {/* Sub-Tabs for In-Depth Inspection */}
-                <div className="flex items-center gap-2 border-b border-gold-light pb-2">
-                  <button
-                    onClick={() => setActiveModalTab('parameters')}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                      activeModalTab === 'parameters'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'bg-cream text-slate-600 hover:bg-cream-100'
-                    }`}
-                  >
-                    All Parameters Breakdown
-                  </button>
-                  <button
-                    onClick={() => setActiveModalTab('formula')}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                      activeModalTab === 'formula'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'bg-cream text-slate-600 hover:bg-cream-100'
-                    }`}
-                  >
-                    Formula Weights &amp; Risk Decay
-                  </button>
-                  <button
-                    onClick={() => setActiveModalTab('sensor_bounds')}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                      activeModalTab === 'sensor_bounds'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'bg-cream text-slate-600 hover:bg-cream-100'
-                    }`}
-                  >
-                    Sensor Telematics vs. Limits
-                  </button>
-                </div>
-
-                {/* TAB 1: ALL PARAMETERS BREAKDOWN (4 PILLARS) */}
-                {activeModalTab === 'parameters' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Pillar 1: Speed Compliance */}
-                      <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1 rounded-lg bg-blue-50 text-blue-600">
-                              <Zap className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <div className="font-bold text-slate-900">1. Speed Compliance (S_v)</div>
-                              <div className="text-[10px] text-slate-400">50% Overall Weight • k_v = 2.0</div>
-                            </div>
-                          </div>
-                          <span className="font-mono font-bold text-sm text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
-                            {s_v.toFixed(1)}% (+{speedPts.toFixed(2)} pts)
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Speed Limit (v_limit)</span>
-                            <span className="font-bold text-slate-800">{speedP.speed_limit_kmh ?? 80.0} km/h</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Critical Speed (v_crit)</span>
-                            <span className="font-bold text-slate-800">{speedP.critical_speed_kmh ?? 95.0} km/h</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Trip Mean Speed</span>
-                            <span className="font-bold text-slate-800">{speedP.mean_speed_kmh ?? 54.2} km/h</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Trip Max Speed</span>
-                            <span className="font-bold text-slate-800">{speedP.max_speed_kmh ?? 74.0} km/h</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Overspeed Events</span>
-                            <span className="font-bold text-slate-800">{speedP.overspeed_instances ?? 0} ({speedP.overspeed_pct ?? 0.0}%)</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Fleet Baseline (μ ± σ)</span>
-                            <span className="font-bold text-slate-800">{speedP.fleet_baseline_mean_kmh ?? 37.5} ± {speedP.fleet_baseline_std_kmh ?? 26.5} km/h</span>
-                          </div>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-blue-50/60 border border-blue-100 flex items-center justify-between text-[10px] text-blue-900 font-mono">
-                          <span>Risk Burden R_v: <strong>{speedP.risk_burden_R ?? 0.039}</strong></span>
-                          <span>Formula: S_v = 100 · exp(-2.0 · R_v)</span>
-                        </div>
+                {/* Detailed Performance Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Speed Metrics */}
+                  <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-lg bg-blue-50 text-blue-600">
+                          <Zap className="w-4 h-4" />
+                        </span>
+                        <span className="font-bold text-slate-900">Speed Performance</span>
                       </div>
-
-                      {/* Pillar 2: Driving Dynamics / Smoothness */}
-                      <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1 rounded-lg bg-emerald-50 text-emerald-600">
-                              <Activity className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <div className="font-bold text-slate-900">2. Driving Smoothness (S_d)</div>
-                              <div className="text-[10px] text-slate-400">30% Overall Weight • k_d = 2.5</div>
-                            </div>
-                          </div>
-                          <span className="font-mono font-bold text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            {s_d.toFixed(1)}% (+{smoothPts.toFixed(2)} pts)
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Warning Accel (a_w)</span>
-                            <span className="font-bold text-slate-800">{smoothP.warning_accel_ms2 ?? 2.0} m/s²</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Critical Accel (a_c)</span>
-                            <span className="font-bold text-slate-800">{smoothP.critical_accel_ms2 ?? 3.0} m/s²</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Mean Abs Acceleration</span>
-                            <span className="font-bold text-slate-800">{smoothP.mean_abs_accel_ms2 ?? 0.72} m/s²</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Max Deceleration</span>
-                            <span className="font-bold text-slate-800">{smoothP.max_accel_ms2 ?? 1.55} m/s²</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Harsh Braking (|a| &gt; 2 m/s²)</span>
-                            <span className="font-bold text-slate-800">{smoothP.harsh_braking_events ?? 0} events</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Rapid Accel (a &gt; 2 m/s²)</span>
-                            <span className="font-bold text-slate-800">{smoothP.rapid_accel_events ?? 0} events</span>
-                          </div>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 flex items-center justify-between text-[10px] text-emerald-900 font-mono">
-                          <span>Risk Burden R_d: <strong>{smoothP.risk_burden_R ?? 0.038}</strong></span>
-                          <span>Formula: S_d = 100 · exp(-2.5 · R_d)</span>
-                        </div>
-                      </div>
-
-                      {/* Pillar 3: Tyre Pressure Compliance */}
-                      <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1 rounded-lg bg-cyan-50 text-cyan-600">
-                              <Gauge className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <div className="font-bold text-slate-900">3. Pressure Compliance (S_p)</div>
-                              <div className="text-[10px] text-slate-400">12% Overall (60% of S_t) • k_p = 2.0</div>
-                            </div>
-                          </div>
-                          <span className="font-mono font-bold text-sm text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200">
-                            {s_p.toFixed(1)}% (+{presPts.toFixed(2)} pts)
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Cold Target Inflation</span>
-                            <span className="font-bold text-slate-800">{presP.baseline_target_psi ?? 130.0} PSI</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Critical Deviation (Δp_crit)</span>
-                            <span className="font-bold text-slate-800">{presP.critical_deviation_psi ?? 15.0} PSI</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Trip Mean Pressure</span>
-                            <span className="font-bold text-slate-800">{presP.mean_pressure_psi ?? 129.6} PSI</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Max Deviation Recorded</span>
-                            <span className="font-bold text-slate-800">{presP.max_deviation_psi ?? 2.4} PSI</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Severe Dev Events (&gt;10 PSI)</span>
-                            <span className="font-bold text-slate-800">{presP.pressure_dev_events ?? 0}</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Fleet Dev Baseline (μ ± σ)</span>
-                            <span className="font-bold text-slate-800">{presP.fleet_baseline_mean_psi ?? 0.53} ± {presP.fleet_baseline_std_psi ?? 0.35} PSI</span>
-                          </div>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-cyan-50/60 border border-cyan-100 flex items-center justify-between text-[10px] text-cyan-900 font-mono">
-                          <span>Risk Burden R_p: <strong>{presP.risk_burden_R ?? 0.036}</strong></span>
-                          <span>Formula: S_p = 100 · exp(-2.0 · R_p)</span>
-                        </div>
-                      </div>
-
-                      {/* Pillar 4: Tyre Thermal Stability */}
-                      <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1 rounded-lg bg-amber-50 text-amber-600">
-                              <Thermometer className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <div className="font-bold text-slate-900">4. Thermal Stability (S_temp)</div>
-                              <div className="text-[10px] text-slate-400">8% Overall (40% of S_t) • k_t = 2.0</div>
-                            </div>
-                          </div>
-                          <span className="font-mono font-bold text-sm text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                            {s_temp.toFixed(1)}% (+{thermPts.toFixed(2)} pts)
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Warning Temp (T_w)</span>
-                            <span className="font-bold text-slate-800">{thermP.warning_temp_c ?? 45.0} °C</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Critical Delam (T_c)</span>
-                            <span className="font-bold text-slate-800">{thermP.critical_temp_c ?? 55.0} °C</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Trip Mean Temperature</span>
-                            <span className="font-bold text-slate-800">{thermP.mean_temp_c ?? 33.8} °C</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Peak Temperature</span>
-                            <span className="font-bold text-slate-800">{thermP.max_temp_c ?? 39.1} °C</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">High Temp Incidents (&gt;45°C)</span>
-                            <span className="font-bold text-slate-800">{thermP.high_temp_events ?? 0}</span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50">
-                            <span className="text-slate-400 block text-[10px]">Fleet Temp Baseline (μ ± σ)</span>
-                            <span className="font-bold text-slate-800">{thermP.fleet_baseline_mean_c ?? 34.4} ± {thermP.fleet_baseline_std_c ?? 5.31} °C</span>
-                          </div>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-amber-50/60 border border-amber-100 flex items-center justify-between text-[10px] text-amber-900 font-mono">
-                          <span>Risk Burden R_t: <strong>{thermP.risk_burden_R ?? 0.075}</strong></span>
-                          <span>Formula: S_temp = 100 · exp(-2.0 · R_t)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 2: MATHEMATICAL VERIFICATION & FORMULA PROOF */}
-                {activeModalTab === 'formula' && (
-                  <div className="space-y-4">
-                    <div className="bg-white border border-gold-border rounded-2xl p-5 space-y-4 shadow-xs">
-                      <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
-                        <Brain className="w-4 h-4 text-purple-600" />
-                        Mathematical Model Specifications &amp; Step-by-Step Proof
-                      </div>
-
-                      <div className="space-y-3 text-[11px] leading-relaxed text-slate-700">
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 font-mono space-y-1">
-                          <div className="font-bold text-slate-900">Step 1: Two-Tier Severity Blending (Absolute vs. Relative)</div>
-                          <p className="text-slate-600 text-[10px]">
-                            E_i = 0.80 · E_abs + 0.20 · E_rel, where E_rel = clip((|z| - z_w) / (z_c - z_w), 0, 1) and z = (x - μ_b) / σ_b.
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            Warning z_w = 2.0, Critical z_c = 3.0. Blends 80% physical manufacturer safety tolerance with 20% empirical fleet driving distribution.
-                          </p>
-                        </div>
-
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 font-mono space-y-1">
-                          <div className="font-bold text-slate-900">Step 2: Duration-Weighted Risk Accumulation (R_j)</div>
-                          <p className="text-slate-600 text-[10px]">
-                            R_j = ∑(E_i · Δt) / T_total (where sampling step Δt = 6.0s)
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            Quantifies total sustained exposure to mechanical, inertial, and thermal stressors across trip duration.
-                          </p>
-                        </div>
-
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 font-mono space-y-1">
-                          <div className="font-bold text-slate-900">Step 3: Exponential Risk Decay Score (S_j)</div>
-                          <p className="text-slate-600 text-[10px]">
-                            S_v = 100 · exp(-2.0 · R_v) • S_d = 100 · exp(-2.5 · R_d) • S_p = 100 · exp(-2.0 · R_p) • S_temp = 100 · exp(-2.0 · R_t)
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            Guarantees non-linear, mathematically bounded penalty mapping where minor variations preserve high scores while sustained infractions decay progressively.
-                          </p>
-                        </div>
-
-                        <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 font-mono space-y-1 text-slate-900">
-                          <div className="font-bold text-amber-900">Step 4: Composite Weighted Trip Score (S)</div>
-                          <p className="font-bold text-xs text-amber-950">
-                            S = 0.50 · S_v + 0.30 · S_d + 0.20 · S_t = 0.50 · S_v + 0.30 · S_d + 0.12 · S_p + 0.08 · S_temp
-                          </p>
-                          <p className="text-[10px] text-amber-800">
-                            = (0.50 × {s_v.toFixed(1)}) + (0.30 × {s_d.toFixed(1)}) + (0.12 × {s_p.toFixed(1)}) + (0.08 × {s_temp.toFixed(1)}) = {totalCalculated.toFixed(1)} / 100
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: SENSOR TELEMATICS VS PHYSICAL LIMITS */}
-                {activeModalTab === 'sensor_bounds' && (
-                  <div className="space-y-4">
-                    <div className="bg-white border border-gold-border rounded-2xl overflow-hidden shadow-xs">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="bg-cream-200 border-b border-gold-light text-slate-700 font-semibold text-[11px]">
-                            <th className="py-3 px-4">Telemetry Channel</th>
-                            <th className="py-3 px-3">Engineering Safety Bound</th>
-                            <th className="py-3 px-3">Fleet Empirical Mean</th>
-                            <th className="py-3 px-3">Trip Observed Value</th>
-                            <th className="py-3 px-3">Risk Burden</th>
-                            <th className="py-3 px-4 text-right">Compliance</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 font-mono text-[11px] text-slate-800">
-                          <tr>
-                            <td className="py-3 px-4 font-bold font-sans flex items-center gap-1.5">
-                              <Zap className="w-3.5 h-3.5 text-blue-500" /> Vehicle Speed (v)
-                            </td>
-                            <td className="py-3 px-3 text-slate-600">≤ 80.0 km/h (crit 95.0)</td>
-                            <td className="py-3 px-3 text-slate-600">37.5 ± 26.5 km/h</td>
-                            <td className="py-3 px-3 font-bold">{speedP.max_speed_kmh ?? 74.0} km/h (max)</td>
-                            <td className="py-3 px-3">{speedP.risk_burden_R ?? 0.039}</td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                {s_v >= 80 ? 'PASS' : 'WARN'}
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4 font-bold font-sans flex items-center gap-1.5">
-                              <Activity className="w-3.5 h-3.5 text-emerald-500" /> Deceleration / Accel (a)
-                            </td>
-                            <td className="py-3 px-3 text-slate-600">|a| ≤ 2.0 m/s² (crit 3.0)</td>
-                            <td className="py-3 px-3 text-slate-600">0.889 ± 0.861 m/s²</td>
-                            <td className="py-3 px-3 font-bold">{smoothP.max_accel_ms2 ?? 1.55} m/s² (max)</td>
-                            <td className="py-3 px-3">{smoothP.risk_burden_R ?? 0.038}</td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                {s_d >= 80 ? 'PASS' : 'WARN'}
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4 font-bold font-sans flex items-center gap-1.5">
-                              <Gauge className="w-3.5 h-3.5 text-cyan-500" /> Tyre Inflation (p)
-                            </td>
-                            <td className="py-3 px-3 text-slate-600">130.0 PSI (crit Δ &gt; 15)</td>
-                            <td className="py-3 px-3 text-slate-600">Δ 0.527 ± 0.350 PSI</td>
-                            <td className="py-3 px-3 font-bold">{presP.mean_pressure_psi ?? 129.6} PSI (mean)</td>
-                            <td className="py-3 px-3">{presP.risk_burden_R ?? 0.036}</td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                {s_p >= 80 ? 'PASS' : 'WARN'}
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4 font-bold font-sans flex items-center gap-1.5">
-                              <Thermometer className="w-3.5 h-3.5 text-amber-500" /> Tyre Temperature (T)
-                            </td>
-                            <td className="py-3 px-3 text-slate-600">≤ 45.0 °C (crit 55.0)</td>
-                            <td className="py-3 px-3 text-slate-600">34.4 ± 5.31 °C</td>
-                            <td className="py-3 px-3 font-bold">{thermP.max_temp_c ?? 39.1} °C (peak)</td>
-                            <td className="py-3 px-3">{thermP.risk_burden_R ?? 0.075}</td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                {s_temp >= 80 ? 'PASS' : 'WARN'}
-                              </span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Self-Learning Online EMA Baseline Adaptation & Narrative Box */}
-                <div className="bg-cream-50 border border-gold-light rounded-2xl p-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gold-light/60 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-purple-600" />
-                      <span className="font-bold text-slate-900">
-                        Online Self-Learning Baseline Adaptation &amp; Driving Persona
+                      <span className="font-mono font-bold text-sm text-blue-600">
+                        {s_v.toFixed(1)} / 100
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-                      EMA Learning Rate: η = 0.05
-                    </span>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Speed Limit</span>
+                        <span className="font-bold text-slate-800">{speedP.speed_limit_kmh ?? 80.0} km/h</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Average Speed</span>
+                        <span className="font-bold text-slate-800">{speedP.mean_speed_kmh ?? 54.2} km/h</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Peak Speed</span>
+                        <span className="font-bold text-slate-800">{speedP.max_speed_kmh ?? 74.0} km/h</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Overspeed Events</span>
+                        <span className="font-bold text-slate-800">{speedP.overspeed_instances ?? 0}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="font-semibold text-slate-900">
-                        Classified Driving Persona: <span className="text-emerald-700">{pattern.profile || 'Defensive & Smooth'}</span>
+                  {/* Smoothness Metrics */}
+                  <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-lg bg-emerald-50 text-emerald-600">
+                          <Activity className="w-4 h-4" />
+                        </span>
+                        <span className="font-bold text-slate-900">Driving Smoothness</span>
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
-                        {pattern.description || 'Gentle throttle and braking patterns minimize tire friction forces, leading to reduced irregular wear and optimal fuel consumption.'}
+                      <span className="font-mono font-bold text-sm text-emerald-600">
+                        {s_d.toFixed(1)} / 100
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Harsh Braking Incidents</span>
+                        <span className="font-bold text-slate-800">{smoothP.harsh_braking_events ?? 0}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Rapid Acceleration Incidents</span>
+                        <span className="font-bold text-slate-800">{smoothP.rapid_accel_events ?? 0}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Average Acceleration</span>
+                        <span className="font-bold text-slate-800">{smoothP.mean_abs_accel_ms2 ?? 0.72} m/s²</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Max Deceleration</span>
+                        <span className="font-bold text-slate-800">{smoothP.max_accel_ms2 ?? 1.55} m/s²</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tyre Pressure Metrics */}
+                  <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-lg bg-cyan-50 text-cyan-600">
+                          <Gauge className="w-4 h-4" />
+                        </span>
+                        <span className="font-bold text-slate-900">Tyre Pressure Compliance</span>
+                      </div>
+                      <span className="font-mono font-bold text-sm text-cyan-600">
+                        {s_p.toFixed(1)} / 100
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Target Cold Pressure</span>
+                        <span className="font-bold text-slate-800">{presP.baseline_target_psi ?? 130.0} PSI</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Average Pressure</span>
+                        <span className="font-bold text-slate-800">{presP.mean_pressure_psi ?? 129.6} PSI</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Max Pressure Deviation</span>
+                        <span className="font-bold text-slate-800">{presP.max_deviation_psi ?? 2.4} PSI</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Pressure Warnings</span>
+                        <span className="font-bold text-slate-800">{presP.pressure_dev_events ?? 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tyre Temperature Metrics */}
+                  <div className="bg-white border border-gold-border rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-lg bg-amber-50 text-amber-600">
+                          <Thermometer className="w-4 h-4" />
+                        </span>
+                        <span className="font-bold text-slate-900">Tyre Temperature Stability</span>
+                      </div>
+                      <span className="font-mono font-bold text-sm text-amber-600">
+                        {s_temp.toFixed(1)} / 100
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Warning Temperature Limit</span>
+                        <span className="font-bold text-slate-800">{thermP.warning_temp_c ?? 45.0} °C</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Average Temperature</span>
+                        <span className="font-bold text-slate-800">{thermP.mean_temp_c ?? 33.8} °C</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Peak Temperature</span>
+                        <span className="font-bold text-slate-800">{thermP.max_temp_c ?? 39.1} °C</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50">
+                        <span className="text-slate-500 block text-[10px]">Thermal Alerts</span>
+                        <span className="font-bold text-slate-800">{thermP.high_temp_events ?? 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Driving Persona & Operational Notes */}
+                <div className="bg-cream-50 border border-gold-light rounded-2xl p-4 space-y-2.5">
+                  <div className="flex items-center gap-2 text-slate-900 font-bold">
+                    <Sparkles className="w-4 h-4 text-brand-gold" />
+                    Trip Observations &amp; Driving Assessment
+                  </div>
+                  <div className="space-y-1.5 text-[11px] text-slate-600 leading-relaxed">
+                    <p>
+                      <strong className="text-slate-800">Assigned Persona:</strong> {pattern.profile || 'Defensive & Smooth'} — {pattern.description || 'Gentle acceleration and braking dynamics.'}
+                    </p>
+                    {breakdown.explanation && (
+                      <p className="pt-1 text-slate-700 border-t border-gold-light/60">
+                        <strong className="text-slate-800">Operational Log:</strong> {breakdown.explanation}
                       </p>
-                      {breakdown.explanation && (
-                        <div className="pt-1.5 text-slate-700 font-medium text-[11px] border-t border-gold-light/40 mt-1.5">
-                          <span className="font-bold text-slate-900">Operational Log: </span>
-                          {breakdown.explanation}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -906,13 +649,13 @@ export const TripsPage: React.FC = () => {
               {/* Modal Footer */}
               <div className="p-4 border-t border-gold-light bg-cream-100 flex items-center justify-between shrink-0">
                 <span className="text-[11px] text-slate-500 font-mono">
-                  Adaptive Trip Score Evaluator • JK Tyre Fleet Intelligence Platform
+                  Trip Scoring Breakdown • JK Tyre Fleet Intelligence Platform
                 </span>
                 <button
                   onClick={() => setSelectedTrip(null)}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm"
                 >
-                  Done &amp; Close Breakdown
+                  Close
                 </button>
               </div>
             </div>
