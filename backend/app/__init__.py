@@ -54,18 +54,33 @@ def create_app(config_class=Config):
             from app.services.oem_vault_service import OEMDataSyncService
             OEMDataSyncService.ensure_baseline_sync()
 
-            # Check if this is a fresh cloud database (0 users registered) or 0 vehicles
+            # Check if this is a fresh cloud database (0 users registered or 0 vehicles)
             from app.models.user import User
             from app.models.vehicle import Vehicle
-            if User.query.first() is None or Vehicle.query.first() is None:
-                app.logger.info("Fresh database or empty fleet detected. Auto-seeding commercial multi-axle fleet...")
-                from synthetic.generator import generate_fleet_data
-                generate_fleet_data(num_vehicles=20, seed=42, weeks_history=3)
-                try:
-                    from scripts.setup_inspection_trips_and_drivers import run as setup_drivers_and_trips
-                    setup_drivers_and_trips()
-                except Exception as exc:
-                    app.logger.warning(f"Inspection setup notice on auto-seed: {exc}")
+
+            # 1. Restore seed database with exactly 2 vehicles if fresh instance
+            seed_db = os.path.abspath(os.path.join(app.root_path, "..", "seed_data", "fleet_2_vehicles.db"))
+            inst_db = os.path.abspath(os.path.join(app.root_path, "..", "instance", "jktyre.db"))
+            if os.path.isfile(seed_db) and (not os.path.isfile(inst_db) or os.path.getsize(inst_db) < 10000):
+                import shutil
+                os.makedirs(os.path.dirname(inst_db), exist_ok=True)
+                shutil.copy2(seed_db, inst_db)
+                app.logger.info("Restored seed database with 2 vehicles.")
+
+            # 2. Prune any excess vehicles to guarantee exactly 2 vehicles (TN04 BF5918 and TN04 BF5974)
+            excess_vehicles = Vehicle.query.filter(~Vehicle.vehicle_number.in_(["TN04 BF5918", "TN04 BF5974"])).all()
+            if excess_vehicles:
+                app.logger.info(f"Pruning {len(excess_vehicles)} excess vehicles to enforce strictly 2 fleet vehicles...")
+                for ev in excess_vehicles:
+                    db.session.delete(ev)
+                db.session.commit()
+
+            # 3. Ensure trips, rewards, and genuine drivers are in sync
+            try:
+                from scripts.setup_inspection_trips_and_drivers import run as setup_drivers_and_trips
+                setup_drivers_and_trips()
+            except Exception as exc:
+                app.logger.warning(f"Inspection setup notice on boot: {exc}")
         except Exception as exc:
             app.logger.warning(f"Migration, OEM sync, or auto-seed notice: {exc}")
 
