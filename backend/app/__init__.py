@@ -54,11 +54,11 @@ def create_app(config_class=Config):
             from app.services.oem_vault_service import OEMDataSyncService
             OEMDataSyncService.ensure_baseline_sync()
 
-            # Check if this is a fresh cloud database (0 users registered) or 0 vehicles
+            # Check if this is a fresh cloud database (0 users registered)
+            # Auto-seed only if NO users exist (completely fresh database)
             from app.models.user import User
-            from app.models.vehicle import Vehicle
-            if User.query.first() is None or Vehicle.query.first() is None:
-                app.logger.info("Fresh database or empty fleet detected. Auto-seeding commercial multi-axle fleet...")
+            if User.query.first() is None:
+                app.logger.info("Fresh database detected. Auto-seeding commercial multi-axle fleet...")
                 from synthetic.generator import generate_fleet_data
                 generate_fleet_data(num_vehicles=20, seed=42, weeks_history=3)
         except Exception as exc:
