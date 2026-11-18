@@ -41,21 +41,9 @@ def get_fleet_vehicles():
     vehicles = Vehicle.query.filter_by(fleet_id=user.fleet_id, status="ACTIVE").order_by(Vehicle.vehicle_number.asc()).all()
     res = []
     for v in vehicles:
-        res.append({
-            "id": v.id,
-            "vehicle_number": v.vehicle_number,
-            "make": v.make,
-            "model": v.model,
-            "vehicle_type": v.vehicle_type,
-            "wheel_config": v.wheel_config,
-            "axle_count": v.axle_count,
-            "current_odometer": v.current_odometer,
-            "baseline_pressure": v.baseline_pressure,
-            "fitted_tyre_count": len([f for f in v.active_tyre_fitments if f.is_mounted]) if v.active_tyre_fitments else 0,
-            "expected_tyre_count": v.expected_tyre_count,
-            "status": v.status,
-            "is_assigned": (v.id == user.assigned_vehicle_id),
-        })
+        d = v.to_dict()
+        d["is_assigned"] = (v.id == user.assigned_vehicle_id)
+        res.append(d)
     return jsonify(res), 200
 
 

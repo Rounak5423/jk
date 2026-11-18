@@ -729,31 +729,70 @@ export const DriverPortalPage: React.FC = () => {
           </h3>
 
           <form onSubmit={handleStartTrip} className="space-y-4 text-xs">
-            {/* Fleet Vehicle Selector */}
-            {fleetVehicles.length > 0 && (
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">
-                  Select Commercial Vehicle for Journey *
+            {/* Fleet Commercial Vehicle Selector */}
+            <div className="bg-white/80 border-2 border-brand-gold/40 rounded-2xl p-4 space-y-2.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-brand-gold" />
+                  Select Vehicle for this Journey *
                 </label>
-                <select
-                  value={selectedVehicleId}
-                  onChange={(e) => {
-                    setSelectedVehicleId(e.target.value);
-                  }}
-                  required
-                  className="w-full bg-cream border border-gold-border rounded-xl px-3 py-2.5 text-slate-900 font-semibold focus:outline-none focus:border-brand-gold focus:ring-brand-gold cursor-pointer"
-                >
-                  {fleetVehicles.map((fv) => (
-                    <option key={fv.id} value={fv.id}>
-                      {fv.vehicle_number} — {fv.make} {fv.model} ({fv.wheel_config}) • Current Odo: {fv.current_odometer?.toLocaleString()} km
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Drivers are authorized to operate any vehicle under this fleet.
-                </p>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                  Fleet Multi-Vehicle Access
+                </span>
               </div>
-            )}
+
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => {
+                  setSelectedVehicleId(e.target.value);
+                  const sel = fleetVehicles.find((v) => v.id === e.target.value);
+                  if (sel) setStartOdo(sel.current_odometer?.toString() || '');
+                }}
+                required
+                className="w-full bg-cream border border-gold-border rounded-xl px-3.5 py-2.5 text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 cursor-pointer shadow-inner"
+              >
+                {fleetVehicles.length > 0 ? (
+                  fleetVehicles.map((fv) => (
+                    <option key={fv.id} value={fv.id}>
+                      {fv.vehicle_number} — {fv.make || 'Commercial Truck'} {fv.model || ''} ({fv.wheel_config}) • Verified Odometer: {fv.current_odometer?.toLocaleString()} km
+                    </option>
+                  ))
+                ) : vehicle ? (
+                  <option value={vehicle.id}>
+                    {vehicle.vehicle_number} — {vehicle.wheel_config} • Verified Odometer: {vehicle.current_odometer?.toLocaleString()} km
+                  </option>
+                ) : (
+                  <option value="">Loading fleet vehicles…</option>
+                )}
+              </select>
+
+              {fleetVehicles.length > 1 && (
+                <div className="flex items-center gap-2 pt-1">
+                  {fleetVehicles.map((fv) => (
+                    <button
+                      key={fv.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedVehicleId(fv.id);
+                        setStartOdo(fv.current_odometer?.toString() || '');
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-between border cursor-pointer ${
+                        selectedVehicleId === fv.id
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-brand-gold/50'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-brand-gold/60'
+                      }`}
+                    >
+                      <span className="font-mono">{fv.vehicle_number}</span>
+                      <span className="text-[10px] opacity-75 font-normal">{fv.current_odometer?.toLocaleString()} km</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-500">
+                You can drive any commercial vehicle under this fleet. Tap any vehicle above to switch immediately.
+              </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -864,6 +903,27 @@ export const DriverPortalPage: React.FC = () => {
             </div>
 
             <form onSubmit={(e) => handleSubmitActivity(e, 'REFUELING')} className="space-y-3.5 text-xs">
+              {fleetVehicles.length > 0 && (
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Commercial Vehicle *</label>
+                  <select
+                    value={selectedVehicleId}
+                    onChange={(e) => {
+                      setSelectedVehicleId(e.target.value);
+                      const sel = fleetVehicles.find((v) => v.id === e.target.value);
+                      if (sel) setFuelOdo(sel.current_odometer?.toString() || '');
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    {fleetVehicles.map((fv) => (
+                      <option key={fv.id} value={fv.id}>
+                        {fv.vehicle_number} ({fv.wheel_config}) • Verified Odo: {fv.current_odometer?.toLocaleString()} km
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 font-semibold mb-1">Fuel Litres (L) *</label>
@@ -989,6 +1049,27 @@ export const DriverPortalPage: React.FC = () => {
             </div>
 
             <form onSubmit={(e) => handleSubmitActivity(e, 'STOP_ODOMETER')} className="space-y-3.5 text-xs">
+              {fleetVehicles.length > 0 && (
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Commercial Vehicle *</label>
+                  <select
+                    value={selectedVehicleId}
+                    onChange={(e) => {
+                      setSelectedVehicleId(e.target.value);
+                      const sel = fleetVehicles.find((v) => v.id === e.target.value);
+                      if (sel) setStopOdo(sel.current_odometer?.toString() || '');
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  >
+                    {fleetVehicles.map((fv) => (
+                      <option key={fv.id} value={fv.id}>
+                        {fv.vehicle_number} ({fv.wheel_config}) • Verified Odo: {fv.current_odometer?.toLocaleString()} km
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Halt / Stop Reason *</label>
                 <select
@@ -1092,6 +1173,30 @@ export const DriverPortalPage: React.FC = () => {
             </div>
 
             <form onSubmit={(e) => handleSubmitActivity(e, 'TYRE_CHECK')} className="space-y-3.5 text-xs">
+              {fleetVehicles.length > 0 && (
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Commercial Vehicle *</label>
+                  <select
+                    value={selectedVehicleId}
+                    onChange={(e) => {
+                      setSelectedVehicleId(e.target.value);
+                      const sel = fleetVehicles.find((v) => v.id === e.target.value);
+                      if (sel) {
+                        setTyreOdo(sel.current_odometer?.toString() || '');
+                        setTyresChecked(sel.expected_tyre_count?.toString() || '12');
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-purple-500 cursor-pointer"
+                  >
+                    {fleetVehicles.map((fv) => (
+                      <option key={fv.id} value={fv.id}>
+                        {fv.vehicle_number} ({fv.wheel_config}) • Verified Odo: {fv.current_odometer?.toLocaleString()} km
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 font-semibold mb-1">Current Odometer (km) *</label>
