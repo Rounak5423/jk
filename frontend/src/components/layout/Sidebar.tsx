@@ -18,6 +18,7 @@ import {
   Database,
   ArrowLeft,
   ClipboardCheck,
+  ClipboardList,
   ChevronLeft,
   ChevronRight,
   Award,
@@ -67,10 +68,11 @@ export const Sidebar: React.FC = () => {
   ];
 
   const driverLinks = [
-    { to: '/driver',         label: 'Driver Dashboard',    icon: Smartphone },
-    { to: '/driver/rewards', label: 'Rewards & Discounts', icon: Gift },
-    { to: '/inspections',    label: 'Submit Inspection',   icon: ClipboardCheck },
-    { to: '/alerts',         label: 'Tyre Alerts',         icon: AlertTriangle },
+    { to: '/driver',            label: 'Driver Dashboard',    icon: Smartphone },
+    { to: '/driver/activities', label: 'Assigned Activities', icon: ClipboardList },
+    { to: '/driver/rewards',    label: 'Rewards & Discounts', icon: Gift },
+    { to: '/inspections',       label: 'Submit Inspection',   icon: ClipboardCheck },
+    { to: '/alerts',            label: 'Tyre Alerts',         icon: AlertTriangle },
   ];
 
   /* Determine which links + section label to show */

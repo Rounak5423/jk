@@ -33,6 +33,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminMapPage } from './pages/admin/AdminMapPage';
 import { OEMFleetVaultPage } from './pages/admin/OEMFleetVaultPage';
 import { DriverPortalPage } from './pages/driver/DriverPortalPage';
+import { DriverActivitiesPage } from './pages/driver/DriverActivitiesPage';
 import { DriverRewardsPage } from './pages/driver/DriverRewardsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -82,6 +83,7 @@ export const App: React.FC = () => {
         <Route path="/admin/oem-vault" element={<OEMFleetVaultPage />} />
         <Route path="/admin/*" element={<AdminDashboardPage />} />
         <Route path="/driver" element={<DriverPortalPage />} />
+        <Route path="/driver/activities" element={<DriverActivitiesPage />} />
         <Route path="/driver/rewards" element={<DriverRewardsPage />} />
       </Route>
 
