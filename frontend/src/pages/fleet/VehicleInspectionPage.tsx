@@ -32,6 +32,8 @@ import {
   Printer,
   History,
   FileCheck2,
+  Download,
+  FlaskConical,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -115,6 +117,9 @@ export const VehicleInspectionPage: React.FC = () => {
   const [showDeleteInspectionConfirm, setShowDeleteInspectionConfirm] = useState(false);
   const [deletingInspectionId, setDeletingInspectionId] = useState<string | null>(null);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'inspection' | 'tests'>('inspection');
+
   // Fetch Vehicle Inspection Summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['vehicle-inspection-summary', id],
@@ -130,6 +135,16 @@ export const VehicleInspectionPage: React.FC = () => {
     queryKey: ['available-tyres', activeFleetId],
     queryFn: async () => {
       const res = await api.get('/tyres/available');
+      return res.data;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch Tests (tyre-fitment lifecycle groups)
+  const { data: testsData, isLoading: testsLoading } = useQuery<any[]>({
+    queryKey: ['vehicle-tests', id],
+    queryFn: async () => {
+      const res = await api.get(`/inspections/vehicle/${id}/tests`);
       return res.data;
     },
     enabled: !!id,
@@ -416,6 +431,24 @@ export const VehicleInspectionPage: React.FC = () => {
     },
   });
 
+  const handleTestExport = async (testIndex: number, testId: string) => {
+    try {
+      const res = await api.get(`/inspections/vehicle/${id}/tests/${testIndex}/export`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Test_Report_${vehicle?.vehicle_number || id}_${testId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert('Failed to download test report. Please try again.');
+    }
+  };
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const f = e.target.files[0];
@@ -486,19 +519,19 @@ export const VehicleInspectionPage: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <Link
               to="/vehicles"
-              className="p-2 rounded-xl border border-slate-200 text-[#5B6068] hover:text-slate-900 hover:bg-slate-50 transition shadow-sm"
+              className="p-2 rounded-xl border border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition shadow-sm"
               title="Back to Vehicles"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
                 Vehicle Physical Inspection — <span className="font-mono">{vehicle.vehicle_number}</span>
-                <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
+                <span className="text-xs font-bold text-slate-200 bg-slate-700 border border-slate-600 px-2.5 py-0.5 rounded-full font-mono">
                   {vehicle.wheel_config}
                 </span>
               </h1>
-              <p className="text-xs text-[#5B6068] mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 2D exploded axle audit, individual tread measurement, defect verification, and real-time fitment replacement.
               </p>
             </div>
@@ -508,7 +541,7 @@ export const VehicleInspectionPage: React.FC = () => {
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <Link
             to={`/vehicles/${vehicle.id}`}
-            className="px-3.5 py-2 cream-glow-card text-slate-700 hover:text-slate-900 rounded-xl text-xs font-semibold transition"
+            className="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-100 hover:text-white rounded-xl text-xs font-semibold transition"
           >
             Vehicle Details
           </Link>
@@ -520,6 +553,42 @@ export const VehicleInspectionPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* ── Tab Switcher ── */}
+      <div className="flex items-center gap-1 p-1 bg-slate-800 border border-slate-700 rounded-2xl w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('inspection')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'inspection'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <ClipboardCheck className="w-3.5 h-3.5" />
+          Inspection
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('tests')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'tests'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <FlaskConical className="w-3.5 h-3.5" />
+          Tests
+          {testsData && testsData.length > 0 && (
+            <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-[#FFC800] text-black text-[10px] font-black">
+              {testsData.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ══════════════════════ INSPECTION TAB ══════════════════════ */}
+      {activeTab === 'inspection' && (<>
 
       {/* ── Inspection Successfully Closed Celebratory Banner ── */}
       {closeSuccessBanner && (
@@ -2044,6 +2113,186 @@ export const VehicleInspectionPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </>)}
+
+      {/* ══════════════════════ TESTS TAB ══════════════════════ */}
+      {activeTab === 'tests' && (
+        <div className="space-y-5">
+          {/* Tests Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <FlaskConical className="w-5 h-5 text-[#FFC800]" />
+                Tyre Lifecycle Tests — {data?.vehicle?.vehicle_number}
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Each test represents a continuous period when the same set of tyres was mounted on this vehicle. Tests end when any tyre is removed.
+              </p>
+            </div>
+            {testsData && testsData.length > 0 && (
+              <span className="text-xs font-mono font-bold bg-slate-700 text-slate-100 px-3 py-1 rounded-xl border border-slate-600">
+                {testsData.length} Test{testsData.length !== 1 ? 's' : ''} Found
+              </span>
+            )}
+          </div>
+
+          {/* Loading state */}
+          {testsLoading && (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-48 bg-slate-100 rounded-3xl animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!testsLoading && (!testsData || testsData.length === 0) && (
+            <div className="p-12 text-center cream-glow-card space-y-3">
+              <FlaskConical className="w-12 h-12 text-slate-300 mx-auto" />
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">No Tests Recorded Yet</h3>
+                <p className="text-xs text-[#5B6068] mt-1 max-w-sm mx-auto">
+                  Tests are created when tyres are fitted and later removed from this vehicle. Use the Fitment Management page to fit tyres and begin tracking test data.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Test Cards */}
+          {!testsLoading && testsData && testsData.map((test: any) => (
+            <div key={test.test_id} className="cream-glow-card overflow-hidden">
+              {/* Card Header */}
+              <div className={`p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                test.status === 'ACTIVE' ? 'bg-gradient-to-r from-emerald-50 to-teal-50' : 'bg-slate-50'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs shadow-sm ${
+                    test.status === 'ACTIVE'
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    <FlaskConical className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-slate-900 text-base font-mono">{test.test_id}</span>
+                      {test.status === 'ACTIVE' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                          </span>
+                          In Progress
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600 border border-slate-300">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#5B6068] mt-0.5">
+                      {test.tyre_count} tyre{test.tyre_count !== 1 ? 's' : ''} •{' '}
+                      {test.inspection_count} inspection report{test.inspection_count !== 1 ? 's' : ''} •{' '}
+                      {test.km_covered.toLocaleString()} km covered
+                    </p>
+                  </div>
+                </div>
+
+                {/* Download Button */}
+                <button
+                  type="button"
+                  onClick={() => handleTestExport(test.test_index, test.test_id)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FFC800] hover:bg-[#e6b400] text-black font-bold rounded-xl text-xs shadow-sm transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Test Report
+                </button>
+              </div>
+
+              {/* Card Body — 2-column grid */}
+              <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Started</span>
+                  <span className="text-xs font-semibold text-slate-900 font-mono">
+                    {new Date(test.started_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Ended</span>
+                  <span className={`text-xs font-semibold font-mono ${test.status === 'ACTIVE' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                    {test.ended_at ? new Date(test.ended_at).toLocaleDateString() : 'Ongoing'}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">KM Covered</span>
+                  <span className="text-xs font-semibold text-slate-900 font-mono">
+                    {test.km_covered.toLocaleString()} km
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Inspections</span>
+                  <span className="text-xs font-semibold text-slate-900 font-mono">{test.inspection_count}</span>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tyres</span>
+                  <span className="text-xs font-semibold text-slate-900 font-mono">{test.tyre_count}</span>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Removal Reason</span>
+                  <span className={`text-xs font-semibold font-mono ${!test.removal_reason ? 'text-emerald-600' : 'text-slate-700'}`}>
+                    {test.removal_reason || 'Still Active'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Wheel Positions */}
+              <div className="px-5 pb-5">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Wheel Positions</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {test.wheel_positions.map((pos: string) => (
+                    <span
+                      key={pos}
+                      className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-mono font-bold text-slate-800"
+                    >
+                      {pos}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Inspection reports sub-list (if any) */}
+              {test.inspections && test.inspections.length > 0 && (
+                <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                    Closed Inspection Reports in This Test
+                  </span>
+                  <div className="space-y-1.5">
+                    {test.inspections.map((rpt: any) => (
+                      <div
+                        key={rpt.id}
+                        className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                      >
+                        <span className="font-mono font-bold text-slate-800">{rpt.report_number}</span>
+                        <span className="text-[#5B6068]">{new Date(rpt.completed_at).toLocaleDateString()}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          rpt.roadworthiness_status === 'CERTIFIED_ROADWORTHY'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : rpt.roadworthiness_status === 'CONDITIONAL'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}>
+                          {rpt.roadworthiness_status.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-[#5B6068] font-mono">{rpt.odometer?.toLocaleString()} km</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

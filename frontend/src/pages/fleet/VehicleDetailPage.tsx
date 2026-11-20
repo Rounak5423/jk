@@ -152,7 +152,7 @@ export const VehicleDetailPage: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Vehicle THI Card */}
         <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-300 block mb-1">Vehicle THI</span>
+          <span className="text-xs text-slate-500 block mb-1">Vehicle THI</span>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-bold font-mono text-slate-900">{thiData.thi.toFixed(1)}</span>
             <span
@@ -167,7 +167,7 @@ export const VehicleDetailPage: React.FC = () => {
               {thiData.thi_status}
             </span>
           </div>
-          <span className="text-[10px] text-slate-300 block mt-0.5">
+          <span className="text-[10px] text-slate-500 block mt-0.5">
             {thiData.critical_tyres_count > 0
               ? `⚠️ ${thiData.critical_tyres_count} critical tyre${thiData.critical_tyres_count > 1 ? 's' : ''}`
               : thiData.warning_tyres_count > 0
@@ -177,27 +177,27 @@ export const VehicleDetailPage: React.FC = () => {
         </div>
 
         <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-300 block mb-1">Current Odometer</span>
+          <span className="text-xs text-slate-500 block mb-1">Current Odometer</span>
           <span className="text-xl font-bold text-slate-900 font-mono">{vehicle.current_odometer.toLocaleString()} km</span>
-          <span className="text-[10px] text-slate-300 block mt-0.5">Monotonically verified</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Monotonically verified</span>
         </div>
 
         <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-300 block mb-1">Recommended Pressure</span>
-          <span className="text-xl font-bold text-white">{vehicle.baseline_pressure} psi</span>
-          <span className="text-[10px] text-slate-300 block mt-0.5">Vehicle baseline</span>
+          <span className="text-xs text-slate-500 block mb-1">Recommended Pressure</span>
+          <span className="text-xl font-bold text-slate-900">{vehicle.baseline_pressure} psi</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Vehicle baseline</span>
         </div>
 
         <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-300 block mb-1">Baseline Mileage</span>
-          <span className="text-xl font-bold text-white">{vehicle.baseline_mileage} km/L</span>
-          <span className="text-[10px] text-slate-300 block mt-0.5">Commercial rating</span>
+          <span className="text-xs text-slate-500 block mb-1">Baseline Mileage</span>
+          <span className="text-xl font-bold text-slate-900">{vehicle.baseline_mileage} km/L</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Commercial rating</span>
         </div>
 
         <div className="bg-cream border border-gold-border p-4 rounded-xl shadow-sm">
-          <span className="text-xs text-slate-300 block mb-1">Axle Setup</span>
-          <span className="text-xl font-bold text-white">{vehicle.axle_count} Axles</span>
-          <span className="text-[10px] text-slate-300 block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
+          <span className="text-xs text-slate-500 block mb-1">Axle Setup</span>
+          <span className="text-xl font-bold text-slate-900">{vehicle.axle_count} Axles</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">{vehicle.expected_tyre_count} Physical wheels</span>
         </div>
       </div>
 
@@ -218,7 +218,7 @@ export const VehicleDetailPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-gold-border text-slate-300 font-semibold bg-cream-100">
+              <tr className="border-b border-gold-border text-slate-500 font-semibold bg-cream-100">
                 <th className="py-3 px-3">Position Code</th>
                 <th className="py-3 px-3">Permanent Serial</th>
                 <th className="py-3 px-3">Tyre Model</th>

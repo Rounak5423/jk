@@ -80,6 +80,28 @@ def get_health_trends():
     # 1. Authoritative current live THI for the requested scope (Vehicle vs Fleet)
     selected_vehicle_obj = None
     active_vehs = Vehicle.query.filter_by(fleet_id=fleet_id, status="ACTIVE").all()
+    
+    # If no vehicles exist, return empty response immediately
+    if not active_vehs and not vehicle_id:
+        return jsonify({
+            "days": days,
+            "vehicle_id": vehicle_id,
+            "trend": [],
+            "summary": {
+                "current_avg_thi": 0,
+                "thi_delta": 0,
+                "current_pressure_health": 0,
+                "current_thermal_health": 0,
+                "current_wear_health": 0,
+                "active_tyres_count": 0,
+                "status_label": "NO DATA",
+                "vehicle_display": "No Vehicles",
+            },
+            "ideal_baseline_value": 95.0,
+            "baseline_label": "JK Tyre Benchmark Reference Baseline (95.0)",
+            "explanation": "No vehicles or data available.",
+        }), 200
+    
     if vehicle_id:
         selected_vehicle_obj = Vehicle.query.get(vehicle_id)
         if not selected_vehicle_obj or not enforce_fleet_access(selected_vehicle_obj.fleet_id):
@@ -87,7 +109,7 @@ def get_health_trends():
         current_live_thi = selected_vehicle_obj.calculate_thi()["thi"]
     else:
         valid_this = [v.calculate_thi()["thi"] for v in active_vehs if v.calculate_thi()["thi"] is not None]
-        current_live_thi = round(sum(valid_this) / len(valid_this), 1) if valid_this else 100.0
+        current_live_thi = round(sum(valid_this) / len(valid_this), 1) if valid_this else 0
 
     # 2. Query historical daily records
     query = (
@@ -142,13 +164,9 @@ def get_health_trends():
             w_health = db_records[day_str]["wear_health"]
             eval_cnt = db_records[day_str]["eval_count"]
         else:
-            # Deterministic, smooth continuous progression towards current live THI
-            progress = (days - 1 - d_idx) / max(1, days - 1)
-            day_thi = round(base_anchor + ((current_live_thi - base_anchor) * progress) + (0.3 * ((d_idx % 3) - 1)), 1)
-            p_health = round(92.5 + ((d_idx % 2) * 1.5), 1)
-            t_health = round(84.0 + (((d_idx + 1) % 3) * 1.0), 1)
-            w_health = round(88.0 + (0.02 * (days - d_idx)), 1)
-            eval_cnt = tyre_count
+            # No real data for this day - skip generating fake data
+            # Only show days with actual recorded data
+            continue
 
         trend_data.append({
             "date": day_str,

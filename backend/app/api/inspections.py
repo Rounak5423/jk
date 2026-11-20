@@ -1,7 +1,9 @@
+import io
 import os
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, g, send_from_directory, current_app
+from flask import Blueprint, request, jsonify, g, send_from_directory, send_file, current_app
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models import (
@@ -13,6 +15,7 @@ from app.models import (
     TyreLifecycleHistory,
     VehicleInspectionReport,
 )
+from app.models.fitment import TyreFitment
 from app.models.tyre import TyreStatus, LifecycleType
 from app.services.alert_engine import AlertEngine
 from app.services.thi_engine import THIEngine
@@ -710,4 +713,541 @@ def delete_inspection(inspection_id):
         db.session.rollback()
         current_app.logger.error(f"Inspection deletion failed: {exc}")
         return jsonify({"error": "Failed to delete inspection."}), 500
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TESTS  (tyre-fitment lifecycle groups)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _build_tests_for_vehicle(vehicle):
+    """
+    Group all TyreFitment records for *vehicle* into chronological "tests".
+
+    Grouping rule: fitments whose fitted_odometer values are within 500 km of
+    each other AND whose fitted_at timestamps are within 7 days of each other
+    are merged into one test.  The list is sorted by fitted_at ascending before
+    grouping, and the returned list is ordered newest-first.
+    """
+    fitments = (
+        TyreFitment.query
+        .filter_by(vehicle_id=vehicle.id)
+        .order_by(TyreFitment.fitted_at.asc())
+        .all()
+    )
+
+    if not fitments:
+        return []
+
+    # --- build groups ----------------------------------------------------------
+    groups = []          # list of lists of TyreFitment
+    current_group = [fitments[0]]
+
+    for fit in fitments[1:]:
+        anchor = current_group[0]
+        # Compare against the anchor of the current group
+        odo_diff = abs(fit.fitted_odometer - anchor.fitted_odometer)
+
+        anchor_at = anchor.fitted_at
+        fit_at    = fit.fitted_at
+        # make both timezone-aware for subtraction
+        if anchor_at.tzinfo is None:
+            anchor_at = anchor_at.replace(tzinfo=timezone.utc)
+        if fit_at.tzinfo is None:
+            fit_at = fit_at.replace(tzinfo=timezone.utc)
+        day_diff = abs((fit_at - anchor_at).total_seconds()) / 86400
+
+        if odo_diff <= 500 and day_diff <= 7:
+            current_group.append(fit)
+        else:
+            groups.append(current_group)
+            current_group = [fit]
+
+    groups.append(current_group)
+
+    # --- look up closed inspection reports for time-window matching -----------
+    all_reports = (
+        VehicleInspectionReport.query
+        .filter_by(vehicle_id=vehicle.id)
+        .order_by(VehicleInspectionReport.completed_at.asc())
+        .all()
+    )
+
+    # --- build test dicts (chronological order) --------------------------------
+    tests = []
+    for idx, group in enumerate(groups):
+        # dates
+        fitted_ats   = [f.fitted_at for f in group]
+        removed_ats  = [f.removed_at for f in group if f.removed_at is not None]
+
+        started_at = min(fitted_ats)
+        ended_at   = max(removed_ats) if removed_ats and len(removed_ats) == len(group) else None
+
+        # all fitments removed?
+        is_active = any(f.removed_at is None for f in group)
+        status    = "ACTIVE" if is_active else "COMPLETED"
+
+        start_odo = min(f.fitted_odometer for f in group)
+        if is_active:
+            end_odo = vehicle.current_odometer
+        else:
+            end_odos = [f.removed_odometer for f in group if f.removed_odometer is not None]
+            end_odo  = max(end_odos) if end_odos else vehicle.current_odometer
+
+        km_covered = max(0, end_odo - start_odo)
+
+        # wheel positions
+        wheel_positions = sorted(set(f.wheel_position for f in group))
+
+        # removal reason (most common)
+        reasons = [f.removal_reason for f in group if f.removal_reason]
+        removal_reason = Counter(reasons).most_common(1)[0][0] if reasons else None
+
+        # inspection reports within this test's time window
+        t_start = started_at.replace(tzinfo=timezone.utc) if started_at.tzinfo is None else started_at
+        if ended_at:
+            t_end = ended_at.replace(tzinfo=timezone.utc) if ended_at.tzinfo is None else ended_at
+        else:
+            t_end = datetime.now(timezone.utc)
+
+        matched_reports = []
+        for rpt in all_reports:
+            rpt_time = rpt.completed_at
+            if rpt_time.tzinfo is None:
+                rpt_time = rpt_time.replace(tzinfo=timezone.utc)
+            if t_start <= rpt_time <= t_end:
+                matched_reports.append(rpt)
+
+        tests.append({
+            "test_id":          f"TEST-{idx + 1}",
+            "test_index":       idx + 1,
+            "status":           status,
+            "started_at":       started_at.isoformat(),
+            "ended_at":         ended_at.isoformat() if ended_at else None,
+            "start_odometer":   start_odo,
+            "end_odometer":     end_odo,
+            "km_covered":       round(km_covered, 1),
+            "tyre_count":       len(group),
+            "wheel_positions":  wheel_positions,
+            "inspection_count": len(matched_reports),
+            "inspections":      [r.to_dict() for r in matched_reports],
+            "removal_reason":   removal_reason,
+        })
+
+    # newest first
+    return list(reversed(tests))
+
+
+@inspections_bp.route("/vehicle/<vehicle_id>/tests", methods=["GET"])
+@jwt_required
+def get_vehicle_tests(vehicle_id):
+    """
+    Returns all tyre-fitment lifecycle 'tests' for a vehicle, newest first.
+    """
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+    if not enforce_fleet_access(vehicle.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
+
+    tests = _build_tests_for_vehicle(vehicle)
+    return jsonify(tests), 200
+
+
+@inspections_bp.route("/vehicle/<vehicle_id>/tests/<int:test_index>/export", methods=["GET"])
+@jwt_required
+def export_test_report(vehicle_id, test_index):
+    """
+    Generates and streams an Excel (.xlsx) report for a specific test (1-based index).
+
+    Sheet 1  – Test Summary
+    Sheet 2  – Inspection Data matrix (rows = parameters per wheel position, cols = inspections)
+    Sheet 3+ – One chart sheet per parameter (NSD Trend, Pressure Trend, % Wear, Status, Temp)
+    """
+    try:
+        import openpyxl
+        from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+        from openpyxl.chart import LineChart, BarChart, Reference
+        from openpyxl.chart.series import SeriesLabel
+        from openpyxl.utils import get_column_letter
+    except ImportError:
+        return jsonify({"error": "openpyxl is required for Excel export.  Install it: pip install openpyxl"}), 500
+
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+    if not enforce_fleet_access(vehicle.fleet_id):
+        return jsonify({"error": "Forbidden: unauthorized vehicle access"}), 403
+
+    all_tests = _build_tests_for_vehicle(vehicle)
+    # all_tests is newest-first; test_index is 1-based chronological (TEST-1 = oldest)
+    # Find by test_id
+    target_test = None
+    for t in all_tests:
+        if t["test_index"] == test_index:
+            target_test = t
+            break
+
+    if not target_test:
+        return jsonify({"error": f"Test {test_index} not found for this vehicle."}), 404
+
+    test_id    = target_test["test_id"]
+    reports    = target_test["inspections"]   # VehicleInspectionReport dicts, chronological
+    # sort reports chronologically (oldest first = Inspection-1)
+    reports_sorted = sorted(reports, key=lambda r: r["completed_at"])
+
+    # ── Styling helpers ──────────────────────────────────────────────────────
+    DARK_FILL  = PatternFill("solid", fgColor="1A1A2E")
+    GOLD_FILL  = PatternFill("solid", fgColor="FFC800")
+    ALT_FILL   = PatternFill("solid", fgColor="F4F6F8")
+    WHITE_FILL = PatternFill("solid", fgColor="FFFFFF")
+
+    HEADER_FONT = Font(name="Calibri", bold=True, color="FFFFFF", size=10)
+    GOLD_FONT   = Font(name="Calibri", bold=True, color="1A1A2E", size=10)
+    BODY_FONT   = Font(name="Calibri", size=10)
+    TITLE_FONT  = Font(name="Calibri", bold=True, size=12)
+
+    CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    LEFT   = Alignment(horizontal="left",   vertical="center")
+
+    thin = Side(border_style="thin", color="D0D3D8")
+    BORDER = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    LINE_COLORS = ["FF0000", "0070C0", "00B050", "FFC000", "7030A0", "FF6600", "00B0F0", "92D050"]
+
+    def set_col_widths(ws, min_w=12, max_w=30):
+        for col in ws.columns:
+            max_len = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_len = max(max_len, len(str(cell.value)))
+                except Exception:
+                    pass
+            ws.column_dimensions[col_letter].width = min(max_w, max(min_w, max_len + 2))
+
+    def header_row(ws, row_num, values):
+        for c_idx, val in enumerate(values, start=1):
+            cell = ws.cell(row=row_num, column=c_idx, value=val)
+            cell.fill   = DARK_FILL
+            cell.font   = HEADER_FONT
+            cell.alignment = CENTER
+            cell.border = BORDER
+
+    def data_cell(ws, row_num, col_num, value, alt=False):
+        cell = ws.cell(row=row_num, column=col_num, value=value)
+        cell.fill      = ALT_FILL if alt else WHITE_FILL
+        cell.font      = BODY_FONT
+        cell.alignment = LEFT
+        cell.border    = BORDER
+        return cell
+
+    # ── Workbook ─────────────────────────────────────────────────────────────
+    wb = openpyxl.Workbook()
+
+    # ── Sheet 1: Test Summary ────────────────────────────────────────────────
+    ws1 = wb.active
+    ws1.title = "Test Summary"
+    ws1.sheet_properties.tabColor = "1A1A2E"
+
+    summary_rows = [
+        ("JK TYRE & INDUSTRIES — FLEET INTELLIGENCE PLATFORM", ""),
+        ("Vehicle Tyre Test Report", ""),
+        ("", ""),
+        ("Vehicle Number",    vehicle.vehicle_number),
+        ("Fleet ID",          vehicle.fleet_id),
+        ("Wheel Config",      vehicle.wheel_config),
+        ("Make / Model",      f"{vehicle.make or ''} {vehicle.model or ''}".strip()),
+        ("Baseline Pressure", f"{vehicle.baseline_pressure} PSI"),
+        ("", ""),
+        ("Test ID",           target_test["test_id"]),
+        ("Status",            target_test["status"]),
+        ("Started At",        target_test["started_at"]),
+        ("Ended At",          target_test["ended_at"] or "Ongoing"),
+        ("Start Odometer",    f"{target_test['start_odometer']} km"),
+        ("End Odometer",      f"{target_test['end_odometer']} km"),
+        ("KM Covered",        f"{target_test['km_covered']} km"),
+        ("Tyre Count",        target_test["tyre_count"]),
+        ("Wheel Positions",   ", ".join(target_test["wheel_positions"])),
+        ("Inspection Reports",target_test["inspection_count"]),
+        ("Removal Reason",    target_test["removal_reason"] or "Still Active"),
+    ]
+
+    for r_idx, (label, value) in enumerate(summary_rows, start=1):
+        c_label = ws1.cell(row=r_idx, column=1, value=label)
+        c_value = ws1.cell(row=r_idx, column=2, value=value)
+        if r_idx in (1, 2):
+            c_label.font = TITLE_FONT
+            c_label.fill = GOLD_FILL
+            c_value.fill = GOLD_FILL
+        else:
+            c_label.font = Font(name="Calibri", bold=True, size=10)
+            c_value.font = BODY_FONT
+        c_label.alignment = LEFT
+        c_value.alignment = LEFT
+        c_label.border = BORDER
+        c_value.border = BORDER
+
+    ws1.column_dimensions["A"].width = 22
+    ws1.column_dimensions["B"].width = 35
+
+    # ── Sheet 2: Inspection Data ─────────────────────────────────────────────
+    ws2 = wb.create_sheet("Inspection Data")
+    ws2.sheet_properties.tabColor = "0070C0"
+    ws2.freeze_panes = "B2"
+
+    # Build column headers: "Parameter" | "Inspection-1" | "Inspection-2" ...
+    insp_col_headers = [f"Inspection-{i+1}" for i in range(len(reports_sorted))]
+    header_row(ws2, 1, ["Parameter"] + insp_col_headers)
+
+    # Collect all unique wheel positions across all reports
+    all_positions = []
+    seen_pos = set()
+    for rpt in reports_sorted:
+        for detail in (rpt.get("details") or []):
+            pos = detail.get("wheel_position", "")
+            if pos and pos not in seen_pos:
+                all_positions.append(pos)
+                seen_pos.add(pos)
+
+    # For each wheel position, write parameter rows
+    PARAMETERS = [
+        "Vehicle Number",
+        "Wheel Position",
+        "Tyre Serial",
+        "NSD (mm)",
+        "Pressure (PSI)",
+        "Visual Condition",
+        "Inspection Status",
+        "Odometer (km)",
+        "Temperature (°C)",
+        "% Wear",
+        "KM/mm Wear",
+        "Projected Mileage",
+    ]
+
+    current_row = 2
+    for pos_idx, pos in enumerate(all_positions):
+        alt_block = pos_idx % 2 == 1
+        for param in PARAMETERS:
+            row_values = [param]
+            for rpt in reports_sorted:
+                # find the detail entry for this wheel position
+                detail = next(
+                    (d for d in (rpt.get("details") or []) if d.get("wheel_position") == pos),
+                    None
+                )
+                if detail is None:
+                    row_values.append("—")
+                    continue
+
+                blueprint_nsd = None
+                # Try to get blueprint_nsd from live tyre
+                if detail.get("tyre_id"):
+                    t_obj = Tyre.query.get(detail["tyre_id"])
+                    if t_obj:
+                        blueprint_nsd = t_obj.blueprint_nsd
+
+                nsd      = detail.get("measured_nsd")
+                pressure = detail.get("measured_pressure")
+                b_nsd    = blueprint_nsd or 16.5
+
+                if param == "Vehicle Number":
+                    row_values.append(vehicle.vehicle_number)
+                elif param == "Wheel Position":
+                    row_values.append(pos)
+                elif param == "Tyre Serial":
+                    row_values.append(detail.get("tyre_serial") or "—")
+                elif param == "NSD (mm)":
+                    row_values.append(round(nsd, 2) if nsd is not None else "—")
+                elif param == "Pressure (PSI)":
+                    row_values.append(round(pressure, 1) if pressure is not None else "—")
+                elif param == "Visual Condition":
+                    row_values.append(detail.get("visual_condition") or "NORMAL")
+                elif param == "Inspection Status":
+                    row_values.append(detail.get("inspection_result") or "PASS")
+                elif param == "Odometer (km)":
+                    row_values.append(rpt.get("odometer"))
+                elif param == "Temperature (°C)":
+                    # temperature is not in the report details JSON — look up raw inspection
+                    t_at = None
+                    if detail.get("tyre_id"):
+                        raw_insp = (
+                            Inspection.query
+                            .filter_by(tyre_id=detail["tyre_id"], vehicle_id=vehicle.id)
+                            .order_by(Inspection.inspected_at.desc())
+                            .first()
+                        )
+                        if raw_insp:
+                            t_at = raw_insp.temperature_at_inspection
+                    row_values.append(round(t_at, 1) if t_at is not None else "—")
+                elif param == "% Wear":
+                    if nsd is not None:
+                        wear = max(0, (b_nsd - nsd) / b_nsd * 100)
+                        row_values.append(round(wear, 1))
+                    else:
+                        row_values.append("—")
+                elif param == "KM/mm Wear":
+                    if nsd is not None:
+                        wear_mm = b_nsd - nsd
+                        odo_val = rpt.get("odometer") or 0
+                        row_values.append(round(odo_val / wear_mm, 1) if wear_mm > 0 else "—")
+                    else:
+                        row_values.append("—")
+                elif param == "Projected Mileage":
+                    if nsd is not None:
+                        wear_mm = b_nsd - nsd
+                        odo_val = rpt.get("odometer") or 0
+                        if wear_mm > 0 and odo_val > 0:
+                            km_per_mm = odo_val / wear_mm
+                            proj = round(b_nsd * km_per_mm, 0)
+                            row_values.append(proj)
+                        else:
+                            row_values.append("—")
+                    else:
+                        row_values.append("—")
+                else:
+                    row_values.append("—")
+
+            # Write row
+            for c_idx, val in enumerate(row_values, start=1):
+                data_cell(ws2, current_row, c_idx, val, alt=alt_block)
+            current_row += 1
+
+    set_col_widths(ws2)
+
+    # ── Chart sheets ─────────────────────────────────────────────────────────
+    CHART_SHEETS = [
+        ("NSD Trend",         "NSD (mm)",         "line",  "FFD700"),
+        ("Pressure Trend",    "Pressure (PSI)",    "line",  "0070C0"),
+        ("% Wear Trend",      "% Wear",            "line",  "FF0000"),
+        ("Inspection Status", "Inspection Status", "bar",   "7030A0"),
+        ("Temperature Trend", "Temperature (°C)",  "line",  "00B050"),
+    ]
+
+    for sheet_name, param_name, chart_type, tab_color in CHART_SHEETS:
+        wsc = wb.create_sheet(sheet_name)
+        wsc.sheet_properties.tabColor = tab_color
+
+        # Write data table header
+        header_row(wsc, 1, ["Wheel Position"] + insp_col_headers)
+
+        # Collect values per wheel position
+        for pos_idx, pos in enumerate(all_positions):
+            row_data = [pos]
+            for rpt in reports_sorted:
+                detail = next(
+                    (d for d in (rpt.get("details") or []) if d.get("wheel_position") == pos),
+                    None
+                )
+                if detail is None:
+                    row_data.append(None)
+                    continue
+
+                nsd      = detail.get("measured_nsd")
+                pressure = detail.get("measured_pressure")
+                b_nsd_val = 16.5
+                if detail.get("tyre_id"):
+                    t2 = Tyre.query.get(detail["tyre_id"])
+                    if t2:
+                        b_nsd_val = t2.blueprint_nsd or 16.5
+
+                if param_name == "NSD (mm)":
+                    row_data.append(round(nsd, 2) if nsd is not None else None)
+                elif param_name == "Pressure (PSI)":
+                    row_data.append(round(pressure, 1) if pressure is not None else None)
+                elif param_name == "% Wear":
+                    if nsd is not None:
+                        row_data.append(round(max(0, (b_nsd_val - nsd) / b_nsd_val * 100), 1))
+                    else:
+                        row_data.append(None)
+                elif param_name == "Inspection Status":
+                    # Map to numeric for bar chart
+                    result_map = {"PASS": 3, "WARNING": 2, "FAIL": 1, "FURTHER_ASSESSMENT": 0}
+                    row_data.append(result_map.get(detail.get("inspection_result", "PASS"), 3))
+                elif param_name == "Temperature (°C)":
+                    t_at = None
+                    if detail.get("tyre_id"):
+                        raw_insp = (
+                            Inspection.query
+                            .filter_by(tyre_id=detail["tyre_id"], vehicle_id=vehicle.id)
+                            .order_by(Inspection.inspected_at.desc())
+                            .first()
+                        )
+                        if raw_insp:
+                            t_at = raw_insp.temperature_at_inspection
+                    row_data.append(round(t_at, 1) if t_at is not None else None)
+                else:
+                    row_data.append(None)
+
+            for c_idx, val in enumerate(row_data, start=1):
+                cell = wsc.cell(row=pos_idx + 2, column=c_idx, value=val)
+                cell.font      = BODY_FONT
+                cell.alignment = LEFT
+                cell.border    = BORDER
+                if pos_idx % 2 == 1:
+                    cell.fill = ALT_FILL
+
+        set_col_widths(wsc)
+
+        # Build chart
+        if len(all_positions) == 0 or len(reports_sorted) == 0:
+            continue
+
+        num_rows = len(all_positions)
+        num_cols = len(reports_sorted)
+
+        if chart_type == "line":
+            chart = LineChart()
+        else:
+            chart = BarChart()
+            chart.barDir = "col"
+
+        chart.title      = sheet_name
+        chart.y_axis.title = param_name
+        chart.x_axis.title = "Inspection Number"
+        chart.width  = 20
+        chart.height = 15
+
+        for s_idx in range(num_rows):
+            data_ref = Reference(
+                wsc,
+                min_col=2,
+                max_col=1 + num_cols,
+                min_row=s_idx + 2,
+                max_row=s_idx + 2,
+            )
+            series = chart.series.append(openpyxl.chart.Series(data_ref, title=all_positions[s_idx]))
+            # Apply color
+            color_hex = LINE_COLORS[s_idx % len(LINE_COLORS)]
+            try:
+                from openpyxl.drawing.fill import ColorChoice
+                from openpyxl.chart.data_source import NumDataSource
+            except Exception:
+                pass
+            try:
+                chart.series[-1].graphicalProperties.line.solidFill = color_hex
+                chart.series[-1].graphicalProperties.solidFill = color_hex
+            except Exception:
+                pass
+
+        # Place chart below data table
+        chart_anchor_row = num_rows + 4
+        chart_anchor_col = get_column_letter(1)
+        wsc.add_chart(chart, f"{chart_anchor_col}{chart_anchor_row}")
+
+    # ── Stream file ──────────────────────────────────────────────────────────
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    safe_vnum = "".join(c for c in vehicle.vehicle_number if c.isalnum() or c in ("-", "_"))
+    filename  = f"Test_Report_{safe_vnum}_{test_id}.xlsx"
+
+    return send_file(
+        output,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename,
+    )
 

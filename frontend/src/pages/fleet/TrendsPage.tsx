@@ -117,15 +117,16 @@ export const TrendsPage: React.FC = () => {
     }
   };
 
+  // No fallback data - show null/0 when no real data exists
   const summary = trendsData?.summary || {
-    current_avg_thi: 80.4,
-    thi_delta: 0.8,
-    current_pressure_health: 93.7,
-    current_thermal_health: 85.2,
-    current_wear_health: 88.0,
-    active_tyres_count: 12,
-    status_label: 'HEALTHY / NOMINAL',
-    vehicle_display: 'All Fleet Vehicles',
+    current_avg_thi: 0,
+    thi_delta: 0,
+    current_pressure_health: 0,
+    current_thermal_health: 0,
+    current_wear_health: 0,
+    active_tyres_count: 0,
+    status_label: 'NO DATA',
+    vehicle_display: 'No Vehicles',
   };
 
   const trendPoints = (trendsData?.trend || []).map((pt: any) => ({
