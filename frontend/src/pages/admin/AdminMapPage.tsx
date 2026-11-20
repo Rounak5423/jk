@@ -136,8 +136,8 @@ export const AdminMapPage: React.FC = () => {
   const [selectedFleet, setSelectedFleet] = useState<MapFleet | null>(null);
   const [freshnessFilter, setFreshnessFilter] = useState<string>('ALL');
   const [vehicleSearch, setVehicleSearch] = useState<string>('');
-  type MapTileMode = 'DARK' | 'LIGHT' | 'SATELLITE' | 'GOOGLE_ROAD' | 'GOOGLE_SATELLITE';
-  const [mapTileType, setMapTileType] = useState<MapTileMode>('DARK');
+  type MapTileMode = 'GOOGLE_ROAD' | 'GOOGLE_HYBRID';
+  const [mapTileType, setMapTileType] = useState<MapTileMode>('GOOGLE_ROAD');
   const [liveTracking, setLiveTracking] = useState(true);
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -192,12 +192,13 @@ export const AdminMapPage: React.FC = () => {
 
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Initial tile layer (CartoDB Dark Matter)
+    // Initial tile layer (Google Road)
+    const initialKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || 'cb1_5bf1_1_2ff7f08b128234f09e108159';
     const tileLayer = L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${initialKey}`,
       {
-        subdomains: 'abcd',
-        maxZoom: 19
+        subdomains: '0123',
+        maxZoom: 20
       }
     ).addTo(map);
 
@@ -227,17 +228,14 @@ export const AdminMapPage: React.FC = () => {
     };
   }, []);
 
-  // Switch base map tiles (Dark Matter / Standard OSM / Satellite / Google Maps)
+  // Switch base map tiles (Google Road / Google Hybrid)
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
     const mapsKey = (data?.maps_api_key || (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || 'cb1_5bf1_1_2ff7f08b128234f09e108159').trim();
     const urls: Record<MapTileMode, string> = {
-      DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      LIGHT: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      SATELLITE: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       GOOGLE_ROAD: `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${mapsKey}`,
-      GOOGLE_SATELLITE: `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${mapsKey}`
+      GOOGLE_HYBRID: `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${mapsKey}`
     };
 
     tileLayerRef.current.setUrl(urls[mapTileType]);
@@ -552,17 +550,14 @@ export const AdminMapPage: React.FC = () => {
               <div className="flex items-center rounded-xl bg-slate-900 p-0.5 border border-slate-700 text-xs overflow-x-auto">
                 {(
                   [
-                    { mode: 'DARK' as const, label: 'Dark' },
-                    { mode: 'LIGHT' as const, label: 'Street' },
-                    { mode: 'SATELLITE' as const, label: 'Satellite' },
                     { mode: 'GOOGLE_ROAD' as const, label: 'Google Road' },
-                    { mode: 'GOOGLE_SATELLITE' as const, label: 'Google Hybrid' },
+                    { mode: 'GOOGLE_HYBRID' as const, label: 'Google Hybrid' },
                   ]
                 ).map(({ mode, label }) => (
                   <button
                     key={mode}
                     onClick={() => setMapTileType(mode)}
-                    className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
+                    className={`px-3 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
                       mapTileType === mode
                         ? 'bg-brand-gold text-black shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
