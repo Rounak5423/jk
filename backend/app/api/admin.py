@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, g, send_file
+from flask import Blueprint, request, jsonify, g, send_file, current_app
 from app.extensions import db
 from app.models import User, UserRole, Fleet, Vehicle, Tyre, Alert, AuditLog
 from app.utils.security import roles_required
@@ -166,6 +166,7 @@ def get_map_locations():
         },
         "fleets": fleet_markers,
         "vehicles": vehicle_markers,
+        "maps_api_key": current_app.config.get("MAPS_API_KEY", "cb1_5bf1_1_2ff7f08b128234f09e108159"),
         "disclaimer": "All coordinates marked SIMULATED are geographically plausible synthetic scenario points generated for demonstration and verification.",
     }), 200
 

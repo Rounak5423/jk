@@ -33,3 +33,6 @@ class Config:
     # Demo mode / synthetic mode flag
     DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() in ("true", "1", "yes")
     RULE_ENGINE_VERSION = "v1.0.0-demo-provisional"
+
+    # Telematics & GIS Map Key
+    MAPS_API_KEY = os.getenv("MAPS_API_KEY", "cb1_5bf1_1_2ff7f08b128234f09e108159")

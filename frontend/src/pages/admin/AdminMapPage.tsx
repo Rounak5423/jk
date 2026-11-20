@@ -19,10 +19,7 @@ import {
   Radio,
   Eye,
   Crosshair,
-  Maximize2,
-  Key,
-  X,
-  Check
+  Maximize2
 } from 'lucide-react';
 
 interface MapVehicle {
@@ -73,6 +70,7 @@ interface MapData {
   };
   fleets: MapFleet[];
   vehicles: MapVehicle[];
+  maps_api_key?: string;
   disclaimer: string;
 }
 
@@ -140,12 +138,6 @@ export const AdminMapPage: React.FC = () => {
   const [vehicleSearch, setVehicleSearch] = useState<string>('');
   type MapTileMode = 'DARK' | 'LIGHT' | 'SATELLITE' | 'GOOGLE_ROAD' | 'GOOGLE_SATELLITE';
   const [mapTileType, setMapTileType] = useState<MapTileMode>('DARK');
-  const [customGoogleKey, setCustomGoogleKey] = useState<string>(() => {
-    return localStorage.getItem('jk_google_maps_api_key') || (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || '';
-  });
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [tempKeyInput, setTempKeyInput] = useState('');
-  const [keySavedMsg, setKeySavedMsg] = useState(false);
   const [liveTracking, setLiveTracking] = useState(true);
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -239,21 +231,17 @@ export const AdminMapPage: React.FC = () => {
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
-    const googleKey = customGoogleKey.trim();
+    const mapsKey = (data?.maps_api_key || (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || 'cb1_5bf1_1_2ff7f08b128234f09e108159').trim();
     const urls: Record<MapTileMode, string> = {
       DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       LIGHT: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       SATELLITE: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      GOOGLE_ROAD: googleKey
-        ? `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${googleKey}`
-        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-      GOOGLE_SATELLITE: googleKey
-        ? `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${googleKey}`
-        : 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
+      GOOGLE_ROAD: `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${mapsKey}`,
+      GOOGLE_SATELLITE: `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${mapsKey}`
     };
 
     tileLayerRef.current.setUrl(urls[mapTileType]);
-  }, [mapTileType, customGoogleKey]);
+  }, [mapTileType, data?.maps_api_key]);
 
   // Update Markers whenever data, search, filter, or selection changes
   useEffect(() => {
@@ -573,13 +561,7 @@ export const AdminMapPage: React.FC = () => {
                 ).map(({ mode, label }) => (
                   <button
                     key={mode}
-                    onClick={() => {
-                      setMapTileType(mode);
-                      if ((mode === 'GOOGLE_ROAD' || mode === 'GOOGLE_SATELLITE') && !customGoogleKey.trim()) {
-                        setTempKeyInput(customGoogleKey);
-                        setShowKeyModal(true);
-                      }
-                    }}
+                    onClick={() => setMapTileType(mode)}
                     className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
                       mapTileType === mode
                         ? 'bg-brand-gold text-black shadow-sm'
@@ -590,25 +572,6 @@ export const AdminMapPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-
-              {/* Google Maps API Key Config Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setTempKeyInput(customGoogleKey);
-                  setShowKeyModal(true);
-                  setKeySavedMsg(false);
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border transition ${
-                  customGoogleKey.trim()
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                    : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-brand-gold/60'
-                }`}
-                title="Configure Google Maps API Key"
-              >
-                <Key className="w-3.5 h-3.5 text-brand-gold" />
-                <span>{customGoogleKey.trim() ? 'Google Key Set ✓' : 'Maps API Key'}</span>
-              </button>
 
               {/* Freshness Filter */}
               <select
@@ -832,114 +795,6 @@ export const AdminMapPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Google Maps API Key Modal */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#14161A] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center text-brand-gold">
-                  <Key className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Google Maps API Key</h3>
-                  <span className="text-[11px] text-slate-400">Configure client GIS satellite &amp; street tiles</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <p className="text-slate-300 leading-relaxed">
-                Paste your Google Maps Platform API key below. It activates Google Road, Satellite, and Hybrid base layers.
-              </p>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Google Maps API Key</label>
-                <input
-                  type="text"
-                  value={tempKeyInput}
-                  onChange={(e) => setTempKeyInput(e.target.value)}
-                  placeholder="AIzaSy..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-brand-gold"
-                />
-              </div>
-
-              {keySavedMsg && (
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>Google Maps key saved! Layers updated.</span>
-                </div>
-              )}
-
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1 text-[11px] text-slate-400">
-                <span className="font-bold text-slate-200 block">Alternative Configuration:</span>
-                <p>
-                  You can also write your key in <code className="text-brand-gold">frontend/.env</code>:
-                </p>
-                <code className="block bg-slate-950 p-2 rounded text-slate-300 font-mono text-[10px]">
-                  VITE_GOOGLE_MAPS_API_KEY=your_key_here
-                </code>
-              </div>
-
-              <div className="flex justify-between items-center pt-2 border-t border-slate-800">
-                {customGoogleKey ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.removeItem('jk_google_maps_api_key');
-                      setCustomGoogleKey('');
-                      setTempKeyInput('');
-                      setKeySavedMsg(false);
-                      setMapTileType('DARK');
-                    }}
-                    className="text-red-400 hover:text-red-300 text-xs font-semibold"
-                  >
-                    Clear Key
-                  </button>
-                ) : <span />}
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowKeyModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition"
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const trimmed = tempKeyInput.trim();
-                      if (trimmed) {
-                        localStorage.setItem('jk_google_maps_api_key', trimmed);
-                        setCustomGoogleKey(trimmed);
-                        setMapTileType('GOOGLE_ROAD');
-                      } else {
-                        localStorage.removeItem('jk_google_maps_api_key');
-                        setCustomGoogleKey('');
-                      }
-                      setKeySavedMsg(true);
-                      setTimeout(() => setShowKeyModal(false), 800);
-                    }}
-                    className="px-5 py-2 rounded-xl text-xs font-bold text-black bg-brand-gold hover:bg-brand-warm-gold transition shadow flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Check className="w-4 h-4" />
-                    Save &amp; Apply
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
