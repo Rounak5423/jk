@@ -1,5 +1,5 @@
 import React from 'react';
-import tyreImg from '../../assets/tyres/tyre-warning.png.png';
+import tyreImg from '../../assets/tyres/tyre-warning.jpg';
 
 interface Props { className?: string; }
 
